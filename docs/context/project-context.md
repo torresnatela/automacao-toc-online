@@ -3,7 +3,7 @@
 > Documento de **contexto geral** do projeto. Descreve o domínio, os atores, o
 > processo atual, o objetivo do sistema e as regras/restrições conhecidas.
 > **Não contém plano de tarefas, cronograma ou etapas de execução** — serve para
-> que uma pessoa (ou o Claude Code) compreenda o problema antes de decidir *como*
+> que uma pessoa (ou o Claude Code) compreenda o problema antes de decidir _como_
 > resolvê-lo.
 
 ---
@@ -30,6 +30,7 @@ uma camada de **orquestração, persistência de estado e entrega**.
 ## 2. Atores e stakeholders
 
 **Lado do cliente (o gabinete de contabilidade):**
+
 - **Ivo Cunha (sénior)** — proprietário/responsável pela empresa. É quem autoriza
   e concede o acesso ao TOConline. Único que pode liberar credenciais.
 - **"Zé" / José (Ivo Cunha júnior)** — filho, é quem executa hoje o processo
@@ -38,11 +39,13 @@ uma camada de **orquestração, persistência de estado e entrega**.
   portais).
 
 **Lado da execução (a Elevate One):**
+
 - **Rodrigo Medalha** — conduz o relacionamento e define a visão do produto.
 - Equipe de desenvolvimento: um responsável técnico ("Ivo" da Elevate One — nome
   coincide com o do cliente) mais desenvolvedores adicionais.
 
 **Sistemas de terceiros envolvidos:**
+
 - **TOConline** — plataforma central onde o gabinete opera.
 - **Portais do Estado português** acessados a partir do TOConline: **Autoridade
   Tributária (AT / Portal das Finanças)**, **e-Fatura** e **Segurança Social
@@ -85,6 +88,7 @@ porque é essa fronteira que define o valor do projeto.
 
 Por volta do **dia 10 de cada mês**, o "Zé" entra na execução multiempresa,
 seleciona todos os clientes e **submete em lote**:
+
 - a comunicação de ordenados / **DMR (Declaração Mensal de Remunerações)** à
   **Autoridade Tributária** e à **Segurança Social**;
 - e, mais tarde (por volta do dia 17–18), a guia da retenção na fonte de IRS.
@@ -141,7 +145,7 @@ não precise executar nem essa etapa manualmente.
 
 ## 6. Natureza técnica do sistema
 
-O sistema combina, conceitualmente, quatro capacidades (descrição do que ele *é*,
+O sistema combina, conceitualmente, quatro capacidades (descrição do que ele _é_,
 não de como construí-lo):
 
 - **Automação de browser (RPA):** navegação programática do TOConline e dos

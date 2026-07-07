@@ -67,20 +67,20 @@ Simples e suficiente para a cadência de RPA; trocável por fila dedicada depois
 
 ## 3. Stack
 
-| Camada | Escolha |
-|---|---|
-| Linguagem | TypeScript (strict) |
-| Package manager | pnpm (workspaces) |
-| Orquestração monorepo | Turborepo (cache de build/test/lint) |
-| Front-end / API | Next.js (App Router), React |
-| Deploy web | Vercel |
-| Banco | Supabase (Postgres) — local via Supabase CLI (Docker) |
-| Acesso a dados / schema | Drizzle ORM + drizzle-kit (gera SQL das migrations) |
-| Auth | Supabase Auth (e-mail/senha) + RLS + roles |
-| Testes | Vitest (unit/integração) + Playwright (e2e) |
-| Lint/format | ESLint (flat config) + Prettier |
-| CI | GitHub Actions (lint + typecheck + test) |
-| Worker (depois) | Node + Playwright |
+| Camada                  | Escolha                                               |
+| ----------------------- | ----------------------------------------------------- |
+| Linguagem               | TypeScript (strict)                                   |
+| Package manager         | pnpm (workspaces)                                     |
+| Orquestração monorepo   | Turborepo (cache de build/test/lint)                  |
+| Front-end / API         | Next.js (App Router), React                           |
+| Deploy web              | Vercel                                                |
+| Banco                   | Supabase (Postgres) — local via Supabase CLI (Docker) |
+| Acesso a dados / schema | Drizzle ORM + drizzle-kit (gera SQL das migrations)   |
+| Auth                    | Supabase Auth (e-mail/senha) + RLS + roles            |
+| Testes                  | Vitest (unit/integração) + Playwright (e2e)           |
+| Lint/format             | ESLint (flat config) + Prettier                       |
+| CI                      | GitHub Actions (lint + typecheck + test)              |
+| Worker (depois)         | Node + Playwright                                     |
 
 ---
 
@@ -114,6 +114,7 @@ package.json · tsconfig.base.json · .gitignore · .prettierrc · eslint.config
 ```
 
 **Fronteiras (isolamento):**
+
 - `packages/core` não depende de Next nem de detalhes do worker — só de tipos e do
   `packages/db`. É a lib de observabilidade + tipos de domínio, testável isolada.
 - `packages/db` encapsula schema e client; consumidores nunca escrevem SQL solto.
@@ -131,12 +132,14 @@ conforme a role do usuário.
 ### 5.1 Auth / autorização
 
 **`profiles`** — espelha `auth.users` (1:1 via `id`).
+
 - `id uuid PK` (= `auth.users.id`)
 - `email text`
 - `role app_role NOT NULL DEFAULT 'viewer'`
 - `full_name text`, `created_at`, `updated_at`
 
 Enum `app_role`: `admin` | `operator` | `viewer`.
+
 - `viewer`: só leitura (logs/estado).
 - `operator`: opera (reprocessa jobs, dispara execuções).
 - `admin`: tudo, inclui gerir credenciais e usuários.
@@ -146,6 +149,7 @@ Trigger `on auth.users insert` cria a `profiles` correspondente com role padrão
 ### 5.2 Observabilidade / eventos correlacionados
 
 **`traces`** — contexto-raiz por gatilho inicial.
+
 - `id uuid PK`
 - `root_trigger trigger_kind NOT NULL` — `webhook` | `schedule` | `manual` | `system`
 - `trigger_source text` — ex.: rota do webhook, nome do cron, ação do usuário
@@ -156,6 +160,7 @@ Trigger `on auth.users insert` cria a `profiles` correspondente com role padrão
 - `started_at`, `ended_at NULL`
 
 **`events`** — árvore causal de acontecimentos dentro de um trace.
+
 - `id uuid PK`
 - `trace_id uuid NOT NULL` (→ `traces.id`, on delete cascade)
 - `parent_event_id uuid NULL` (→ `events.id`) — forma a árvore gatilho→filhos
@@ -169,6 +174,7 @@ Trigger `on auth.users insert` cria a `profiles` correspondente com role padrão
 - Índices: `(trace_id)`, `(parent_event_id)`, `(type)`, `(occurred_at)`.
 
 **`logs`** — linhas finas penduradas num event (e no trace).
+
 - `id uuid PK`
 - `trace_id uuid NOT NULL` (→ `traces.id`, cascade)
 - `event_id uuid NULL` (→ `events.id`, cascade)
@@ -181,6 +187,7 @@ Trigger `on auth.users insert` cria a `profiles` correspondente com role padrão
 ### 5.3 Orquestração
 
 **`jobs`** — fila DB-backed.
+
 - `id uuid PK`
 - `trace_id uuid NULL` (→ `traces.id`) — contexto de origem
 - `triggering_event_id uuid NULL` (→ `events.id`)
@@ -200,11 +207,13 @@ Trigger `on auth.users insert` cria a `profiles` correspondente com role padrão
 ### 5.4 Esqueleto de domínio
 
 **`clients`** — empresas do gabinete.
+
 - `id`, `name text NOT NULL`, `nif text` (NIF/tax id), `email text`,
   `status client_status NOT NULL DEFAULT 'active'` (`active` | `inactive`),
   `toconline_ref text NULL`, `metadata jsonb`.
 
 **`obligations`** — obrigação recorrente por cliente.
+
 - `id`, `client_id uuid NOT NULL` (→ `clients.id`, cascade),
   `kind obligation_kind NOT NULL`, `frequency obligation_frequency NOT NULL DEFAULT 'monthly'`,
   `metadata jsonb`.
@@ -212,6 +221,7 @@ Trigger `on auth.users insert` cria a `profiles` correspondente com role padrão
 - `obligation_frequency`: `monthly` | `quarterly` | `annual` | `other`.
 
 **`obligation_periods`** — estado por **cliente × obrigação × período**.
+
 - `id`, `obligation_id uuid NOT NULL` (→ `obligations.id`, cascade),
   `period text NOT NULL` (ex.: `2026-06`),
   `status obligation_period_status NOT NULL DEFAULT 'pending'`,
@@ -220,6 +230,7 @@ Trigger `on auth.users insert` cria a `profiles` correspondente com role padrão
 - Unique `(obligation_id, period)` — idempotência (não repetir período já feito).
 
 **`documents`** — as guias de pagamento.
+
 - `id`, `obligation_period_id uuid NOT NULL` (→ cascade),
   `type text NOT NULL`, `entity text NULL` (entidade), `reference text NULL` (referência),
   `amount numeric(12,2) NULL`, `valid_until date NULL` (**só SS**),
@@ -228,6 +239,7 @@ Trigger `on auth.users insert` cria a `profiles` correspondente com role padrão
   `extracted_at NULL`, `sent_at NULL`, `metadata jsonb`.
 
 **`integration_credentials`** — acesso por cliente/provider.
+
 - `id`, `client_id uuid NULL` (→ `clients.id`), `provider integration_provider NOT NULL`
   (`toconline` | `at` | `seguranca_social` | `efatura`),
   `username text NULL`, `secret_encrypted text NULL` (**criptografado em repouso**),
@@ -244,7 +256,7 @@ Trigger `on auth.users insert` cria a `profiles` correspondente com role padrão
 
 ## 6. Sistema de logs/eventos correlacionados (detalhe)
 
-Modelo inspirado em *distributed tracing*, persistido no Postgres, para reconstruir
+Modelo inspirado em _distributed tracing_, persistido no Postgres, para reconstruir
 "de um webhook/evento inicial até o último efeito" e depurar a cadeia inteira.
 
 - **Trace** = raiz por gatilho. **Event** = nó com `parent_event_id` → árvore causal.
@@ -252,11 +264,11 @@ Modelo inspirado em *distributed tracing*, persistido no Postgres, para reconstr
 - `packages/core` expõe uma API tipada:
 
 ```ts
-const trace = await tracer.startTrace({ rootTrigger: 'webhook', triggerSource: '/api/hooks/x' });
-const evt   = await trace.event({ type: 'webhook.received', source: 'web' });
-await evt.log.info('payload validado', { size });
-const child = await evt.child({ type: 'job.enqueued', source: 'web' });
-await evt.succeed({ durationMs });        // ou evt.fail(error) / evt.skip(reason)
+const trace = await tracer.startTrace({ rootTrigger: "webhook", triggerSource: "/api/hooks/x" });
+const evt = await trace.event({ type: "webhook.received", source: "web" });
+await evt.log.info("payload validado", { size });
+const child = await evt.child({ type: "job.enqueued", source: "web" });
+await evt.succeed({ durationMs }); // ou evt.fail(error) / evt.skip(reason)
 await trace.complete();
 ```
 
@@ -330,4 +342,7 @@ implementação.
 - Como confirmar pagamento do cliente → afeta o fecho do ciclo/lembretes; fora desta base.
 - Escopo exato do acesso limitado ao TOConline (sigilo/RGPD) → tratamento cuidadoso
   de credenciais desde já (RLS + criptografia planejada).
+
+```
+
 ```

@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      # Testes de integração do @toc/db exigem Supabase local (RLS depende de
+      # auth.users/auth.uid()); no CI eles são pulados. Rodam localmente.
+      SKIP_DB_TESTS: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm lint
+
+      - run: pnpm typecheck
+
+      - name: Unit tests (@toc/core)
+        run: pnpm --filter @toc/core test
+
+      - name: DB tests (@toc/db, pulados no CI)
+        run: pnpm --filter @toc/db test
+
+      - name: Build web
+        run: pnpm --filter web build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://localhost:54421
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-dummy-anon-key
