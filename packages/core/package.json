@@ -1,0 +1,26 @@
+{
+  "name": "@toc/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./observability": "./src/observability/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@toc/db": "workspace:*",
+    "drizzle-orm": "^0.38.0"
+  },
+  "devDependencies": {
+    "@toc/config": "workspace:*",
+    "@types/node": "^22.10.0",
+    "vitest": "^2.1.0",
+    "typescript": "^5.7.0",
+    "eslint": "^9.17.0"
+  }
+}
