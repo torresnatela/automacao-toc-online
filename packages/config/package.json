@@ -1,0 +1,13 @@
+{
+  "name": "@toc/config",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./tsconfig": "./tsconfig.base.json",
+    "./eslint": "./eslint-preset.js"
+  },
+  "dependencies": {
+    "@eslint/js": "^9.17.0",
+    "typescript-eslint": "^8.19.0"
+  }
+}
