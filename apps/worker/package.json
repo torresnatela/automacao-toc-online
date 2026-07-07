@@ -1,0 +1,23 @@
+{
+  "name": "@toc/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "echo \"(worker: sem testes ainda)\" && exit 0"
+  },
+  "dependencies": {
+    "@toc/db": "workspace:*",
+    "@toc/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@toc/config": "workspace:*",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0",
+    "eslint": "^9.17.0"
+  }
+}
