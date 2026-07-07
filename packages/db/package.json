@@ -15,12 +15,13 @@
   },
   "dependencies": {
     "drizzle-orm": "^0.38.0",
-    "postgres": "^3.4.5"
+    "pg": "^8.13.0"
   },
   "devDependencies": {
     "drizzle-kit": "^0.30.0",
     "@toc/config": "workspace:*",
     "@types/node": "^22.10.0",
+    "@types/pg": "^8.11.0",
     "vitest": "^2.1.0",
     "typescript": "^5.7.0",
     "eslint": "^9.17.0"

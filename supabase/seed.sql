@@ -1,0 +1,2 @@
+-- Seed de dados para desenvolvimento local.
+-- Vazio por enquanto (a base não tem features). Adicione seeds por feature conforme necessário.
