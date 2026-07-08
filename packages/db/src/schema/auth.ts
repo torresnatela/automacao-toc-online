@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, boolean } from "drizzle-orm/pg-core";
 import { appRole } from "./enums";
 
 // Espelha auth.users(id). Sem FK explícita ao schema `auth` (gerido pelo Supabase);
@@ -8,6 +8,9 @@ export const profiles = pgTable("profiles", {
   email: text("email"),
   fullName: text("full_name"),
   role: appRole("role").notNull().default("viewer"),
+  // Força a troca de senha no 1º acesso. Setada como true pelo trigger
+  // handle_new_user quando o admin cria o usuário (ver migration *_rls.sql).
+  mustChangePassword: boolean("must_change_password").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

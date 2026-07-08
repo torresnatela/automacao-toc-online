@@ -15,6 +15,13 @@
       "when": 1783385138063,
       "tag": "20260707004538_perfect_baron_strucker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783511108566,
+      "tag": "20260708114508_little_lester",
+      "breakpoints": true
     }
   ]
 }
