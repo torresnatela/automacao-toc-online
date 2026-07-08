@@ -21,8 +21,15 @@ pnpm db:reset
 
 ### Auth / autorização
 
-- `profiles` — espelha `auth.users` (via trigger). Guarda `role` (`app_role`:
-  `admin | operator | viewer`).
+- `profiles` — espelha `auth.users` (via trigger `handle_new_user`). Guarda `role`
+  (`app_role`: `admin | operator | viewer`) e `must_change_password`. A UI de cadastro
+  expõe só **Admin** e **Member** (Member = `viewer`; `operator` fica reservado). Cadastro
+  é feito por admin via `auth.admin.createUser` (service role); o signup público está
+  **desligado** (`enable_signup = false`).
+  - **Gate do 1º acesso:** o middleware/login leem `app_metadata.must_change_password` do
+    **JWT** (o `getUser()` já roda — sem query extra). A coluna `profiles.must_change_password`
+    espelha o mesmo estado para exibição no `/admin/users`. `createUser` seta ambos como
+    `true`; `change-password` limpa ambos via service role.
 
 ### Observabilidade
 
@@ -48,6 +55,24 @@ pnpm db:reset
 Ligado em todas as tabelas de aplicação. Leitura para autenticados; escrita via service role
 (worker) que bypassa RLS. `integration_credentials` só é lida por `admin`. A função
 `public.current_app_role()` resolve o papel do usuário atual.
+
+`profiles` tem leitura restrita: cada usuário lê **o próprio** (`read_own_profile`) e o admin
+lê **todos** (`admin_read_all_profiles`) — email/role não vazam entre usuários comuns.
+
+O trigger `prevent_privileged_self_update` bloqueia o usuário de alterar o **próprio** `role`
+ou `must_change_password` num self-update (a policy `update_own_profile` permite editar a
+própria linha). Sob service role o `auth.uid()` é `NULL`, então admin/worker não é bloqueado.
+
+## Bootstrap do admin
+
+Só admin cadastra usuários, então o **primeiro** admin nasce fora do fluxo:
+
+- **Local/dev/e2e:** `supabase/seed.sql` cria `admin@local.test` / `admin123` (role `admin`,
+  `must_change_password = false`), aplicado no `pnpm db:reset`.
+- **Produção:** crie o usuário manualmente (Supabase Studio → Authentication → Add user) e
+  promova via SQL: `update public.profiles set role='admin', must_change_password=false where email='...';`
+  (ou um script one-off usando a service role + `auth.admin.createUser`). Desligue o signup
+  público também no projeto de produção (Dashboard → Authentication → Providers → Email).
 
 ## Acesso a dados
 
