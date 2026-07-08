@@ -61,6 +61,12 @@ export function CreateUserForm() {
             abaixo (mostrada apenas uma vez):
           </p>
           <code style={{ fontSize: 18, userSelect: "all" }}>{state.tempPassword}</code>
+          {state.warning && (
+            <p style={{ margin: "8px 0 0", color: "#a15c00" }}>
+              Atenção: {state.warning}. O usuário foi criado como Member — ajuste o
+              papel se necessário.
+            </p>
+          )}
         </div>
       )}
     </section>

@@ -1,6 +1,7 @@
 // Helpers puros de auth/autorização. Este subpath (@toc/core/auth) NÃO importa
 // @toc/db — para não arrastar drizzle/pg ao bundle do middleware do web.
 export { generateTempPassword } from "./password";
+export { validateNewPassword, MIN_PASSWORD_LENGTH } from "./validate";
 export {
   shouldRedirectToChangePassword,
   type ChangePasswordGuardInput,
@@ -19,4 +20,5 @@ export {
   type RegisterUserInput,
   type RegisterUserOutput,
   type CreateAuthUserResult,
+  type AssignRoleResult,
 } from "./register";

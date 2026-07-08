@@ -4,8 +4,10 @@
 -- ---------------------------------------------------------------------------
 -- Admin bootstrap (dev/e2e). Só admin cria usuários, então o PRIMEIRO admin
 -- precisa nascer fora do fluxo. Credencial local fixa: admin@local.test / admin123.
--- Em produção, faça o bootstrap manualmente (Supabase Studio ou script com a
--- service role) — ver docs/local-development.md e docs/database.md.
+--
+-- ⚠️  CREDENCIAL FRACA E CONHECIDA — NUNCA aplique este seed em produção. O seed
+--     só roda no `supabase db reset` (local); `supabase migration up` (prod) NÃO
+--     executa seed.sql. Bootstrap de produção é manual — ver docs/database.md.
 -- ---------------------------------------------------------------------------
 
 insert into auth.users (

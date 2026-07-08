@@ -4,7 +4,7 @@ export const APP_ROLES = ["admin", "operator", "viewer"] as const;
 export type AppRole = (typeof APP_ROLES)[number];
 
 // Hierarquia (menor → maior) usada por requireRole(min) no dashboard.
-export const ROLE_ORDER: AppRole[] = ["viewer", "operator", "admin"];
+export const ROLE_ORDER: readonly AppRole[] = ["viewer", "operator", "admin"];
 
 // Papéis oferecidos no formulário de cadastro (só dois, por enquanto).
 // "member" mapeia para o papel base `viewer` (default do trigger).

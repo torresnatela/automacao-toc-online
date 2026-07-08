@@ -12,6 +12,10 @@ export default async function ChangePasswordPage({
   const user = await getSessionUser();
   if (!user) redirect("/login");
   const { error } = await searchParams;
+  const message =
+    error === "salvar"
+      ? "Não foi possível concluir a troca. Tente novamente."
+      : "Senha inválida (mínimo 6 caracteres e as duas iguais).";
 
   return (
     <main style={{ maxWidth: 320, margin: "80px auto", padding: "0 16px" }}>
@@ -19,7 +23,7 @@ export default async function ChangePasswordPage({
       <p>Defina uma nova senha para concluir o primeiro acesso.</p>
       {error ? (
         <p role="alert" style={{ color: "crimson" }}>
-          Senha inválida (mínimo 6 caracteres e as duas iguais).
+          {message}
         </p>
       ) : null}
       <form action={changePassword} style={{ display: "grid", gap: 8 }}>

@@ -121,5 +121,43 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")(
         ),
       ).rejects.toThrow();
     });
+
+    it("usuário comum lê o próprio profile mas NÃO o de outro", async () => {
+      const meId = randomUUID();
+      const otherId = randomUUID();
+      await db.insert(profiles).values({ id: meId, email: `${meId}@teste.local` });
+      await db
+        .insert(profiles)
+        .values({ id: otherId, email: `${otherId}@teste.local` });
+
+      const rows = await asUser(meId, async (c) => {
+        const own = await c.query("select id from public.profiles where id = $1", [meId]);
+        const other = await c.query("select id from public.profiles where id = $1", [
+          otherId,
+        ]);
+        return { own: own.rowCount, other: other.rowCount };
+      });
+      expect(rows.own).toBe(1);
+      expect(rows.other).toBe(0);
+    });
+
+    it("admin lê o profile de outro usuário", async () => {
+      const adminId = randomUUID();
+      const otherId = randomUUID();
+      await db
+        .insert(profiles)
+        .values({ id: adminId, email: `${adminId}@teste.local`, role: "admin" });
+      await db
+        .insert(profiles)
+        .values({ id: otherId, email: `${otherId}@teste.local` });
+
+      const count = await asUser(adminId, async (c) => {
+        const r = await c.query("select id from public.profiles where id = $1", [
+          otherId,
+        ]);
+        return r.rowCount;
+      });
+      expect(count).toBe(1);
+    });
   },
 );

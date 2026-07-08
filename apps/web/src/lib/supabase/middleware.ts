@@ -39,17 +39,11 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Usuário autenticado: força a troca de senha no 1º acesso enquanto a flag
-  // must_change_password estiver ativa. A função pura trata o anti-loop
-  // (libera /change-password e /login).
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("must_change_password")
-    .eq("id", user.id)
-    .single();
-
+  // estiver ativa. A flag vem do app_metadata do JWT (getUser já foi chamado
+  // acima — sem query extra ao banco). A função pura trata o anti-loop.
   const target = shouldRedirectToChangePassword({
     authenticated: true,
-    mustChangePassword: profile?.must_change_password ?? false,
+    mustChangePassword: user.app_metadata?.must_change_password === true,
     path,
   });
   if (target) {

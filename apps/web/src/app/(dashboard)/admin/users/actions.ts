@@ -8,12 +8,14 @@ export interface CreateUserState {
   ok?: boolean;
   email?: string;
   tempPassword?: string;
+  warning?: string;
   error?: string;
 }
 
 // Cadastra um usuário (apenas admin). Gera senha temporária e a devolve para ser
-// exibida uma vez na tela. O papel é atribuído via service role (bypass RLS); o
-// trigger handle_new_user já marca must_change_password = true.
+// exibida uma vez na tela. O papel é atribuído via service role (bypass RLS). O
+// gate de troca no 1º acesso vai no app_metadata do JWT (lido pelo middleware
+// sem query extra); o trigger handle_new_user também marca a coluna profiles.
 export async function createUser(
   _prev: CreateUserState,
   formData: FormData,
@@ -35,6 +37,7 @@ export async function createUser(
           password: input.password,
           email_confirm: true,
           user_metadata: { full_name: input.fullName },
+          app_metadata: { must_change_password: true },
         });
         if (error) return { error: error.message };
         return { userId: data.user.id };
@@ -44,12 +47,17 @@ export async function createUser(
           .from("profiles")
           .update({ role: input.role, full_name: input.fullName })
           .eq("id", input.userId);
-        if (error) throw new Error(error.message);
+        return error ? { error: error.message } : {};
       },
     },
     { email, fullName, uiRole },
   );
 
   if (!result.ok) return { error: result.error };
-  return { ok: true, email: result.email, tempPassword: result.tempPassword };
+  return {
+    ok: true,
+    email: result.email,
+    tempPassword: result.tempPassword,
+    warning: result.warning,
+  };
 }

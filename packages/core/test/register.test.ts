@@ -15,6 +15,7 @@ function makeDeps(overrides: Partial<RegisterUserDeps> = {}) {
     },
     async assignRole(input) {
       calls.assignRole.push(input);
+      return {};
     },
     ...overrides,
   };
@@ -65,6 +66,26 @@ describe("registerUser", () => {
 
     expect(out).toEqual({ ok: false, error: "email já registado" });
     expect(calls.assignRole).toHaveLength(0);
+  });
+
+  it("se assignRole falha, ainda retorna a senha (usuário já existe) com aviso", async () => {
+    const { deps } = makeDeps({
+      async assignRole() {
+        return { error: "falha ao atribuir papel" };
+      },
+    });
+
+    const out = await registerUser(deps, {
+      email: "meio@toc.pt",
+      fullName: "Meio",
+      uiRole: "admin",
+    });
+
+    expect(out.ok).toBe(true);
+    if (out.ok) {
+      expect(out.tempPassword).toBe("SENHA-FIXA-123");
+      expect(out.warning).toBe("falha ao atribuir papel");
+    }
   });
 
   it("rejeita email vazio sem chamar createAuthUser", async () => {
