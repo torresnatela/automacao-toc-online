@@ -1,12 +1,18 @@
-# Graph Report - .  (2026-07-07)
+# Graph Report - automacao-toc-online  (2026-07-08)
 
 ## Corpus Check
-- Corpus is ~21,979 words - fits in a single context window. You may not need a graph.
+- 72 files · ~22,123 words
+- Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 437 nodes · 535 edges · 42 communities (29 shown, 13 thin omitted)
-- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 20 edges (avg confidence: 0.88)
-- Token cost: 163,100 input · 0 output
+- 535 nodes · 544 edges · 111 communities (33 shown, 78 thin omitted)
+- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 1 edges (avg confidence: 0.85)
+- Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `e04a7688`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - Observability Tracer/Logger
@@ -43,6 +49,75 @@
 - IRS Withholding (IRS)
 - Management Dashboard (planned)
 - TS Strict Convention
+- Design — Base do Projeto: Automação de Guias Fiscais (TOConline)
+- Base do Projeto (Automação TOConline) — Implementation Plan
+- Arquitetura
+- pull_request_template.md
+- README.md
+- @toc/worker (scaffold)
+- jobs queue consumed by worker
+- Worker runs off Vercel (long-running process + real browser)
+- Portal automation (TOConline, AT, Segurança Social, e-Fatura)
+- @toc/worker RPA worker (scaffold)
+- @toc/core observability (Tracer/Logger)
+- apps/web (Next.js App Router → Vercel)
+- apps/worker (Node + Playwright RPA)
+- Fila de trabalho (tabela jobs, FOR UPDATE SKIP LOCKED)
+- Monorepo com dois deployables
+- packages/core (Tracer/Logger + tipos de domínio)
+- packages/db (schema Drizzle + client pg)
+- Supabase (Postgres verdade + Auth + Storage)
+- Acesso Direto
+- Autoridade Tributária (AT / Portal das Finanças)
+- Calendário fiscal mensal (dias 10/17-18/20/25)
+- DMR (Declaração Mensal de Remunerações)
+- Documento inexistente (estado válido, não erro)
+- e-Fatura
+- Elevate One (executora)
+- Execução multiempresa
+- Gabinete de contabilidade (cliente)
+- Guia de pagamento (PDF)
+- Idempotência (não repetir trabalho já feito)
+- IVA (Declaração Periódica do IVA)
+- Sigilo profissional e proteção de dados (RGPD)
+- Automação de browser (RPA)
+- Segurança Social Direta
+- TOConline (plataforma cloud da OCC)
+- Utilizador dedicado por cliente
+- Prazo de validade da guia da Segurança Social
+- Conventional Commits
+- Feature branches + PR + CI
+- clients (empresas do gabinete)
+- public.current_app_role() (helper SQL)
+- documents (as guias: entidade, referência, valor, valid_until, storage_path)
+- events (tabela)
+- integration_credentials (acesso por cliente/provider)
+- jobs (fila DB-backed)
+- logs (tabela)
+- obligation_periods (estado por cliente × obrigação × período)
+- obligations (obrigação recorrente por cliente)
+- profiles (espelha auth.users, role app_role)
+- Schema Drizzle = fonte da verdade
+- @toc/db (createDb + schema Drizzle tipado)
+- traces (tabela)
+- DbStore (persistência real)
+- Modelo inspirado em distributed tracing
+- Event (nó com parent_event_id → árvore causal)
+- InMemoryStore (testes sem banco)
+- Log (linha fina pendurada num event/trace)
+- @toc/core (biblioteca de observabilidade)
+- Trace (contexto-raiz por gatilho inicial)
+- Tracer / createTracer (@toc/core)
+- ObservabilityStore (interface saveTrace/saveEvent/saveLog)
+- Plano de implementação — Base do Projeto
+- Criptografia de credenciais (planejada, não implementada)
+- Roles app_role (viewer/operator/admin)
+- Design — Base do Projeto (spec aprovado)
+- Fora de escopo nesta base (YAGNI)
+- PR Checklist (TDD, lint/typecheck/test, migrations, no secrets)
+- pnpm workspace config (apps/*, packages/*)
+- Monorepo structure (apps/web, apps/worker, packages/db, packages/core, packages/config)
+- Automação de Guias Fiscais (TOConline) project overview
 
 ## God Nodes (most connected - your core abstractions)
 1. `compilerOptions` - 16 edges
@@ -50,52 +125,48 @@
 3. `ObservabilityStore` - 14 edges
 4. `compilerOptions` - 14 edges
 5. `scripts` - 13 edges
-6. `Logger` - 10 edges
-7. `InMemoryStore` - 10 edges
-8. `DbStore` - 9 edges
-9. `Database` - 9 edges
-10. `scripts` - 8 edges
+6. `Base do Projeto (Automação TOConline) — Implementation Plan` - 13 edges
+7. `Contexto do Projeto — Automação de Guias Fiscais (TOConline)` - 12 edges
+8. `Design — Base do Projeto: Automação de Guias Fiscais (TOConline)` - 12 edges
+9. `Logger` - 10 edges
+10. `InMemoryStore` - 10 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `CI Build web step (Next.js build with Supabase env)` --references--> `apps/web Next.js dashboard README`  [INFERRED]
   .github/workflows/ci.yml → apps/web/README.md
-- `Monorepo structure (apps/web, apps/worker, packages/db, packages/core, packages/config)` --references--> `apps/web Next.js dashboard README`  [INFERRED]
-  README.md → apps/web/README.md
-- `Monorepo structure (apps/web, apps/worker, packages/db, packages/core, packages/config)` --references--> `@toc/worker RPA worker (scaffold)`  [INFERRED]
-  README.md → apps/worker/README.md
-- `Monorepo structure (apps/web, apps/worker, packages/db, packages/core, packages/config)` --shares_data_with--> `pnpm workspace config (apps/*, packages/*)`  [INFERRED]
-  README.md → pnpm-workspace.yaml
-- `@toc/worker RPA worker (scaffold)` --semantically_similar_to--> `apps/web Next.js dashboard README`  [INFERRED] [semantically similar]
-  apps/worker/README.md → apps/web/README.md
+- `TracesPage()` --calls--> `getSessionUser()`  [EXTRACTED]
+  apps/web/src/app/(dashboard)/traces/page.tsx → apps/web/src/lib/auth.ts
+- `TracesPage()` --calls--> `getSupabaseServerClient()`  [EXTRACTED]
+  apps/web/src/app/(dashboard)/traces/page.tsx → apps/web/src/lib/supabase/server.ts
+- `signIn()` --calls--> `getSupabaseServerClient()`  [EXTRACTED]
+  apps/web/src/app/login/actions.ts → apps/web/src/lib/supabase/server.ts
+- `signOut()` --calls--> `getSupabaseServerClient()`  [EXTRACTED]
+  apps/web/src/app/login/actions.ts → apps/web/src/lib/supabase/server.ts
 
 ## Import Cycles
 - None detected.
 
 ## Hyperedges (group relationships)
 - **CI verification pipeline (lint, typecheck, unit tests, DB tests, build web)** — github_workflows_ci_verify, github_workflows_ci_skip_db_tests, github_workflows_ci_build_web, github_pull_request_template_pr_checklist [INFERRED 0.75]
-- **Monorepo workspace composition (web, worker, shared packages)** — readme_monorepo_structure, pnpm_workspace_workspace_config, apps_web_readme_nextjs_app, apps_worker_readme_rpa_worker [INFERRED 0.75]
-- **Fluxo de observabilidade trace → event → log** — docs_event_logging_trace, docs_event_logging_event, docs_event_logging_log, docs_event_logging_tracer [EXTRACTED 0.95]
-- **Cadeia de domínio clients → obligations → obligation_periods → documents** — docs_database_clients, docs_database_obligations, docs_database_obligation_periods, docs_database_documents [EXTRACTED 0.95]
-- **Acesso Direto do TOConline aos portais do Estado** — docs_context_project_context_toconline, docs_context_project_context_acesso_direto, docs_context_project_context_autoridade_tributaria, docs_context_project_context_seguranca_social, docs_context_project_context_efatura [EXTRACTED 0.90]
 - **Next.js scaffold default assets** — apps_web_public_file_icon, apps_web_public_globe_icon, apps_web_public_next_logo, apps_web_public_vercel_logo, apps_web_public_window_icon [INFERRED 0.85]
 
-## Communities (42 total, 13 thin omitted)
+## Communities (111 total, 78 thin omitted)
 
 ### Community 0 - "Observability Tracer/Logger"
-Cohesion: 0.09
-Nodes (15): observability, Logger, ObservabilityStore, createEvent(), createTracer(), EventHandle, TraceHandle, Tracer (+7 more)
+Cohesion: 0.07
+Nodes (21): observability, Logger, DbStore, InMemoryStore, ObservabilityStore, createEvent(), createTracer(), EventHandle (+13 more)
 
 ### Community 1 - "Architecture & Domain Overview"
-Cohesion: 0.08
-Nodes (36): apps/web (Next.js App Router → Vercel), apps/worker (Node + Playwright RPA), Fila de trabalho (tabela jobs, FOR UPDATE SKIP LOCKED), Monorepo com dois deployables, Fronteiras dos pacotes, packages/core (Tracer/Logger + tipos de domínio), packages/db (schema Drizzle + client pg), Supabase (Postgres verdade + Auth + Storage) (+28 more)
+Cohesion: 0.09
+Nodes (19): Banco, Convenções, Código, Fluxo de trabalho (Git), Observabilidade, TDD, Acesso a dados, Auth / autorização (+11 more)
 
 ### Community 2 - "DB Schema (Drizzle)"
 Cohesion: 0.10
-Nodes (25): profiles, clients, documents, integrationCredentials, obligationPeriods, obligations, appRole, clientStatus (+17 more)
+Nodes (27): createDb(), schema, profiles, clients, documents, integrationCredentials, obligationPeriods, obligations (+19 more)
 
 ### Community 3 - "Observability Stores & DB Client"
-Cohesion: 0.13
-Nodes (8): DbStore, InMemoryStore, EventRecord, LogRecord, TraceRecord, createDb(), Database, schema
+Cohesion: 0.07
+Nodes (27): CLAUDE.md — Automação de Guias Fiscais (TOConline), Comandos essenciais, Convenções técnicas, Estrutura, graphify, Mapa da documentação, Regras de trabalho, 10. Glossário (+19 more)
 
 ### Community 4 - "Web App Dependencies"
 Cohesion: 0.08
@@ -104,10 +175,6 @@ Nodes (25): dependencies, next, react, react-dom, @supabase/ssr, @supabase/supab
 ### Community 5 - "DB Package Manifest"
 Cohesion: 0.09
 Nodes (22): dependencies, drizzle-orm, pg, devDependencies, drizzle-kit, eslint, @toc/config, @types/node (+14 more)
-
-### Community 6 - "Fiscal Domain & RLS"
-Cohesion: 0.11
-Nodes (22): 2FA obrigatório na Segurança Social, Acesso Direto, Autoridade Tributária (AT / Portal das Finanças), DMR (Declaração Mensal de Remunerações), e-Fatura, Guia de pagamento (PDF), Idempotência (não repetir trabalho já feito), IVA (Declaração Periódica do IVA) (+14 more)
 
 ### Community 7 - "Turborepo & Lint Config"
 Cohesion: 0.09
@@ -142,8 +209,8 @@ Cohesion: 0.12
 Nodes (15): compilerOptions, declaration, esModuleInterop, forceConsistentCasingInFileNames, isolatedModules, lib, module, moduleResolution (+7 more)
 
 ### Community 15 - "Docs, CI & PR Workflow"
-Cohesion: 0.15
-Nodes (14): apps/web Next.js dashboard README, jobs queue consumed by worker, Worker runs off Vercel (long-running process + real browser), Portal automation (TOConline, AT, Segurança Social, e-Fatura), @toc/worker RPA worker (scaffold), @toc/core observability (Tracer/Logger), PR Checklist (TDD, lint/typecheck/test, migrations, no secrets), CI Build web step (Next.js build with Supabase env) (+6 more)
+Cohesion: 0.50
+Nodes (4): apps/web Next.js dashboard README, CI Build web step (Next.js build with Supabase env), SKIP_DB_TESTS flag (skip @toc/db integration tests in CI), CI verify job
 
 ### Community 16 - "Config Package Manifest"
 Cohesion: 0.18
@@ -165,25 +232,45 @@ Nodes (5): compilerOptions, outDir, rootDir, extends, include
 Cohesion: 0.33
 Nodes (5): compilerOptions, outDir, rootDir, extends, include
 
+### Community 42 - "Design — Base do Projeto: Automação de Guias Fiscais (TOConline)"
+Cohesion: 0.12
+Nodes (16): 10. Fora de escopo nesta base (YAGNI), 11. Riscos e pontos em aberto (herdados do contexto), 1. Objetivo desta base, 2. Arquitetura geral, 3. Stack, 4. Estrutura de pastas, 5.1 Auth / autorização, 5.2 Observabilidade / eventos correlacionados (+8 more)
+
+### Community 43 - "Base do Projeto (Automação TOConline) — Implementation Plan"
+Cohesion: 0.14
+Nodes (13): Base do Projeto (Automação TOConline) — Implementation Plan, File Structure, Global Constraints, Task 0: Branch de trabalho, Task 1: Esqueleto do monorepo + tooling, Task 2: Supabase local + `packages/db` (Drizzle base), Task 3: Schema backbone — auth + observabilidade + jobs (com RLS), Task 4: Schema esqueleto de domínio (com RLS) (+5 more)
+
+### Community 44 - "Arquitetura"
+Cohesion: 0.29
+Nodes (6): Arquitetura, Deploy, Fila de trabalho, Fronteiras dos pacotes, Por que dois deployables, Visão geral
+
+### Community 45 - "pull_request_template.md"
+Cohesion: 0.40
+Nodes (4): Checklist, Como testar, O que muda, Por quê
+
+### Community 46 - "README.md"
+Cohesion: 0.50
+Nodes (3): Deploy on Vercel, Getting Started, Learn More
+
 ## Knowledge Gaps
-- **210 isolated node(s):** `eslintConfig`, `nextConfig`, `name`, `version`, `private` (+205 more)
+- **324 isolated node(s):** `eslintConfig`, `nextConfig`, `name`, `version`, `private` (+319 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **13 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **78 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `TOConline (plataforma cloud da OCC)` connect `Architecture & Domain Overview` to `Fiscal Domain & RLS`?**
-  _High betweenness centrality (0.009) - this node is a cross-community bridge._
-- **Why does `ObservabilityStore` connect `Observability Tracer/Logger` to `Observability Stores & DB Client`?**
-  _High betweenness centrality (0.009) - this node is a cross-community bridge._
+- **Why does `devDependencies` connect `Turborepo & Lint Config` to `Root Package Scripts`?**
+  _High betweenness centrality (0.004) - this node is a cross-community bridge._
 - **What connects `eslintConfig`, `NOTE: This file should not be edited`, `nextConfig` to the rest of the system?**
-  _216 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _339 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Observability Tracer/Logger` be split into smaller, more focused modules?**
-  _Cohesion score 0.08943089430894309 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06547619047619048 - nodes in this community are weakly interconnected._
 - **Should `Architecture & Domain Overview` be split into smaller, more focused modules?**
-  _Cohesion score 0.0761904761904762 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09090909090909091 - nodes in this community are weakly interconnected._
 - **Should `DB Schema (Drizzle)` be split into smaller, more focused modules?**
-  _Cohesion score 0.0967741935483871 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09759759759759759 - nodes in this community are weakly interconnected._
 - **Should `Observability Stores & DB Client` be split into smaller, more focused modules?**
-  _Cohesion score 0.1339031339031339 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06666666666666667 - nodes in this community are weakly interconnected._
+- **Should `Web App Dependencies` be split into smaller, more focused modules?**
+  _Cohesion score 0.07692307692307693 - nodes in this community are weakly interconnected._
