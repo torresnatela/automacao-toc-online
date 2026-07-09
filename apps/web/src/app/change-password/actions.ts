@@ -33,5 +33,5 @@ export async function changePassword(formData: FormData) {
     .eq("id", user.id);
   if (metaError || colError) redirect("/change-password?error=salvar");
 
-  redirect("/traces");
+  redirect("/");
 }

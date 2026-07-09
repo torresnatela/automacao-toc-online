@@ -19,6 +19,7 @@
     "drizzle-orm": "^0.38.0"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.47.0",
     "@toc/config": "workspace:*",
     "@types/node": "^22.10.0",
     "vitest": "^2.1.0",
