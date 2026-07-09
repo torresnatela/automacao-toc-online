@@ -5,7 +5,9 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./observability": "./src/observability/index.ts"
+    "./observability": "./src/observability/index.ts",
+    "./auth": "./src/auth/index.ts",
+    "./auth/guard": "./src/auth/guard.ts"
   },
   "scripts": {
     "test": "vitest run",

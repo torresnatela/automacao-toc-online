@@ -1,8 +1,7 @@
+import { ROLE_ORDER, type AppRole } from "@toc/core/auth";
 import { getSupabaseServerClient } from "./supabase/server";
 
-export type AppRole = "admin" | "operator" | "viewer";
-
-const ROLE_ORDER: AppRole[] = ["viewer", "operator", "admin"];
+export type { AppRole };
 
 export interface SessionUser {
   id: string;

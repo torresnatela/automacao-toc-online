@@ -1,16 +1,16 @@
 # Graph Report - automacao-toc-online  (2026-07-08)
 
 ## Corpus Check
-- 72 files · ~22,123 words
+- 95 files · ~28,618 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 535 nodes · 544 edges · 111 communities (33 shown, 78 thin omitted)
-- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 1 edges (avg confidence: 0.85)
+- 581 nodes · 687 edges · 99 communities (34 shown, 65 thin omitted)
+- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 2 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e04a7688`
+- Built from commit: `efcce8f0`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -32,7 +32,6 @@
 - Shared Base tsconfig (variant)
 - Docs, CI & PR Workflow
 - Config Package Manifest
-- Web Middleware & Proxy
 - Package tsconfig (core)
 - Package tsconfig (db)
 - Package tsconfig (worker)
@@ -49,7 +48,7 @@
 - IRS Withholding (IRS)
 - Management Dashboard (planned)
 - TS Strict Convention
-- Design — Base do Projeto: Automação de Guias Fiscais (TOConline)
+- CLAUDE.md — Automação de Guias Fiscais (TOConline)
 - Base do Projeto (Automação TOConline) — Implementation Plan
 - Arquitetura
 - pull_request_template.md
@@ -88,18 +87,6 @@
 - Conventional Commits
 - Feature branches + PR + CI
 - clients (empresas do gabinete)
-- public.current_app_role() (helper SQL)
-- documents (as guias: entidade, referência, valor, valid_until, storage_path)
-- events (tabela)
-- integration_credentials (acesso por cliente/provider)
-- jobs (fila DB-backed)
-- logs (tabela)
-- obligation_periods (estado por cliente × obrigação × período)
-- obligations (obrigação recorrente por cliente)
-- profiles (espelha auth.users, role app_role)
-- Schema Drizzle = fonte da verdade
-- @toc/db (createDb + schema Drizzle tipado)
-- traces (tabela)
 - DbStore (persistência real)
 - Modelo inspirado em distributed tracing
 - Event (nó com parent_event_id → árvore causal)
@@ -126,22 +113,22 @@
 4. `compilerOptions` - 14 edges
 5. `scripts` - 13 edges
 6. `Base do Projeto (Automação TOConline) — Implementation Plan` - 13 edges
-7. `Contexto do Projeto — Automação de Guias Fiscais (TOConline)` - 12 edges
-8. `Design — Base do Projeto: Automação de Guias Fiscais (TOConline)` - 12 edges
-9. `Logger` - 10 edges
-10. `InMemoryStore` - 10 edges
+7. `getSupabaseServerClient()` - 12 edges
+8. `Contexto do Projeto — Automação de Guias Fiscais (TOConline)` - 12 edges
+9. `Design — Base do Projeto: Automação de Guias Fiscais (TOConline)` - 12 edges
+10. `Logger` - 10 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `CI Build web step (Next.js build with Supabase env)` --references--> `apps/web Next.js dashboard README`  [INFERRED]
-  .github/workflows/ci.yml → apps/web/README.md
-- `TracesPage()` --calls--> `getSessionUser()`  [EXTRACTED]
-  apps/web/src/app/(dashboard)/traces/page.tsx → apps/web/src/lib/auth.ts
-- `TracesPage()` --calls--> `getSupabaseServerClient()`  [EXTRACTED]
-  apps/web/src/app/(dashboard)/traces/page.tsx → apps/web/src/lib/supabase/server.ts
-- `signIn()` --calls--> `getSupabaseServerClient()`  [EXTRACTED]
-  apps/web/src/app/login/actions.ts → apps/web/src/lib/supabase/server.ts
-- `signOut()` --calls--> `getSupabaseServerClient()`  [EXTRACTED]
-  apps/web/src/app/login/actions.ts → apps/web/src/lib/supabase/server.ts
+- `createUser()` --calls--> `registerUser()`  [EXTRACTED]
+  apps/web/src/app/(dashboard)/admin/users/actions.ts → packages/core/src/auth/register.ts
+- `ProfileRow` --references--> `AppRole`  [EXTRACTED]
+  apps/web/src/app/(dashboard)/admin/users/page.tsx → packages/core/src/auth/roles.ts
+- `AdminUsersPage()` --calls--> `dbRoleToUiLabel()`  [EXTRACTED]
+  apps/web/src/app/(dashboard)/admin/users/page.tsx → packages/core/src/auth/roles.ts
+- `changePassword()` --calls--> `validateNewPassword()`  [EXTRACTED]
+  apps/web/src/app/change-password/actions.ts → packages/core/src/auth/validate.ts
+- `SessionUser` --references--> `AppRole`  [EXTRACTED]
+  apps/web/src/lib/auth.ts → packages/core/src/auth/roles.ts
 
 ## Import Cycles
 - None detected.
@@ -150,27 +137,27 @@
 - **CI verification pipeline (lint, typecheck, unit tests, DB tests, build web)** — github_workflows_ci_verify, github_workflows_ci_skip_db_tests, github_workflows_ci_build_web, github_pull_request_template_pr_checklist [INFERRED 0.75]
 - **Next.js scaffold default assets** — apps_web_public_file_icon, apps_web_public_globe_icon, apps_web_public_next_logo, apps_web_public_vercel_logo, apps_web_public_window_icon [INFERRED 0.85]
 
-## Communities (111 total, 78 thin omitted)
+## Communities (99 total, 65 thin omitted)
 
 ### Community 0 - "Observability Tracer/Logger"
-Cohesion: 0.07
-Nodes (21): observability, Logger, DbStore, InMemoryStore, ObservabilityStore, createEvent(), createTracer(), EventHandle (+13 more)
+Cohesion: 0.06
+Nodes (22): observability, Logger, DbStore, InMemoryStore, ObservabilityStore, createEvent(), createTracer(), EventHandle (+14 more)
 
 ### Community 1 - "Architecture & Domain Overview"
 Cohesion: 0.09
-Nodes (19): Banco, Convenções, Código, Fluxo de trabalho (Git), Observabilidade, TDD, Acesso a dados, Auth / autorização (+11 more)
+Nodes (20): Banco, Convenções, Código, Fluxo de trabalho (Git), Observabilidade, TDD, Acesso a dados, Auth / autorização (+12 more)
 
 ### Community 2 - "DB Schema (Drizzle)"
-Cohesion: 0.10
-Nodes (27): createDb(), schema, profiles, clients, documents, integrationCredentials, obligationPeriods, obligations (+19 more)
+Cohesion: 0.09
+Nodes (28): createDb(), profiles, clients, documents, integrationCredentials, obligationPeriods, obligations, appRole (+20 more)
 
 ### Community 3 - "Observability Stores & DB Client"
-Cohesion: 0.07
-Nodes (27): CLAUDE.md — Automação de Guias Fiscais (TOConline), Comandos essenciais, Convenções técnicas, Estrutura, graphify, Mapa da documentação, Regras de trabalho, 10. Glossário (+19 more)
+Cohesion: 0.12
+Nodes (16): 10. Fora de escopo nesta base (YAGNI), 11. Riscos e pontos em aberto (herdados do contexto), 1. Objetivo desta base, 2. Arquitetura geral, 3. Stack, 4. Estrutura de pastas, 5.1 Auth / autorização, 5.2 Observabilidade / eventos correlacionados (+8 more)
 
 ### Community 4 - "Web App Dependencies"
-Cohesion: 0.08
-Nodes (25): dependencies, next, react, react-dom, @supabase/ssr, @supabase/supabase-js, devDependencies, eslint (+17 more)
+Cohesion: 0.07
+Nodes (27): dependencies, next, react, react-dom, server-only, @supabase/ssr, @supabase/supabase-js, @toc/core (+19 more)
 
 ### Community 5 - "DB Package Manifest"
 Cohesion: 0.09
@@ -189,16 +176,16 @@ Cohesion: 0.10
 Nodes (19): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+11 more)
 
 ### Community 10 - "Core Package Manifest"
-Cohesion: 0.10
-Nodes (19): dependencies, drizzle-orm, @toc/db, devDependencies, eslint, @toc/config, @types/node, typescript (+11 more)
+Cohesion: 0.09
+Nodes (21): dependencies, drizzle-orm, @toc/db, devDependencies, eslint, @toc/config, @types/node, typescript (+13 more)
 
 ### Community 11 - "Worker Package Manifest"
 Cohesion: 0.11
 Nodes (18): dependencies, @toc/core, @toc/db, devDependencies, eslint, @toc/config, @types/node, typescript (+10 more)
 
 ### Community 12 - "Web Auth & Pages"
-Cohesion: 0.23
-Nodes (11): TraceRow, TracesPage(), signIn(), signOut(), AppRole, getSessionUser(), requireRole(), ROLE_ORDER (+3 more)
+Cohesion: 0.18
+Nodes (16): changePassword(), ChangePasswordPage(), createUser(), CreateUserState, CreateUserForm(), initialState, AdminUsersPage(), TraceRow (+8 more)
 
 ### Community 13 - "Shared Base tsconfig"
 Cohesion: 0.12
@@ -216,10 +203,6 @@ Nodes (4): apps/web Next.js dashboard README, CI Build web step (Next.js build w
 Cohesion: 0.18
 Nodes (10): dependencies, @eslint/js, typescript-eslint, exports, ./eslint, ./tsconfig, name, private (+2 more)
 
-### Community 17 - "Web Middleware & Proxy"
-Cohesion: 0.47
-Nodes (4): CookieToSet, updateSession(), config, proxy()
-
 ### Community 18 - "Package tsconfig (core)"
 Cohesion: 0.33
 Nodes (5): compilerOptions, outDir, rootDir, extends, include
@@ -232,9 +215,9 @@ Nodes (5): compilerOptions, outDir, rootDir, extends, include
 Cohesion: 0.33
 Nodes (5): compilerOptions, outDir, rootDir, extends, include
 
-### Community 42 - "Design — Base do Projeto: Automação de Guias Fiscais (TOConline)"
-Cohesion: 0.12
-Nodes (16): 10. Fora de escopo nesta base (YAGNI), 11. Riscos e pontos em aberto (herdados do contexto), 1. Objetivo desta base, 2. Arquitetura geral, 3. Stack, 4. Estrutura de pastas, 5.1 Auth / autorização, 5.2 Observabilidade / eventos correlacionados (+8 more)
+### Community 42 - "CLAUDE.md — Automação de Guias Fiscais (TOConline)"
+Cohesion: 0.07
+Nodes (27): CLAUDE.md — Automação de Guias Fiscais (TOConline), Comandos essenciais, Convenções técnicas, Estrutura, graphify, Mapa da documentação, Regras de trabalho, 10. Glossário (+19 more)
 
 ### Community 43 - "Base do Projeto (Automação TOConline) — Implementation Plan"
 Cohesion: 0.14
@@ -252,25 +235,29 @@ Nodes (4): Checklist, Como testar, O que muda, Por quê
 Cohesion: 0.50
 Nodes (3): Deploy on Vercel, Getting Started, Learn More
 
+### Community 80 - "clients (empresas do gabinete)"
+Cohesion: 0.09
+Nodes (24): ProfileRow, SessionUser, CookieToSet, updateSession(), config, proxy(), ChangePasswordGuardInput, shouldRedirectToChangePassword() (+16 more)
+
 ## Knowledge Gaps
-- **324 isolated node(s):** `eslintConfig`, `nextConfig`, `name`, `version`, `private` (+319 more)
+- **321 isolated node(s):** `eslintConfig`, `nextConfig`, `name`, `version`, `private` (+316 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **78 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **65 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `devDependencies` connect `Turborepo & Lint Config` to `Root Package Scripts`?**
-  _High betweenness centrality (0.004) - this node is a cross-community bridge._
+  _High betweenness centrality (0.003) - this node is a cross-community bridge._
 - **What connects `eslintConfig`, `NOTE: This file should not be edited`, `nextConfig` to the rest of the system?**
-  _339 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _333 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Observability Tracer/Logger` be split into smaller, more focused modules?**
-  _Cohesion score 0.06547619047619048 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06394230769230769 - nodes in this community are weakly interconnected._
 - **Should `Architecture & Domain Overview` be split into smaller, more focused modules?**
-  _Cohesion score 0.09090909090909091 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._
 - **Should `DB Schema (Drizzle)` be split into smaller, more focused modules?**
-  _Cohesion score 0.09759759759759759 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08780487804878048 - nodes in this community are weakly interconnected._
 - **Should `Observability Stores & DB Client` be split into smaller, more focused modules?**
-  _Cohesion score 0.06666666666666667 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.11764705882352941 - nodes in this community are weakly interconnected._
 - **Should `Web App Dependencies` be split into smaller, more focused modules?**
-  _Cohesion score 0.07692307692307693 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07142857142857142 - nodes in this community are weakly interconnected._
