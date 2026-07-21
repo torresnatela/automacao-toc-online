@@ -39,22 +39,41 @@ pnpm db:reset
 
 - `jobs` — fila DB-backed. `status`: `pending | running | succeeded | failed | skipped | cancelled`.
 
+### Multi-tenant (equipe = gabinete)
+
+- `teams` — o gabinete de contabilidade (tenant). `status` (`team_status`: `active | inactive`),
+  `nif` do próprio gabinete. Tem vários usuários (`profiles.team_id`) e várias empresas.
+- `profiles.team_id` — FK nullable → `teams` (`on delete set null`). **NULL = admin global**
+  (enxerga todas as equipes). Um usuário pertence a **uma** equipe.
+
 ### Domínio (esqueleto, enums extensíveis)
 
-- `clients` — empresas do gabinete.
-- `obligations` — obrigação recorrente por cliente (`kind`, `frequency`).
-- `obligation_periods` — estado por **cliente × obrigação × período** (unique `(obligation_id, period)`
+- `companies` — **empresa cliente** (contribuinte). Substituiu a antiga `clients`. Chave de
+  Segurança Social `niss` (`bigint`, **UNIQUE global**); `nif` (cruzamento AT/TOConline),
+  `type` (`contributor_type`: `employer | self_employed | voluntary_social_insurance |
+  domestic_service`), `status` (`company_status`: `active | inactive | suspended`), contato e
+  morada (PT). Pertence a uma equipe via `team_id` (`on delete cascade`).
+- `obligations` — obrigação recorrente por empresa (`company_id`, `kind`, `frequency`).
+- `obligation_periods` — estado por **empresa × obrigação × período** (unique `(obligation_id, period)`
   → idempotência). `status`: `pending | in_progress | delivered | paid | skipped_nonexistent | error | not_applicable`.
 - `documents` — as guias (entidade, referência, valor, `valid_until` só p/ SS, `storage_path`).
-- `integration_credentials` — acesso por cliente/provider; `secret_encrypted` (criptografia
-  planejada, ainda não implementada — alvo: Supabase Vault / pgsodium). `status`/`expires_at`
-  modelam "senha da SS expira".
+- `integration_credentials` — acesso por empresa/provider (`company_id`); `secret_encrypted`
+  (criptografia planejada, ainda não implementada — alvo: Supabase Vault / pgsodium).
+  `status`/`expires_at` modelam "senha da SS expira".
 
 ## RLS
 
 Ligado em todas as tabelas de aplicação. Leitura para autenticados; escrita via service role
-(worker) que bypassa RLS. `integration_credentials` só é lida por `admin`. A função
-`public.current_app_role()` resolve o papel do usuário atual.
+(worker/cliente admin do dashboard) que bypassa RLS, com checagem de papel/equipe na app.
+`integration_credentials` só é lida por `admin`. A função `public.current_app_role()` resolve o
+papel do usuário atual.
+
+**Escopo por equipe (multi-tenant):** `public.current_app_team()` resolve a `team_id` do usuário
+atual. `teams` (`read_own_team`) e `companies` (`read_team_companies`) só são lidas quando
+`team_id = current_app_team()` **ou** o papel é `admin` (global). O trigger
+`prevent_privileged_self_update` também impede o usuário de trocar a **própria** `team_id`
+(além de `role`/`must_change_password`). `obligations`/`documents` mantêm leitura ampla para
+autenticados por ora (dívida: escopar por `company_id`).
 
 `profiles` tem leitura restrita: cada usuário lê **o próprio** (`read_own_profile`) e o admin
 lê **todos** (`admin_read_all_profiles`) — email/role não vazam entre usuários comuns.
