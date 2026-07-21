@@ -1,4 +1,9 @@
 import { signIn } from "./actions";
+import { AuthLayout } from "@/components/auth/auth-layout";
+import { FormField } from "@/components/patterns/form-field";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default async function LoginPage({
   searchParams,
@@ -7,18 +12,37 @@ export default async function LoginPage({
 }) {
   const { error } = await searchParams;
   return (
-    <main style={{ maxWidth: 320, margin: "80px auto", padding: "0 16px" }}>
-      <h1>Entrar</h1>
+    <AuthLayout title="Entrar" subtitle="Acede ao painel de automação fiscal.">
       {error ? (
-        <p role="alert" style={{ color: "crimson" }}>
-          Credenciais inválidas.
-        </p>
+        <Alert variant="destructive" className="mb-5">
+          <AlertDescription>Credenciais inválidas.</AlertDescription>
+        </Alert>
       ) : null}
-      <form action={signIn} style={{ display: "grid", gap: 8 }}>
-        <input name="email" type="email" placeholder="email" required aria-label="email" />
-        <input name="password" type="password" placeholder="senha" required aria-label="senha" />
-        <button type="submit">Entrar</button>
+      <form action={signIn} className="grid gap-4">
+        <FormField label="Email" htmlFor="email">
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="voce@exemplo.pt"
+            required
+            aria-label="email"
+          />
+        </FormField>
+        <FormField label="Senha" htmlFor="password">
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="••••••••"
+            required
+            aria-label="senha"
+          />
+        </FormField>
+        <Button type="submit" className="mt-2 w-full">
+          Entrar
+        </Button>
       </form>
-    </main>
+    </AuthLayout>
   );
 }
