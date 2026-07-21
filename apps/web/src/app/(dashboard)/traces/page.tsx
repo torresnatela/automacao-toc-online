@@ -1,7 +1,18 @@
 import { redirect } from "next/navigation";
+import { Activity } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { signOut } from "@/app/login/actions";
+import { PageHeader } from "@/components/patterns/page-header";
+import { EmptyState } from "@/components/patterns/empty-state";
+import { StatusBadge } from "@/components/patterns/status-badge";
+import {
+  DataTable,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/patterns/data-table";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +21,17 @@ interface TraceRow {
   root_trigger: string;
   status: string;
   started_at: string;
+}
+
+const dateFmt = new Intl.DateTimeFormat("pt-PT", { dateStyle: "short", timeStyle: "short" });
+
+function formatDate(value: string): string {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : dateFmt.format(d);
+}
+
+function capitalize(s: string): string {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
 
 export default async function TracesPage() {
@@ -25,41 +47,37 @@ export default async function TracesPage() {
   const traces = (data ?? []) as TraceRow[];
 
   return (
-    <main style={{ maxWidth: 900, margin: "40px auto", padding: "0 16px" }}>
-      <header
-        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}
-      >
-        <h1>Traces</h1>
-        <form action={signOut} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span>
-            {user.email} ({user.role})
-          </span>
-          <button type="submit">Sair</button>
-        </form>
-      </header>
+    <div>
+      <PageHeader title="Traces" description="Execuções recentes e o seu estado." />
 
       {traces.length === 0 ? (
-        <p>Nenhum trace ainda.</p>
+        <EmptyState
+          icon={<Activity />}
+          title="Nenhum trace ainda"
+          description="Assim que um fluxo com efeito colateral rodar, ele aparece aqui."
+        />
       ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th style={{ textAlign: "left" }}>Gatilho</th>
-              <th style={{ textAlign: "left" }}>Status</th>
-              <th style={{ textAlign: "left" }}>Início</th>
-            </tr>
-          </thead>
-          <tbody>
+        <DataTable>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Gatilho</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Início</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {traces.map((t) => (
-              <tr key={t.id}>
-                <td>{t.root_trigger}</td>
-                <td>{t.status}</td>
-                <td>{t.started_at}</td>
-              </tr>
+              <TableRow key={t.id}>
+                <TableCell className="font-medium text-foreground">{t.root_trigger}</TableCell>
+                <TableCell>
+                  <StatusBadge kind="trace" value={t.status} label={capitalize(t.status)} />
+                </TableCell>
+                <TableCell className="text-muted-foreground">{formatDate(t.started_at)}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </DataTable>
       )}
-    </main>
+    </div>
   );
 }
