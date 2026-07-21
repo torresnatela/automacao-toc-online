@@ -30,7 +30,7 @@ CREATE TABLE "companies" (
 	"metadata" jsonb DEFAULT '{}'::jsonb NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "company_niss_uq" UNIQUE("niss")
+	CONSTRAINT "company_niss_team_uq" UNIQUE("team_id","niss")
 );
 --> statement-breakpoint
 -- Ordem ajustada à mão: derruba as FKs para `clients` ANTES de dropar a tabela

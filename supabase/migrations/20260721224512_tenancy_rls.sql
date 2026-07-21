@@ -12,13 +12,58 @@ $$;
 
 -- teams: cada usuário lê a própria equipe; admin lê todas.
 alter table public.teams enable row level security;
+drop policy if exists "read_own_team" on public.teams;
 create policy "read_own_team" on public.teams for select to authenticated
   using (id = public.current_app_team() or public.current_app_role() = 'admin');
 
 -- companies: leitura escopada por equipe; admin vê todas.
 alter table public.companies enable row level security;
+drop policy if exists "read_team_companies" on public.companies;
 create policy "read_team_companies" on public.companies for select to authenticated
   using (team_id = public.current_app_team() or public.current_app_role() = 'admin');
+
+-- Tabelas-filhas do tenant (obligations → obligation_periods → documents): antes
+-- eram `using(true)` (herdadas de 20260707004539_domain_rls.sql), o que vazava os
+-- dados sensíveis (caminhos de PDFs, valores) entre equipes. Reescopa por equipe
+-- subindo a árvore até companies.team_id. Os EXISTS usam current_app_team()/role,
+-- ambos SECURITY DEFINER, sem recursão de policy.
+drop policy if exists "read_obligations" on public.obligations;
+create policy "read_team_obligations" on public.obligations for select to authenticated
+  using (
+    public.current_app_role() = 'admin'
+    or exists (
+      select 1 from public.companies c
+      where c.id = obligations.company_id
+        and c.team_id = public.current_app_team()
+    )
+  );
+
+drop policy if exists "read_periods" on public.obligation_periods;
+create policy "read_team_periods" on public.obligation_periods for select to authenticated
+  using (
+    public.current_app_role() = 'admin'
+    or exists (
+      select 1
+      from public.obligations o
+      join public.companies c on c.id = o.company_id
+      where o.id = obligation_periods.obligation_id
+        and c.team_id = public.current_app_team()
+    )
+  );
+
+drop policy if exists "read_documents" on public.documents;
+create policy "read_team_documents" on public.documents for select to authenticated
+  using (
+    public.current_app_role() = 'admin'
+    or exists (
+      select 1
+      from public.obligation_periods p
+      join public.obligations o on o.id = p.obligation_id
+      join public.companies c on c.id = o.company_id
+      where p.id = documents.obligation_period_id
+        and c.team_id = public.current_app_team()
+    )
+  );
 
 -- Estende o guard de self-update para também impedir o usuário de trocar a
 -- PRÓPRIA equipe (a policy update_own_profile permite editar a própria linha).

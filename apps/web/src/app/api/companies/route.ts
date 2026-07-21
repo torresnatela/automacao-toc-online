@@ -22,6 +22,9 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ ok: false, error: "JSON inválido." }, { status: 400 });
   }
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    return NextResponse.json({ ok: false, error: "Corpo deve ser um objeto." }, { status: 400 });
+  }
   const result = await createCompanyFromInput(companyInputFrom(body as Record<string, unknown>));
   if (!result.ok) {
     return NextResponse.json(

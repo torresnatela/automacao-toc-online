@@ -1,16 +1,16 @@
 # Graph Report - automacao-toc-online  (2026-07-21)
 
 ## Corpus Check
-- 131 files · ~40,372 words
+- 153 files · ~48,731 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 733 nodes · 1127 edges · 106 communities (41 shown, 65 thin omitted)
+- 875 nodes · 1339 edges · 111 communities (46 shown, 65 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 2 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ca77629d`
+- Built from commit: `e015da6c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -90,6 +90,11 @@
 - clients (empresas do gabinete)
 - README.md
 - @toc/worker (scaffold)
+- cn
+- Design System Cliconta + Reformulação do Front-end — Design
+- components.json
+- Cliconta Design System + Reformulação do Front-end — Implementation Plan
+- postcss.config.mjs
 - DbStore (persistência real)
 - Modelo inspirado em distributed tracing
 - Event (nó com parent_event_id → árvore causal)
@@ -110,22 +115,22 @@
 - Automação de Guias Fiscais (TOConline) project overview
 
 ## God Nodes (most connected - your core abstractions)
-1. `getSessionUser()` - 25 edges
-2. `getSupabaseServerClient()` - 18 edges
-3. `compilerOptions` - 16 edges
-4. `compilerOptions` - 14 edges
-5. `ObservabilityStore` - 14 edges
-6. `compilerOptions` - 14 edges
-7. `getSupabaseAdminClient()` - 13 edges
-8. `scripts` - 13 edges
-9. `Base do Projeto (Automação TOConline) — Implementation Plan` - 13 edges
-10. `listTeams()` - 12 edges
+1. `cn()` - 45 edges
+2. `getSessionUser()` - 21 edges
+3. `getSupabaseServerClient()` - 18 edges
+4. `compilerOptions` - 16 edges
+5. `Cliconta Design System + Reformulação do Front-end — Implementation Plan` - 16 edges
+6. `requireRole()` - 15 edges
+7. `compilerOptions` - 14 edges
+8. `ObservabilityStore` - 14 edges
+9. `compilerOptions` - 14 edges
+10. `getSupabaseAdminClient()` - 13 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `ProfileRow` --references--> `AppRole`  [EXTRACTED]
-  apps/web/src/app/(dashboard)/admin/users/page.tsx → packages/core/src/auth/roles.ts
 - `createUser()` --calls--> `registerUser()`  [EXTRACTED]
   apps/web/src/app/(dashboard)/admin/users/actions.ts → packages/core/src/auth/register.ts
+- `ProfileRow` --references--> `AppRole`  [EXTRACTED]
+  apps/web/src/app/(dashboard)/admin/users/page.tsx → packages/core/src/auth/roles.ts
 - `AdminUsersPage()` --calls--> `dbRoleToUiLabel()`  [EXTRACTED]
   apps/web/src/app/(dashboard)/admin/users/page.tsx → packages/core/src/auth/roles.ts
 - `changePassword()` --calls--> `validateNewPassword()`  [EXTRACTED]
@@ -140,31 +145,31 @@
 - **CI verification pipeline (lint, typecheck, unit tests, DB tests, build web)** — github_workflows_ci_verify, github_workflows_ci_skip_db_tests, github_workflows_ci_build_web, github_pull_request_template_pr_checklist [INFERRED 0.75]
 - **Next.js scaffold default assets** — apps_web_public_file_icon, apps_web_public_globe_icon, apps_web_public_next_logo, apps_web_public_vercel_logo, apps_web_public_window_icon [INFERRED 0.85]
 
-## Communities (106 total, 65 thin omitted)
+## Communities (111 total, 65 thin omitted)
 
 ### Community 0 - "Observability Tracer/Logger"
 Cohesion: 0.07
-Nodes (21): Logger, DbStore, InMemoryStore, ObservabilityStore, createEvent(), createTracer(), EventHandle, TraceHandle (+13 more)
+Nodes (20): Logger, DbStore, InMemoryStore, ObservabilityStore, createEvent(), createTracer(), EventHandle, TraceHandle (+12 more)
 
 ### Community 1 - "Architecture & Domain Overview"
 Cohesion: 0.17
 Nodes (11): Acesso a dados, Auth / autorização, Banco de dados, Bootstrap do admin, Domínio (esqueleto, enums extensíveis), Fluxo de migrations, Multi-tenant (equipe = gabinete), Observabilidade (+3 more)
 
 ### Community 2 - "DB Schema (Drizzle)"
-Cohesion: 0.07
-Nodes (38): ActionMeta, getTracer(), observability, createDb(), profiles, companies, documents, integrationCredentials (+30 more)
+Cohesion: 0.06
+Nodes (39): ActionMeta, getTracer(), observability, createDb(), schema, profiles, companies, documents (+31 more)
 
 ### Community 3 - "Observability Stores & DB Client"
-Cohesion: 0.09
-Nodes (26): CompanyRepo, CompanyServiceOutput, createCompany(), nn(), normalizeCompany(), updateCompany(), CompanyField, validateCompanyInput() (+18 more)
+Cohesion: 0.08
+Nodes (28): CompanyRepo, CompanyServiceOutput, createCompany(), nn(), normalizeCompany(), updateCompany(), CompanyField, validateCompanyInput() (+20 more)
 
 ### Community 4 - "Web App Dependencies"
-Cohesion: 0.07
-Nodes (28): dependencies, next, react, react-dom, server-only, @supabase/ssr, @supabase/supabase-js, @toc/core (+20 more)
+Cohesion: 0.05
+Nodes (36): dependencies, class-variance-authority, clsx, lucide-react, next, @radix-ui/react-dialog, @radix-ui/react-dropdown-menu, react (+28 more)
 
 ### Community 5 - "DB Package Manifest"
-Cohesion: 0.15
-Nodes (25): Ctx, DELETE(), GET(), PATCH(), POST(), CompanyFormState, createCompanyAction(), deleteCompanyAction() (+17 more)
+Cohesion: 0.12
+Nodes (29): Ctx, DELETE(), GET(), PATCH(), GET(), POST(), CompanyFormState, createCompanyAction() (+21 more)
 
 ### Community 7 - "Turborepo & Lint Config"
 Cohesion: 0.07
@@ -187,8 +192,8 @@ Cohesion: 0.10
 Nodes (19): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+11 more)
 
 ### Community 12 - "Web Auth & Pages"
-Cohesion: 0.08
-Nodes (54): GET(), Ctx, DELETE(), GET(), PATCH(), GET(), POST(), changePassword() (+46 more)
+Cohesion: 0.07
+Nodes (57): Ctx, DELETE(), GET(), PATCH(), GET(), POST(), changePassword(), ChangePasswordPage() (+49 more)
 
 ### Community 13 - "Shared Base tsconfig"
 Cohesion: 0.11
@@ -222,6 +227,10 @@ Nodes (13): dependsOn, outputs, cache, persistent, $schema, tasks, build, dev (+
 Cohesion: 0.17
 Nodes (10): Banco, Convenções, Código, Fluxo de trabalho (Git), Observabilidade, TDD, API (`@toc/core`), Modelo (+2 more)
 
+### Community 21 - "Web Root Layout"
+Cohesion: 0.40
+Nodes (3): display, metadata, sans
+
 ### Community 42 - "CLAUDE.md — Automação de Guias Fiscais (TOConline)"
 Cohesion: 0.18
 Nodes (10): dependencies, @eslint/js, typescript-eslint, exports, ./eslint, ./tsconfig, name, private (+2 more)
@@ -248,14 +257,30 @@ Nodes (4): Checklist, Como testar, O que muda, Por quê
 
 ### Community 80 - "clients (empresas do gabinete)"
 Cohesion: 0.10
-Nodes (22): CookieToSet, updateSession(), config, proxy(), ChangePasswordGuardInput, shouldRedirectToChangePassword(), generateTempPassword(), AssignRoleResult (+14 more)
+Nodes (23): ProfileRow, CookieToSet, updateSession(), config, proxy(), ChangePasswordGuardInput, shouldRedirectToChangePassword(), generateTempPassword() (+15 more)
 
 ### Community 81 - "README.md"
 Cohesion: 0.50
 Nodes (3): Deploy on Vercel, Getting Started, Learn More
 
+### Community 88 - "cn"
+Cohesion: 0.07
+Nodes (38): Logo(), LogoProps, WaveMotif(), WaveMotifProps, Alert(), AlertDescription(), AlertTitle(), alertVariants (+30 more)
+
+### Community 89 - "Design System Cliconta + Reformulação do Front-end — Design"
+Cohesion: 0.09
+Nodes (21): 10. Acessibilidade, 11. Fora de escopo (YAGNI), 12. Riscos e mitigação, 1. Objetivo, 2. Contexto e restrições, 3. Referência visual (DNA da Cliconta), 4.1 Cores, 4.2 Tipografia (Hanken Grotesk; display peso 500) (+13 more)
+
+### Community 90 - "components.json"
+Cohesion: 0.11
+Nodes (17): aliases, components, hooks, lib, ui, utils, iconLibrary, rsc (+9 more)
+
+### Community 91 - "Cliconta Design System + Reformulação do Front-end — Implementation Plan"
+Cohesion: 0.12
+Nodes (16): Cliconta Design System + Reformulação do Front-end — Implementation Plan, File Structure, Global Constraints, Self-Review (cobertura da spec), Task 10: Equipes (lista + form em Dialog + edição), Task 11: Admin / Usuários, Task 12: Verificação final, Task 1: Fundação — Tailwind v4, tokens, fontes, `cn` (+8 more)
+
 ## Knowledge Gaps
-- **343 isolated node(s):** `eslintConfig`, `nextConfig`, `name`, `version`, `private` (+338 more)
+- **405 isolated node(s):** `$schema`, `style`, `rsc`, `tsx`, `config` (+400 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **65 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -263,16 +288,16 @@ Nodes (3): Deploy on Vercel, Getting Started, Learn More
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `DbStore` connect `Observability Tracer/Logger` to `DB Schema (Drizzle)`?**
-  _High betweenness centrality (0.021) - this node is a cross-community bridge._
+  _High betweenness centrality (0.016) - this node is a cross-community bridge._
 - **Why does `createTracer()` connect `Observability Tracer/Logger` to `DB Schema (Drizzle)`?**
-  _High betweenness centrality (0.011) - this node is a cross-community bridge._
-- **What connects `eslintConfig`, `NOTE: This file should not be edited`, `nextConfig` to the rest of the system?**
-  _355 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _High betweenness centrality (0.008) - this node is a cross-community bridge._
+- **What connects `$schema`, `style`, `rsc` to the rest of the system?**
+  _417 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Observability Tracer/Logger` be split into smaller, more focused modules?**
-  _Cohesion score 0.0670762928827445 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06874669487043893 - nodes in this community are weakly interconnected._
 - **Should `DB Schema (Drizzle)` be split into smaller, more focused modules?**
-  _Cohesion score 0.06516290726817042 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06370543541788427 - nodes in this community are weakly interconnected._
 - **Should `Observability Stores & DB Client` be split into smaller, more focused modules?**
-  _Cohesion score 0.09219858156028368 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08385744234800839 - nodes in this community are weakly interconnected._
 - **Should `Web App Dependencies` be split into smaller, more focused modules?**
-  _Cohesion score 0.06896551724137931 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05405405405405406 - nodes in this community are weakly interconnected._

@@ -4,7 +4,8 @@ import { validateTeamInput, type TeamFieldErrors } from "./validate";
 /** Porta de persistência da equipe. Implementação real na app web; testes usam fakes. */
 export interface TeamRepo {
   insert(record: TeamRecord): Promise<{ id: string }>;
-  update(id: string, record: TeamRecord): Promise<void>;
+  // `found: false` quando nenhuma linha casou o id (equipe inexistente).
+  update(id: string, record: TeamRecord): Promise<{ found: boolean }>;
 }
 
 export type TeamServiceOutput =
@@ -40,6 +41,7 @@ export async function updateTeam(
   const fieldErrors = validateTeamInput(input);
   if (fieldErrors) return { ok: false, fieldErrors };
 
-  await repo.update(id, normalizeTeam(input));
+  const { found } = await repo.update(id, normalizeTeam(input));
+  if (!found) return { ok: false, error: "Equipe não encontrada." };
   return { ok: true, id };
 }

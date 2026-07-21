@@ -14,7 +14,7 @@ function makeRepo(overrides: Partial<CompanyRepo> = {}) {
     findByNiss: [] as number[],
   };
   const repo: CompanyRepo = {
-    async findByNiss(niss) {
+    async findByNiss(_teamId, niss) {
       calls.findByNiss.push(niss);
       return null;
     },
@@ -24,6 +24,7 @@ function makeRepo(overrides: Partial<CompanyRepo> = {}) {
     },
     async update(id, record) {
       calls.update.push({ id, record });
+      return { found: true };
     },
     ...overrides,
   };
@@ -44,7 +45,7 @@ describe("createCompany", () => {
   it("normaliza e insere, retornando o id", async () => {
     const { repo, calls } = makeRepo();
 
-    const out = await createCompany(repo, input({ country: "pt", nif: " 501234567 " }));
+    const out = await createCompany(repo, input({ country: "pt", nif: " 500000000 " }));
 
     expect(out).toEqual({ ok: true, id: "company-1" });
     expect(calls.insert).toHaveLength(1);
@@ -52,7 +53,7 @@ describe("createCompany", () => {
     expect(rec.niss).toBe(12345678901); // string → número
     expect(rec.status).toBe("active"); // default
     expect(rec.country).toBe("PT"); // uppercased + default
-    expect(rec.nif).toBe("501234567"); // trim
+    expect(rec.nif).toBe("500000000"); // trim
   });
 
   it("rejeita entrada inválida sem tocar no repo", async () => {
@@ -117,5 +118,18 @@ describe("updateCompany", () => {
     expect(out.ok).toBe(false);
     if (!out.ok) expect(out.fieldErrors?.niss).toBeTruthy();
     expect(calls.update).toHaveLength(0);
+  });
+
+  it("retorna erro quando a empresa não existe (update casou 0 linhas)", async () => {
+    const { repo } = makeRepo({
+      async update() {
+        return { found: false };
+      },
+    });
+
+    const out = await updateCompany(repo, "inexistente", input());
+
+    expect(out.ok).toBe(false);
+    if (!out.ok) expect(out.error).toBeTruthy();
   });
 });

@@ -6,6 +6,7 @@ import {
   updateCompanyFromInput,
   deleteCompany,
   companyInputFrom,
+  companyPatchFrom,
 } from "@/lib/companies/service";
 import type { CompanyFieldErrors } from "@toc/core/domain";
 
@@ -32,15 +33,19 @@ export async function updateCompanyAction(
   _prev: CompanyFormState,
   formData: FormData,
 ): Promise<CompanyFormState> {
-  const input = companyInputFrom(Object.fromEntries(formData));
-  const result = await updateCompanyFromInput(id, input);
+  const patch = companyPatchFrom(Object.fromEntries(formData));
+  const result = await updateCompanyFromInput(id, patch);
   if (!result.ok) return { error: result.error, fieldErrors: result.fieldErrors };
   revalidatePath("/empresas");
   revalidatePath(`/empresas/${id}`);
   return { ok: true };
 }
 
-export async function deleteCompanyAction(id: string): Promise<void> {
-  await deleteCompany(id);
+// Devolve o resultado (não engole): um delete bloqueado/falho não deve aparecer
+// como sucesso. Só revalida quando de fato apagou.
+export async function deleteCompanyAction(id: string): Promise<CompanyFormState> {
+  const result = await deleteCompany(id);
+  if (!result.ok) return { error: result.error };
   revalidatePath("/empresas");
+  return { ok: true };
 }

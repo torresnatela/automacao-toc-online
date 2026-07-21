@@ -5,6 +5,7 @@ import {
   type ContributorType,
   type CompanyStatus,
 } from "../types";
+import { isValidNif, isValidNiss } from "../validate-pt";
 
 export type CompanyField =
   | "teamId"
@@ -19,8 +20,6 @@ export type CompanyField =
 
 export type CompanyFieldErrors = Partial<Record<CompanyField, string>>;
 
-const NISS_RE = /^\d{11}$/;
-const NIF_RE = /^\d{9}$/;
 const POSTAL_RE = /^\d{4}-\d{3}$/;
 const COUNTRY_RE = /^[A-Za-z]{2}$/;
 // Validação de email deliberadamente simples (o Auth/entidades validam de fato).
@@ -36,10 +35,10 @@ export function validateCompanyInput(input: CompanyInput): CompanyFieldErrors | 
   if (!input.teamId?.trim()) errors.teamId = "Equipe é obrigatória.";
 
   const niss = String(input.niss ?? "").trim();
-  if (!NISS_RE.test(niss)) errors.niss = "NISS deve ter 11 dígitos.";
+  if (!isValidNiss(niss)) errors.niss = "NISS deve ter 11 dígitos (sem zero à esquerda).";
 
   const nif = (input.nif ?? "").trim();
-  if (nif && !NIF_RE.test(nif)) errors.nif = "NIF deve ter 9 dígitos.";
+  if (nif && !isValidNif(nif)) errors.nif = "NIF inválido (9 dígitos + dígito de controlo).";
 
   if (!input.name?.trim()) errors.name = "Nome é obrigatório.";
 

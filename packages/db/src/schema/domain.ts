@@ -50,7 +50,9 @@ export const companies = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    unique("company_niss_uq").on(t.niss), // impede empresa duplicada (global)
+    // NISS único POR EQUIPE (não global): duas equipes podem ter o mesmo contribuinte,
+    // e a colisão não vira um oráculo de existência entre tenants.
+    unique("company_niss_team_uq").on(t.teamId, t.niss),
     index("company_niss_idx").on(t.niss),
     index("company_status_idx").on(t.status),
     index("company_team_idx").on(t.teamId),

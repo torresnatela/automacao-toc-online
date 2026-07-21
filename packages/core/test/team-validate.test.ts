@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { validateTeamInput, type TeamInput } from "../src/domain/index";
 
 function validInput(overrides: Partial<TeamInput> = {}): TeamInput {
-  return { name: "Gabinete Silva & Costa", nif: "501234567", status: "active", ...overrides };
+  return { name: "Gabinete Silva & Costa", nif: "500000000", status: "active", ...overrides };
 }
 
 describe("validateTeamInput", () => {
@@ -14,9 +14,10 @@ describe("validateTeamInput", () => {
     expect(validateTeamInput(validInput({ name: "  " }))?.name).toBeTruthy();
   });
 
-  it("aceita nif ausente mas rejeita nif com tamanho diferente de 9 dígitos", () => {
+  it("aceita nif ausente mas valida estrutura + dígito de controlo quando informado", () => {
     expect(validateTeamInput(validInput({ nif: null }))).toBeNull();
-    expect(validateTeamInput(validInput({ nif: "12" }))?.nif).toBeTruthy();
+    expect(validateTeamInput(validInput({ nif: "12" }))?.nif).toBeTruthy(); // curto
+    expect(validateTeamInput(validInput({ nif: "501234567" }))?.nif).toBeTruthy(); // controlo errado
   });
 
   it("rejeita status fora do enum", () => {

@@ -41,8 +41,9 @@ export type CompanyMutationResult =
 // Constrói um CompanyInput a partir de um objeto cru (JSON da API ou FormData da
 // action, convertida com Object.fromEntries). A validação/normalização real fica
 // no @toc/core; aqui só coletamos os campos.
+const str = (v: unknown) => (v == null || v === "" ? null : String(v));
+
 export function companyInputFrom(src: Record<string, unknown>): CompanyInput {
-  const str = (v: unknown) => (v == null || v === "" ? null : String(v));
   return {
     teamId: String(src.teamId ?? ""),
     niss: String(src.niss ?? ""),
@@ -58,6 +59,47 @@ export function companyInputFrom(src: Record<string, unknown>): CompanyInput {
     city: str(src.city),
     country: str(src.country),
     notes: str(src.notes),
+  };
+}
+
+// PATCH parcial: só os campos PRESENTES no corpo entram no patch. Ausente = mantém
+// o valor atual (o merge com a linha existente acontece em updateCompanyFromInput).
+export function companyPatchFrom(src: Record<string, unknown>): Partial<CompanyInput> {
+  const patch: Partial<CompanyInput> = {};
+  if ("teamId" in src) patch.teamId = String(src.teamId ?? "");
+  if ("niss" in src) patch.niss = String(src.niss ?? "");
+  if ("nif" in src) patch.nif = str(src.nif);
+  if ("name" in src) patch.name = String(src.name ?? "");
+  if ("type" in src) patch.type = src.type as CompanyInput["type"];
+  if ("status" in src) patch.status = (src.status as CompanyInput["status"]) || undefined;
+  if ("email" in src) patch.email = str(src.email);
+  if ("phone" in src) patch.phone = str(src.phone);
+  if ("addressLine1" in src) patch.addressLine1 = str(src.addressLine1);
+  if ("addressLine2" in src) patch.addressLine2 = str(src.addressLine2);
+  if ("postalCode" in src) patch.postalCode = str(src.postalCode);
+  if ("city" in src) patch.city = str(src.city);
+  if ("country" in src) patch.country = str(src.country);
+  if ("notes" in src) patch.notes = str(src.notes);
+  return patch;
+}
+
+// Linha persistida → CompanyInput (base do merge de PATCH parcial).
+function companyRowToInput(row: CompanyRow): CompanyInput {
+  return {
+    teamId: row.team_id,
+    niss: String(row.niss),
+    nif: row.nif,
+    name: row.name,
+    type: row.type as CompanyInput["type"],
+    status: row.status as CompanyInput["status"],
+    email: row.email,
+    phone: row.phone,
+    addressLine1: row.address_line1,
+    addressLine2: row.address_line2,
+    postalCode: row.postal_code,
+    city: row.city,
+    country: row.country,
+    notes: row.notes,
   };
 }
 
@@ -98,10 +140,24 @@ function toRow(r: CompanyRecord) {
   };
 }
 
+// Preserva o code do erro pg (ex.: "23505" = unique_violation) para o chamador
+// distinguir colisão de NISS de um erro genérico, sem vazar a mensagem crua.
+function repoError(error: { message: string; code?: string }): Error {
+  const e = new Error(error.message);
+  (e as { code?: string }).code = error.code;
+  return e;
+}
+
 function companyRepo(admin: Admin): CompanyRepo {
   return {
-    async findByNiss(niss) {
-      const { data } = await admin.from("companies").select("id").eq("niss", niss).maybeSingle();
+    // Unicidade de NISS é POR EQUIPE: escopa a busca ao team_id (sem oráculo global).
+    async findByNiss(teamId, niss) {
+      const { data } = await admin
+        .from("companies")
+        .select("id")
+        .eq("team_id", teamId)
+        .eq("niss", niss)
+        .maybeSingle();
       return data ? { id: (data as { id: string }).id } : null;
     },
     async insert(record) {
@@ -110,17 +166,31 @@ function companyRepo(admin: Admin): CompanyRepo {
         .insert(toRow(record))
         .select("id")
         .single();
-      if (error) throw new Error(error.message);
+      if (error) throw repoError(error);
       return { id: (data as { id: string }).id };
     },
     async update(id, record) {
-      const { error } = await admin
+      const { data, error } = await admin
         .from("companies")
         .update({ ...toRow(record), updated_at: new Date().toISOString() })
-        .eq("id", id);
-      if (error) throw new Error(error.message);
+        .eq("id", id)
+        .select("id");
+      if (error) throw repoError(error);
+      return { found: (data?.length ?? 0) > 0 };
     },
   };
+}
+
+const NISS_TAKEN = "Já existe uma empresa com este NISS.";
+
+// Traduz uma exceção de escrita num resultado da API sem vazar detalhes internos.
+// Colisão de NISS (unique_violation) vira erro de campo 400; o resto vira 500 genérico.
+function mutationError(e: unknown): CompanyMutationResult {
+  const code = (e as { code?: string })?.code;
+  if (code === "23505") {
+    return { ok: false, status: 400, error: NISS_TAKEN, fieldErrors: { niss: NISS_TAKEN } };
+  }
+  return { ok: false, status: 500, error: "Erro interno." };
 }
 
 // Requer papel >= operator. Distingue 401 (sem sessão) de 403 (papel insuficiente).
@@ -158,13 +228,14 @@ export async function createCompanyFromInput(input: CompanyInput): Promise<Compa
   }
 
   const admin = getSupabaseAdminClient();
-  const act = await startAction({
-    triggerSource: "companies.create",
-    type: "company.create",
-    createdBy: actor.id,
-    payload: { niss: String(input.niss) },
-  });
+  let act: Awaited<ReturnType<typeof startAction>> | undefined;
   try {
+    act = await startAction({
+      triggerSource: "companies.create",
+      type: "company.create",
+      createdBy: actor.id,
+      payload: { niss: String(input.niss) },
+    });
     const result = await createCompany(companyRepo(admin), { ...input, teamId });
     if (!result.ok) {
       await act.failure("validação/unicidade");
@@ -179,14 +250,14 @@ export async function createCompanyFromInput(input: CompanyInput): Promise<Compa
     return { ok: true, id: result.id };
   } catch (e) {
     const message = e instanceof Error ? e.message : "erro desconhecido";
-    await act.failure(message);
-    return { ok: false, status: 500, error: message };
+    await act?.failure(message);
+    return mutationError(e);
   }
 }
 
 export async function updateCompanyFromInput(
   id: string,
-  input: CompanyInput,
+  patch: Partial<CompanyInput>,
 ): Promise<CompanyMutationResult> {
   const auth = await requireWriter();
   if (!auth.ok) return auth;
@@ -195,36 +266,30 @@ export async function updateCompanyFromInput(
   const admin = getSupabaseAdminClient();
   const { data: existing } = await admin
     .from("companies")
-    .select("id, team_id")
+    .select(COLUMNS)
     .eq("id", id)
     .maybeSingle();
-  if (!existing) return { ok: false, status: 404, error: "Empresa não encontrada." };
-  const current = existing as { id: string; team_id: string };
+  // 404 (e NÃO 403) também para empresa de outra equipe: não revela existência
+  // de registros de outros tenants a um operador que adivinhe ids.
+  const notFound: CompanyMutationResult = { ok: false, status: 404, error: "Empresa não encontrada." };
+  if (!existing) return notFound;
+  const current = existing as CompanyRow;
+  if (actor.role !== "admin" && current.team_id !== actor.teamId) return notFound;
 
-  let teamId = input.teamId;
-  if (actor.role !== "admin") {
-    if (current.team_id !== actor.teamId) {
-      return { ok: false, status: 403, error: "Empresa pertence a outra equipe." };
-    }
-    teamId = actor.teamId!; // operador não move a empresa de equipe
-  }
-  if (!teamId) {
-    return {
-      ok: false,
-      status: 400,
-      error: "Equipe é obrigatória.",
-      fieldErrors: { teamId: "Equipe é obrigatória." },
-    };
-  }
+  // Merge parcial: parte da linha atual e sobrepõe só os campos enviados.
+  const merged: CompanyInput = { ...companyRowToInput(current), ...patch };
+  // Operador nunca move a empresa de equipe; admin pode (via patch.teamId).
+  if (actor.role !== "admin") merged.teamId = actor.teamId!;
 
-  const act = await startAction({
-    triggerSource: "companies.update",
-    type: "company.update",
-    createdBy: actor.id,
-    payload: { id },
-  });
+  let act: Awaited<ReturnType<typeof startAction>> | undefined;
   try {
-    const result = await updateCompany(companyRepo(admin), id, { ...input, teamId });
+    act = await startAction({
+      triggerSource: "companies.update",
+      type: "company.update",
+      createdBy: actor.id,
+      payload: { id },
+    });
+    const result = await updateCompany(companyRepo(admin), id, merged);
     if (!result.ok) {
       await act.failure("validação/unicidade");
       return {
@@ -238,8 +303,8 @@ export async function updateCompanyFromInput(
     return { ok: true, id: result.id };
   } catch (e) {
     const message = e instanceof Error ? e.message : "erro desconhecido";
-    await act.failure(message);
-    return { ok: false, status: 500, error: message };
+    await act?.failure(message);
+    return mutationError(e);
   }
 }
 
@@ -254,26 +319,27 @@ export async function deleteCompany(id: string): Promise<CompanyMutationResult> 
     .select("id, team_id")
     .eq("id", id)
     .maybeSingle();
-  if (!existing) return { ok: false, status: 404, error: "Empresa não encontrada." };
+  // 404 (não 403) também para empresa de outra equipe — ver updateCompanyFromInput.
+  const notFound: CompanyMutationResult = { ok: false, status: 404, error: "Empresa não encontrada." };
+  if (!existing) return notFound;
   const current = existing as { id: string; team_id: string };
-  if (actor.role !== "admin" && current.team_id !== actor.teamId) {
-    return { ok: false, status: 403, error: "Empresa pertence a outra equipe." };
-  }
+  if (actor.role !== "admin" && current.team_id !== actor.teamId) return notFound;
 
-  const act = await startAction({
-    triggerSource: "companies.delete",
-    type: "company.delete",
-    createdBy: actor.id,
-    payload: { id },
-  });
+  let act: Awaited<ReturnType<typeof startAction>> | undefined;
   try {
+    act = await startAction({
+      triggerSource: "companies.delete",
+      type: "company.delete",
+      createdBy: actor.id,
+      payload: { id },
+    });
     const { error } = await admin.from("companies").delete().eq("id", id);
-    if (error) throw new Error(error.message);
+    if (error) throw repoError(error);
     await act.success();
     return { ok: true, id };
   } catch (e) {
     const message = e instanceof Error ? e.message : "erro desconhecido";
-    await act.failure(message);
-    return { ok: false, status: 500, error: message };
+    await act?.failure(message);
+    return mutationError(e);
   }
 }

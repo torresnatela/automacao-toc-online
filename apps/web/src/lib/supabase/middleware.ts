@@ -33,7 +33,7 @@ export async function updateSession(request: NextRequest) {
   // Rotas de API são uma superfície REST: deixamos o route handler responder com
   // JSON (401/403) em vez de redirecionar para a página de login (HTML). O cookie
   // de sessão ainda é renovado via `response`.
-  const isApi = path.startsWith("/api");
+  const isApi = path === "/api" || path.startsWith("/api/");
 
   if (!user) {
     if (isApi) return response;

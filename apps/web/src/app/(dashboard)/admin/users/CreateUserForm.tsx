@@ -31,6 +31,7 @@ export function CreateUserForm({ teams }: { teams: { id: string; name: string }[
           <span>Papel</span>
           <select name="role" defaultValue="member">
             <option value="member">Member</option>
+            <option value="operator">Operator</option>
             <option value="admin">Admin</option>
           </select>
         </label>

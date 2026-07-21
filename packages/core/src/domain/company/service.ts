@@ -6,9 +6,11 @@ import { validateCompanyInput, type CompanyFieldErrors } from "./validate";
  * cliente Supabase; os testes usam fakes em memória.
  */
 export interface CompanyRepo {
-  findByNiss(niss: number): Promise<{ id: string } | null>;
+  // NISS é único POR EQUIPE (não global): a checagem de duplicidade é escopada.
+  findByNiss(teamId: string, niss: number): Promise<{ id: string } | null>;
   insert(record: CompanyRecord): Promise<{ id: string }>;
-  update(id: string, record: CompanyRecord): Promise<void>;
+  // `found: false` quando nenhuma linha casou o id (empresa inexistente).
+  update(id: string, record: CompanyRecord): Promise<{ found: boolean }>;
 }
 
 export type CompanyServiceOutput =
@@ -50,7 +52,7 @@ export async function createCompany(
 
   const record = normalizeCompany(input);
 
-  const existing = await repo.findByNiss(record.niss);
+  const existing = await repo.findByNiss(record.teamId, record.niss);
   if (existing) {
     return { ok: false, fieldErrors: { niss: "Já existe uma empresa com este NISS." } };
   }
@@ -70,11 +72,12 @@ export async function updateCompany(
 
   const record = normalizeCompany(input);
 
-  const existing = await repo.findByNiss(record.niss);
+  const existing = await repo.findByNiss(record.teamId, record.niss);
   if (existing && existing.id !== id) {
     return { ok: false, fieldErrors: { niss: "Já existe uma empresa com este NISS." } };
   }
 
-  await repo.update(id, record);
+  const { found } = await repo.update(id, record);
+  if (!found) return { ok: false, error: "Empresa não encontrada." };
   return { ok: true, id };
 }

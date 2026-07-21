@@ -20,6 +20,10 @@ describe("papéis (roles)", () => {
       expect(uiRoleToDbRole("member")).toBe("viewer");
     });
 
+    it("operator vira operator", () => {
+      expect(uiRoleToDbRole("operator")).toBe("operator");
+    });
+
     it("admin vira admin", () => {
       expect(uiRoleToDbRole("admin")).toBe("admin");
     });

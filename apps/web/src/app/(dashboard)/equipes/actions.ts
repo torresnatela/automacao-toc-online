@@ -6,6 +6,7 @@ import {
   updateTeamFromInput,
   deleteTeam,
   teamInputFrom,
+  teamPatchFrom,
 } from "@/lib/teams/service";
 import type { TeamFieldErrors } from "@toc/core/domain";
 
@@ -30,14 +31,17 @@ export async function updateTeamAction(
   _prev: TeamFormState,
   formData: FormData,
 ): Promise<TeamFormState> {
-  const result = await updateTeamFromInput(id, teamInputFrom(Object.fromEntries(formData)));
+  const result = await updateTeamFromInput(id, teamPatchFrom(Object.fromEntries(formData)));
   if (!result.ok) return { error: result.error, fieldErrors: result.fieldErrors };
   revalidatePath("/equipes");
   revalidatePath(`/equipes/${id}`);
   return { ok: true };
 }
 
-export async function deleteTeamAction(id: string): Promise<void> {
-  await deleteTeam(id);
+// Devolve o resultado (não engole): só revalida quando de fato apagou.
+export async function deleteTeamAction(id: string): Promise<TeamFormState> {
+  const result = await deleteTeam(id);
+  if (!result.ok) return { error: result.error };
   revalidatePath("/equipes");
+  return { ok: true };
 }

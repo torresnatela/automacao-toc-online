@@ -25,13 +25,27 @@ export type TeamMutationResult =
   | { ok: true; id: string }
   | { ok: false; status: number; error: string; fieldErrors?: TeamFieldErrors };
 
+const str = (v: unknown) => (v == null || v === "" ? null : String(v));
+
 export function teamInputFrom(src: Record<string, unknown>): TeamInput {
-  const str = (v: unknown) => (v == null || v === "" ? null : String(v));
   return {
     name: String(src.name ?? ""),
     nif: str(src.nif),
     status: (src.status as TeamInput["status"]) || undefined,
   };
+}
+
+// PATCH parcial: só os campos presentes no corpo entram no patch (ausente = mantém).
+export function teamPatchFrom(src: Record<string, unknown>): Partial<TeamInput> {
+  const patch: Partial<TeamInput> = {};
+  if ("name" in src) patch.name = String(src.name ?? "");
+  if ("nif" in src) patch.nif = str(src.nif);
+  if ("status" in src) patch.status = (src.status as TeamInput["status"]) || undefined;
+  return patch;
+}
+
+function teamRowToInput(row: TeamRow): TeamInput {
+  return { name: row.name, nif: row.nif, status: row.status as TeamInput["status"] };
 }
 
 // --- Leitura (RLS: usuário vê a própria equipe; admin vê todas) ---
@@ -64,13 +78,20 @@ function teamRepo(admin: Admin): TeamRepo {
       return { id: (data as { id: string }).id };
     },
     async update(id, record) {
-      const { error } = await admin
+      const { data, error } = await admin
         .from("teams")
         .update({ ...toRow(record), updated_at: new Date().toISOString() })
-        .eq("id", id);
+        .eq("id", id)
+        .select("id");
       if (error) throw new Error(error.message);
+      return { found: (data?.length ?? 0) > 0 };
     },
   };
+}
+
+// Não vaza detalhes internos: qualquer exceção de escrita vira 500 genérico.
+function mutationError(): TeamMutationResult {
+  return { ok: false, status: 500, error: "Erro interno." };
 }
 
 async function requireAdmin(): Promise<
@@ -90,13 +111,14 @@ export async function createTeamFromInput(input: TeamInput): Promise<TeamMutatio
   const { actor } = auth;
 
   const admin = getSupabaseAdminClient();
-  const act = await startAction({
-    triggerSource: "teams.create",
-    type: "team.create",
-    createdBy: actor.id,
-    payload: { name: input.name },
-  });
+  let act: Awaited<ReturnType<typeof startAction>> | undefined;
   try {
+    act = await startAction({
+      triggerSource: "teams.create",
+      type: "team.create",
+      createdBy: actor.id,
+      payload: { name: input.name },
+    });
     const result = await createTeam(teamRepo(admin), input);
     if (!result.ok) {
       await act.failure("validação");
@@ -111,31 +133,35 @@ export async function createTeamFromInput(input: TeamInput): Promise<TeamMutatio
     return { ok: true, id: result.id };
   } catch (e) {
     const message = e instanceof Error ? e.message : "erro desconhecido";
-    await act.failure(message);
-    return { ok: false, status: 500, error: message };
+    await act?.failure(message);
+    return mutationError();
   }
 }
 
 export async function updateTeamFromInput(
   id: string,
-  input: TeamInput,
+  patch: Partial<TeamInput>,
 ): Promise<TeamMutationResult> {
   const auth = await requireAdmin();
   if (!auth.ok) return auth;
   const { actor } = auth;
 
   const admin = getSupabaseAdminClient();
-  const { data: existing } = await admin.from("teams").select("id").eq("id", id).maybeSingle();
+  const { data: existing } = await admin.from("teams").select(COLUMNS).eq("id", id).maybeSingle();
   if (!existing) return { ok: false, status: 404, error: "Equipe não encontrada." };
 
-  const act = await startAction({
-    triggerSource: "teams.update",
-    type: "team.update",
-    createdBy: actor.id,
-    payload: { id },
-  });
+  // Merge parcial: parte da linha atual e sobrepõe só os campos enviados.
+  const merged: TeamInput = { ...teamRowToInput(existing as TeamRow), ...patch };
+
+  let act: Awaited<ReturnType<typeof startAction>> | undefined;
   try {
-    const result = await updateTeam(teamRepo(admin), id, input);
+    act = await startAction({
+      triggerSource: "teams.update",
+      type: "team.update",
+      createdBy: actor.id,
+      payload: { id },
+    });
+    const result = await updateTeam(teamRepo(admin), id, merged);
     if (!result.ok) {
       await act.failure("validação");
       return {
@@ -149,8 +175,8 @@ export async function updateTeamFromInput(
     return { ok: true, id: result.id };
   } catch (e) {
     const message = e instanceof Error ? e.message : "erro desconhecido";
-    await act.failure(message);
-    return { ok: false, status: 500, error: message };
+    await act?.failure(message);
+    return mutationError();
   }
 }
 
@@ -163,20 +189,21 @@ export async function deleteTeam(id: string): Promise<TeamMutationResult> {
   const { data: existing } = await admin.from("teams").select("id").eq("id", id).maybeSingle();
   if (!existing) return { ok: false, status: 404, error: "Equipe não encontrada." };
 
-  const act = await startAction({
-    triggerSource: "teams.delete",
-    type: "team.delete",
-    createdBy: actor.id,
-    payload: { id },
-  });
+  let act: Awaited<ReturnType<typeof startAction>> | undefined;
   try {
+    act = await startAction({
+      triggerSource: "teams.delete",
+      type: "team.delete",
+      createdBy: actor.id,
+      payload: { id },
+    });
     const { error } = await admin.from("teams").delete().eq("id", id);
     if (error) throw new Error(error.message);
     await act.success();
     return { ok: true, id };
   } catch (e) {
     const message = e instanceof Error ? e.message : "erro desconhecido";
-    await act.failure(message);
-    return { ok: false, status: 500, error: message };
+    await act?.failure(message);
+    return mutationError();
   }
 }

@@ -828,10 +828,11 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "company_niss_uq": {
-          "name": "company_niss_uq",
+        "company_niss_team_uq": {
+          "name": "company_niss_team_uq",
           "nullsNotDistinct": false,
           "columns": [
+            "team_id",
             "niss"
           ]
         }

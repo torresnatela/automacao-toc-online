@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getSessionUser } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { listCompanies } from "@/lib/companies/service";
 import { listTeams } from "@/lib/teams/service";
 import { signOut } from "@/app/login/actions";
@@ -11,8 +11,10 @@ import { createCompanyAction } from "./actions";
 export const dynamic = "force-dynamic";
 
 export default async function EmpresasPage() {
-  const user = await getSessionUser();
-  if (!user) redirect("/login");
+  // Gerir empresas exige operator+ (o mesmo papel que o service exige na escrita);
+  // viewers não veem um formulário que só levaria 403.
+  const user = await requireRole("operator");
+  if (!user) redirect("/traces");
 
   const companies = await listCompanies();
   // Admin escolhe a equipe no cadastro; operador usa a própria (fixada no service).

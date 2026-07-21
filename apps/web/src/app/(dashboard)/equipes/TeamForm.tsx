@@ -19,6 +19,8 @@ export interface TeamFormProps {
 export function TeamForm({ action, initial, title, submitLabel }: TeamFormProps) {
   const [state, formAction, pending] = useActionState<TeamFormState, FormData>(action, {});
   const fe = state.fieldErrors ?? {};
+  const aria = (key: keyof typeof fe) =>
+    fe[key] ? { "aria-invalid": true as const, "aria-describedby": `team-err-${key}` } : {};
 
   return (
     <section style={{ border: "1px solid #ccc", borderRadius: 8, padding: 16, marginBottom: 24 }}>
@@ -26,14 +28,22 @@ export function TeamForm({ action, initial, title, submitLabel }: TeamFormProps)
       <form action={formAction} style={{ display: "grid", gap: 12, maxWidth: 420 }}>
         <label style={labelStyle}>
           <span>Nome do gabinete</span>
-          <input name="name" defaultValue={initial?.name ?? ""} required />
-          {fe.name && <span style={errStyle}>{fe.name}</span>}
+          <input name="name" defaultValue={initial?.name ?? ""} required {...aria("name")} />
+          {fe.name && (
+            <span id="team-err-name" style={errStyle}>
+              {fe.name}
+            </span>
+          )}
         </label>
 
         <label style={labelStyle}>
           <span>NIF</span>
-          <input name="nif" defaultValue={initial?.nif ?? ""} />
-          {fe.nif && <span style={errStyle}>{fe.nif}</span>}
+          <input name="nif" defaultValue={initial?.nif ?? ""} {...aria("nif")} />
+          {fe.nif && (
+            <span id="team-err-nif" style={errStyle}>
+              {fe.nif}
+            </span>
+          )}
         </label>
 
         <label style={labelStyle}>

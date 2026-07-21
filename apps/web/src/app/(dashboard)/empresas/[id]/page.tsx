@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getSessionUser } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { getCompany } from "@/lib/companies/service";
 import { listTeams } from "@/lib/teams/service";
 import { signOut } from "@/app/login/actions";
@@ -10,8 +10,8 @@ import { updateCompanyAction } from "../actions";
 export const dynamic = "force-dynamic";
 
 export default async function EditCompanyPage({ params }: { params: Promise<{ id: string }> }) {
-  const user = await getSessionUser();
-  if (!user) redirect("/login");
+  const user = await requireRole("operator"); // gerir empresas exige operator+
+  if (!user) redirect("/traces");
 
   const { id } = await params;
   const company = await getCompany(id);

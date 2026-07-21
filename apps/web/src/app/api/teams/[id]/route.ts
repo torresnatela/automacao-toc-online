@@ -4,7 +4,7 @@ import {
   getTeam,
   updateTeamFromInput,
   deleteTeam,
-  teamInputFrom,
+  teamPatchFrom,
 } from "@/lib/teams/service";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -28,7 +28,10 @@ export async function PATCH(req: Request, ctx: Ctx) {
   } catch {
     return NextResponse.json({ ok: false, error: "JSON inválido." }, { status: 400 });
   }
-  const result = await updateTeamFromInput(id, teamInputFrom(body as Record<string, unknown>));
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    return NextResponse.json({ ok: false, error: "Corpo deve ser um objeto." }, { status: 400 });
+  }
+  const result = await updateTeamFromInput(id, teamPatchFrom(body as Record<string, unknown>));
   if (!result.ok) {
     return NextResponse.json(
       { ok: false, error: result.error, fieldErrors: result.fieldErrors },
