@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { signOut } from "@/app/login/actions";
 import { dbRoleToUiLabel, type AppRole } from "@toc/core/auth";
 import { CreateUserForm } from "./CreateUserForm";
 
@@ -17,7 +16,7 @@ interface ProfileRow {
 
 export default async function AdminUsersPage() {
   const admin = await requireRole("admin");
-  if (!admin) redirect("/traces");
+  if (!admin) redirect("/");
 
   const supabase = await getSupabaseServerClient();
   const { data } = await supabase
@@ -27,18 +26,8 @@ export default async function AdminUsersPage() {
   const users = (data ?? []) as ProfileRow[];
 
   return (
-    <main style={{ maxWidth: 900, margin: "40px auto", padding: "0 16px" }}>
-      <header
-        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}
-      >
-        <h1>Usuários</h1>
-        <form action={signOut} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span>
-            {admin.email} ({admin.role})
-          </span>
-          <button type="submit">Sair</button>
-        </form>
-      </header>
+    <section>
+      <h1>Usuários</h1>
 
       <CreateUserForm />
 
@@ -62,6 +51,6 @@ export default async function AdminUsersPage() {
           ))}
         </tbody>
       </table>
-    </main>
+    </section>
   );
 }
