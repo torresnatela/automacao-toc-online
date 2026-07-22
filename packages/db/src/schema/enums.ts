@@ -21,7 +21,16 @@ export const jobStatus = pgEnum("job_status", [
 ]);
 
 // --- Domínio (esqueleto; enums extensíveis por feature) ---
-export const clientStatus = pgEnum("client_status", ["active", "inactive"]);
+// Multi-tenant: equipe (gabinete de contabilidade) + empresas clientes abaixo dela.
+export const teamStatus = pgEnum("team_status", ["active", "inactive"]);
+// Tipo de contribuinte (define escopos de emissão adiante). Ordem = CONTRIBUTOR_TYPES em @toc/core.
+export const contributorType = pgEnum("contributor_type", [
+  "employer",
+  "self_employed",
+  "voluntary_social_insurance",
+  "domestic_service",
+]);
+export const companyStatus = pgEnum("company_status", ["active", "inactive", "suspended"]);
 export const obligationKind = pgEnum("obligation_kind", [
   "iva",
   "irs_retencao",

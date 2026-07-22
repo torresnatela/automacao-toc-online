@@ -5,7 +5,7 @@ import { createUser, type CreateUserState } from "./actions";
 
 const initialState: CreateUserState = {};
 
-export function CreateUserForm() {
+export function CreateUserForm({ teams }: { teams: { id: string; name: string }[] }) {
   const [state, formAction, pending] = useActionState(createUser, initialState);
 
   return (
@@ -31,7 +31,19 @@ export function CreateUserForm() {
           <span>Papel</span>
           <select name="role" defaultValue="member">
             <option value="member">Member</option>
+            <option value="operator">Operator</option>
             <option value="admin">Admin</option>
+          </select>
+        </label>
+        <label style={{ display: "grid", gap: 4 }}>
+          <span>Equipe</span>
+          <select name="team_id" defaultValue="">
+            <option value="">— sem equipe (admin global) —</option>
+            {teams.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
           </select>
         </label>
         <button type="submit" disabled={pending}>

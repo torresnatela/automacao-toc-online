@@ -1,0 +1,189 @@
+@import "tailwindcss";
+
+/*
+ * Cliconta Design System — tokens.
+ * Escalas de paleta e primitivos ficam em @theme (geram utilities como
+ * bg-brand-600, text-gold-500). Papéis semânticos (background, primary, ...)
+ * ficam em :root e são expostos via @theme inline, o que deixa a estrutura
+ * pronta para um tema escuro futuro (basta um seletor .dark sobrescrevendo
+ * as mesmas variáveis).
+ */
+
+@theme {
+  /* Tipografia — Hanken Grotesk via next/font; --font-display é o slot único
+     para trocar pelo Forma DJR licenciado depois. */
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-hanken-display), var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+
+  /* Brand — verde pinho */
+  --color-brand-50: #eef4f1;
+  --color-brand-100: #d6e4dd;
+  --color-brand-200: #aec9bb;
+  --color-brand-300: #7fa895;
+  --color-brand-400: #4e8069;
+  --color-brand-500: #2e6350;
+  --color-brand-600: #1e4a3b;
+  --color-brand-700: #1a4034;
+  --color-brand-800: #14312a;
+  --color-brand-900: #0f2620;
+  --color-brand-950: #0a1a16;
+
+  /* Gold — amarelo manteiga (o "accent" da marca) */
+  --color-gold-300: #f4dca6;
+  --color-gold-400: #efce88;
+  --color-gold-500: #eac378;
+  --color-gold-600: #ddb05a;
+  --color-gold-700: #c4923a;
+
+  /* Sage — verde dessaturado (motivo de ondas, realces sutis) */
+  --color-sage-300: #c3d3ca;
+  --color-sage-400: #a9c0b4;
+  --color-sage-500: #9db5a8;
+
+  /* Raio */
+  --radius-sm: 0.5rem;   /* 8px  */
+  --radius-md: 0.75rem;  /* 12px — inputs */
+  --radius-lg: 1rem;     /* 16px */
+  --radius-xl: 1.25rem;  /* 20px */
+  --radius-2xl: 1.5rem;  /* 24px — cards */
+
+  /* Sombras suaves com tom quente */
+  --shadow-xs: 0 1px 2px rgba(20, 49, 42, 0.04);
+  --shadow-sm: 0 1px 3px rgba(20, 49, 42, 0.06), 0 1px 2px rgba(20, 49, 42, 0.04);
+  --shadow-md: 0 4px 12px rgba(20, 49, 42, 0.08);
+  --shadow-lg: 0 12px 32px rgba(20, 49, 42, 0.1);
+
+  /* Animações (geram utilities animate-*) */
+  --animate-overlay-in: overlay-in 150ms ease-out;
+  --animate-dialog-in: dialog-in 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-pop-in: pop-in 120ms ease-out;
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -46%) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Papéis semânticos expostos ao Tailwind (bg-background, text-primary, ...) */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-bg: var(--destructive-bg);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-accent: var(--sidebar-accent);
+}
+
+:root {
+  --background: #fafaf8;
+  --foreground: #16241e;
+
+  --card: #ffffff;
+  --card-foreground: #16241e;
+  --popover: #ffffff;
+  --popover-foreground: #16241e;
+
+  --primary: #1e4a3b;
+  --primary-foreground: #fafaf8;
+  --secondary: #f2f1ec;
+  --secondary-foreground: #16241e;
+  --muted: #f2f1ec;
+  --muted-foreground: #5b6b63;
+
+  /* accent = hover neutro esverdeado (não confundir com o gold da marca) */
+  --accent: #eef4f1;
+  --accent-foreground: #1a4034;
+
+  --destructive: #b4472f;
+  --destructive-foreground: #fafaf8;
+  --destructive-bg: #f7e3dd;
+
+  --success: #2e7d5b;
+  --success-bg: #e5f1eb;
+  --warning: #c88a2e;
+  --warning-bg: #fbf0dc;
+  --info: #2e6e7d;
+  --info-bg: #dceef1;
+
+  --border: #e6e4dd;
+  --input: #e6e4dd;
+  --ring: #1e4a3b;
+
+  /* Sidebar (verde-pinho) */
+  --sidebar: #1a4034;
+  --sidebar-foreground: #e8f0eb;
+  --sidebar-muted: #9fbcae;
+  --sidebar-accent: #eac378;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    color: var(--color-foreground);
+  }
+}

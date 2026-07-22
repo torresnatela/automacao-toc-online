@@ -47,3 +47,11 @@ on conflict do nothing;
 update public.profiles
 set role = 'admin', must_change_password = false, full_name = 'Admin Local'
 where id = '11111111-1111-1111-1111-111111111111';
+
+-- ---------------------------------------------------------------------------
+-- Equipe demo (gabinete) para desenvolvimento/e2e: dá uma equipe onde cadastrar
+-- empresas. O admin bootstrap fica SEM equipe (team_id NULL = admin global, vê tudo).
+-- ---------------------------------------------------------------------------
+insert into public.teams (id, name, nif)
+values ('22222222-2222-2222-2222-222222222222', 'Gabinete Demo', '500000000')
+on conflict (id) do nothing;

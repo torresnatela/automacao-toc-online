@@ -1,6 +1,19 @@
-import { pgTable, uuid, text, timestamp, jsonb, numeric, date, unique } from "drizzle-orm/pg-core";
 import {
-  clientStatus,
+  pgTable,
+  uuid,
+  text,
+  varchar,
+  bigint,
+  timestamp,
+  jsonb,
+  numeric,
+  date,
+  unique,
+  index,
+} from "drizzle-orm/pg-core";
+import {
+  companyStatus,
+  contributorType,
   obligationKind,
   obligationFrequency,
   obligationPeriodStatus,
@@ -8,24 +21,49 @@ import {
   integrationProvider,
   credentialStatus,
 } from "./enums";
+import { teams } from "./teams";
 
-export const clients = pgTable("clients", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull(),
-  nif: text("nif"),
-  email: text("email"),
-  status: clientStatus("status").notNull().default("active"),
-  toconlineRef: text("toconline_ref"),
-  metadata: jsonb("metadata").notNull().default({}),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+// Empresa cliente (contribuinte). Chave de operações da Segurança Social = NISS.
+// Pertence a uma equipe (tenant). Substitui a antiga tabela `clients`.
+export const companies = pgTable(
+  "companies",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    teamId: uuid("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    niss: bigint("niss", { mode: "number" }).notNull(), // chave Segurança Social (11 dígitos)
+    nif: varchar("nif", { length: 9 }), // cruzamento com AT / TOConline
+    name: text("name").notNull(),
+    type: contributorType("type").notNull(),
+    status: companyStatus("status").notNull().default("active"),
+    email: text("email"),
+    phone: varchar("phone", { length: 20 }),
+    addressLine1: text("address_line1"),
+    addressLine2: text("address_line2"),
+    postalCode: varchar("postal_code", { length: 10 }), // formato PT: 1049-013
+    city: text("city"),
+    country: varchar("country", { length: 2 }).notNull().default("PT"), // ISO 3166-1 alpha-2
+    notes: text("notes"),
+    metadata: jsonb("metadata").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // NISS único POR EQUIPE (não global): duas equipes podem ter o mesmo contribuinte,
+    // e a colisão não vira um oráculo de existência entre tenants.
+    unique("company_niss_team_uq").on(t.teamId, t.niss),
+    index("company_niss_idx").on(t.niss),
+    index("company_status_idx").on(t.status),
+    index("company_team_idx").on(t.teamId),
+  ],
+);
 
 export const obligations = pgTable("obligations", {
   id: uuid("id").primaryKey().defaultRandom(),
-  clientId: uuid("client_id")
+  companyId: uuid("company_id")
     .notNull()
-    .references(() => clients.id, { onDelete: "cascade" }),
+    .references(() => companies.id, { onDelete: "cascade" }),
   kind: obligationKind("kind").notNull(),
   frequency: obligationFrequency("frequency").notNull().default("monthly"),
   metadata: jsonb("metadata").notNull().default({}),
@@ -70,7 +108,7 @@ export const documents = pgTable("documents", {
 
 export const integrationCredentials = pgTable("integration_credentials", {
   id: uuid("id").primaryKey().defaultRandom(),
-  clientId: uuid("client_id").references(() => clients.id, { onDelete: "cascade" }),
+  companyId: uuid("company_id").references(() => companies.id, { onDelete: "cascade" }),
   provider: integrationProvider("provider").notNull(),
   username: text("username"),
   // Criptografado em repouso (mecanismo planejado: Supabase Vault / pgsodium). Não implementado nesta base.

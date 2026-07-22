@@ -7,6 +7,7 @@ export interface SessionUser {
   id: string;
   email: string | undefined;
   role: AppRole;
+  teamId: string | null; // equipe (tenant); null = admin global
 }
 
 export async function getSessionUser(): Promise<SessionUser | null> {
@@ -18,11 +19,16 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, team_id")
     .eq("id", user.id)
     .single();
 
-  return { id: user.id, email: user.email, role: (profile?.role ?? "viewer") as AppRole };
+  return {
+    id: user.id,
+    email: user.email,
+    role: (profile?.role ?? "viewer") as AppRole,
+    teamId: (profile?.team_id ?? null) as string | null,
+  };
 }
 
 /** Retorna o usuário se tiver ao menos o papel `min`; senão null. */
