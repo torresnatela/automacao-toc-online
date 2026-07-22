@@ -4,7 +4,6 @@
   "2": "DB Schema (Drizzle)",
   "3": "Observability Stores & DB Client",
   "4": "Web App Dependencies",
-  "5": "DB Package Manifest",
   "6": "Fiscal Domain & RLS",
   "7": "Turborepo & Lint Config",
   "8": "Root Package Scripts",

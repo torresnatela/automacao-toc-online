@@ -286,6 +286,26 @@
       "norm_label": "login.spec.ts"
     },
     {
+      "label": "logs.spec.ts",
+      "file_type": "code",
+      "source_file": "apps/web/e2e/logs.spec.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "apps_web_e2e_logs_spec",
+      "community": 112,
+      "norm_label": "logs.spec.ts"
+    },
+    {
+      "label": "login()",
+      "file_type": "code",
+      "source_file": "apps/web/e2e/logs.spec.ts",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "apps_web_e2e_logs_spec_login",
+      "community": 112,
+      "norm_label": "login()"
+    },
+    {
       "label": "teams.spec.ts",
       "file_type": "code",
       "source_file": "apps/web/e2e/teams.spec.ts",
@@ -772,7 +792,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_createuserform",
-      "community": 12,
+      "community": 80,
       "norm_label": "createuserform.tsx"
     },
     {
@@ -782,7 +802,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_createuserform_initialstate",
-      "community": 12,
+      "community": 80,
       "norm_label": "initialstate"
     },
     {
@@ -792,7 +812,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_createuserform_createuserform",
-      "community": 12,
+      "community": 80,
       "norm_label": "createuserform()"
     },
     {
@@ -802,7 +822,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_actions",
-      "community": 12,
+      "community": 80,
       "norm_label": "actions.ts"
     },
     {
@@ -812,7 +832,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_actions_valid_ui_roles",
-      "community": 12,
+      "community": 80,
       "norm_label": "valid_ui_roles"
     },
     {
@@ -822,7 +842,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_actions_createuserstate",
-      "community": 12,
+      "community": 80,
       "norm_label": "createuserstate"
     },
     {
@@ -832,7 +852,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_actions_createuser",
-      "community": 12,
+      "community": 80,
       "norm_label": "createuser()"
     },
     {
@@ -842,14 +862,14 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_page",
-      "community": 12,
+      "community": 80,
       "norm_label": "page.tsx"
     },
     {
       "label": "ProfileRow",
       "file_type": "code",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L11",
+      "source_location": "L10",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_page_profilerow",
       "community": 80,
@@ -859,10 +879,10 @@
       "label": "AdminUsersPage()",
       "file_type": "code",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L20",
+      "source_location": "L19",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_page_adminuserspage",
-      "community": 12,
+      "community": 80,
       "norm_label": "adminuserspage()"
     },
     {
@@ -872,7 +892,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_companyform",
-      "community": 5,
+      "community": 12,
       "norm_label": "companyform.tsx"
     },
     {
@@ -882,7 +902,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_companyform_labelstyle",
-      "community": 5,
+      "community": 12,
       "norm_label": "labelstyle"
     },
     {
@@ -892,7 +912,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_companyform_errstyle",
-      "community": 5,
+      "community": 12,
       "norm_label": "errstyle"
     },
     {
@@ -902,7 +922,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_companyform_companyformprops",
-      "community": 5,
+      "community": 12,
       "norm_label": "companyformprops"
     },
     {
@@ -942,7 +962,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_actions",
-      "community": 5,
+      "community": 12,
       "norm_label": "actions.ts"
     },
     {
@@ -952,7 +972,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_actions_companyformstate",
-      "community": 5,
+      "community": 12,
       "norm_label": "companyformstate"
     },
     {
@@ -962,7 +982,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_actions_createcompanyaction",
-      "community": 5,
+      "community": 12,
       "norm_label": "createcompanyaction()"
     },
     {
@@ -972,7 +992,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_actions_updatecompanyaction",
-      "community": 5,
+      "community": 12,
       "norm_label": "updatecompanyaction()"
     },
     {
@@ -982,7 +1002,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_actions_deletecompanyaction",
-      "community": 5,
+      "community": 12,
       "norm_label": "deletecompanyaction()"
     },
     {
@@ -1152,18 +1172,148 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_layout",
-      "community": 87,
+      "community": 12,
       "norm_label": "layout.tsx"
     },
     {
       "label": "DashboardLayout()",
       "file_type": "code",
       "source_file": "apps/web/src/app/(dashboard)/layout.tsx",
-      "source_location": "L7",
+      "source_location": "L10",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_layout_dashboardlayout",
-      "community": 87,
+      "community": 12,
       "norm_label": "dashboardlayout()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(dashboard)/logs/[traceId]/page.tsx",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "apps_web_src_app_dashboard_logs_traceid_page",
+      "community": 87,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "TraceRow",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(dashboard)/logs/[traceId]/page.tsx",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "apps_web_src_app_dashboard_logs_traceid_page_tracerow",
+      "community": 87,
+      "norm_label": "tracerow"
+    },
+    {
+      "label": "EventRow",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(dashboard)/logs/[traceId]/page.tsx",
+      "source_location": "L19",
+      "_origin": "ast",
+      "id": "apps_web_src_app_dashboard_logs_traceid_page_eventrow",
+      "community": 87,
+      "norm_label": "eventrow"
+    },
+    {
+      "label": "LogRow",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(dashboard)/logs/[traceId]/page.tsx",
+      "source_location": "L29",
+      "_origin": "ast",
+      "id": "apps_web_src_app_dashboard_logs_traceid_page_logrow",
+      "community": 87,
+      "norm_label": "logrow"
+    },
+    {
+      "label": "renderEventTree()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(dashboard)/logs/[traceId]/page.tsx",
+      "source_location": "L39",
+      "_origin": "ast",
+      "id": "apps_web_src_app_dashboard_logs_traceid_page_rendereventtree",
+      "community": 87,
+      "norm_label": "rendereventtree()"
+    },
+    {
+      "label": "TraceDetailPage()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(dashboard)/logs/[traceId]/page.tsx",
+      "source_location": "L55",
+      "_origin": "ast",
+      "id": "apps_web_src_app_dashboard_logs_traceid_page_tracedetailpage",
+      "community": 87,
+      "norm_label": "tracedetailpage()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(dashboard)/logs/page.tsx",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "apps_web_src_app_dashboard_logs_page",
+      "community": 12,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "TraceRow",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(dashboard)/logs/page.tsx",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "apps_web_src_app_dashboard_logs_page_tracerow",
+      "community": 12,
+      "norm_label": "tracerow"
+    },
+    {
+      "label": "LogsPage()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(dashboard)/logs/page.tsx",
+      "source_location": "L14",
+      "_origin": "ast",
+      "id": "apps_web_src_app_dashboard_logs_page_logspage",
+      "community": 12,
+      "norm_label": "logspage()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(dashboard)/page.tsx",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "apps_web_src_app_dashboard_page",
+      "community": 111,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "Integration",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(dashboard)/page.tsx",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "apps_web_src_app_dashboard_page_integration",
+      "community": 111,
+      "norm_label": "integration"
+    },
+    {
+      "label": "INTEGRATIONS",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(dashboard)/page.tsx",
+      "source_location": "L11",
+      "_origin": "ast",
+      "id": "apps_web_src_app_dashboard_page_integrations",
+      "community": 111,
+      "norm_label": "integrations"
+    },
+    {
+      "label": "IntegracoesPage()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(dashboard)/page.tsx",
+      "source_location": "L18",
+      "_origin": "ast",
+      "id": "apps_web_src_app_dashboard_page_integracoespage",
+      "community": 111,
+      "norm_label": "integracoespage()"
     },
     {
       "label": "page.tsx",
@@ -1179,17 +1329,47 @@
       "label": "TraceRow",
       "file_type": "code",
       "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
-      "source_location": "L8",
+      "source_location": "L19",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_traces_page_tracerow",
       "community": 12,
       "norm_label": "tracerow"
     },
     {
+      "label": "dateFmt",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L26",
+      "_origin": "ast",
+      "id": "apps_web_src_app_dashboard_traces_page_datefmt",
+      "community": 12,
+      "norm_label": "datefmt"
+    },
+    {
+      "label": "formatDate()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L28",
+      "_origin": "ast",
+      "id": "apps_web_src_app_dashboard_traces_page_formatdate",
+      "community": 12,
+      "norm_label": "formatdate()"
+    },
+    {
+      "label": "capitalize()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L33",
+      "_origin": "ast",
+      "id": "apps_web_src_app_dashboard_traces_page_capitalize",
+      "community": 12,
+      "norm_label": "capitalize()"
+    },
+    {
       "label": "TracesPage()",
       "file_type": "code",
       "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
-      "source_location": "L15",
+      "source_location": "L37",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_traces_page_tracespage",
       "community": 12,
@@ -1202,7 +1382,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_api_companies_id_route",
-      "community": 5,
+      "community": 12,
       "norm_label": "route.ts"
     },
     {
@@ -1212,7 +1392,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "apps_web_src_app_api_companies_id_route_ctx",
-      "community": 5,
+      "community": 12,
       "norm_label": "ctx"
     },
     {
@@ -1222,7 +1402,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "apps_web_src_app_api_companies_id_route_get",
-      "community": 5,
+      "community": 12,
       "norm_label": "get()"
     },
     {
@@ -1232,7 +1412,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "apps_web_src_app_api_companies_id_route_patch",
-      "community": 5,
+      "community": 12,
       "norm_label": "patch()"
     },
     {
@@ -1242,7 +1422,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "apps_web_src_app_api_companies_id_route_delete",
-      "community": 5,
+      "community": 12,
       "norm_label": "delete()"
     },
     {
@@ -1252,7 +1432,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_api_companies_route",
-      "community": 5,
+      "community": 12,
       "norm_label": "route.ts"
     },
     {
@@ -1262,7 +1442,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "apps_web_src_app_api_companies_route_get",
-      "community": 5,
+      "community": 12,
       "norm_label": "get()"
     },
     {
@@ -1272,7 +1452,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "apps_web_src_app_api_companies_route_post",
-      "community": 5,
+      "community": 12,
       "norm_label": "post()"
     },
     {
@@ -1382,17 +1562,17 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_change_password_page",
-      "community": 12,
+      "community": 88,
       "norm_label": "page.tsx"
     },
     {
       "label": "ChangePasswordPage()",
       "file_type": "code",
       "source_file": "apps/web/src/app/change-password/page.tsx",
-      "source_location": "L7",
+      "source_location": "L12",
       "_origin": "ast",
       "id": "apps_web_src_app_change_password_page_changepasswordpage",
-      "community": 12,
+      "community": 88,
       "norm_label": "changepasswordpage()"
     },
     {
@@ -1459,7 +1639,7 @@
       "label": "signIn()",
       "file_type": "code",
       "source_file": "apps/web/src/app/login/actions.ts",
-      "source_location": "L6",
+      "source_location": "L8",
       "_origin": "ast",
       "id": "apps_web_src_app_login_actions_signin",
       "community": 12,
@@ -1469,7 +1649,7 @@
       "label": "signOut()",
       "file_type": "code",
       "source_file": "apps/web/src/app/login/actions.ts",
-      "source_location": "L21",
+      "source_location": "L30",
       "_origin": "ast",
       "id": "apps_web_src_app_login_actions_signout",
       "community": 12,
@@ -1482,38 +1662,158 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_login_page",
-      "community": 12,
+      "community": 88,
       "norm_label": "page.tsx"
     },
     {
       "label": "LoginPage()",
       "file_type": "code",
       "source_file": "apps/web/src/app/login/page.tsx",
-      "source_location": "L3",
+      "source_location": "L8",
       "_origin": "ast",
       "id": "apps_web_src_app_login_page_loginpage",
-      "community": 12,
+      "community": 88,
       "norm_label": "loginpage()"
     },
     {
-      "label": "page.tsx",
+      "label": "app-shell.tsx",
       "file_type": "code",
-      "source_file": "apps/web/src/app/page.tsx",
+      "source_file": "apps/web/src/components/app-shell/app-shell.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "apps_web_src_app_page",
-      "community": 25,
-      "norm_label": "page.tsx"
+      "id": "apps_web_src_components_app_shell_app_shell",
+      "community": 88,
+      "norm_label": "app-shell.tsx"
     },
     {
-      "label": "Home()",
+      "label": "AppShellProps",
       "file_type": "code",
-      "source_file": "apps/web/src/app/page.tsx",
-      "source_location": "L3",
+      "source_file": "apps/web/src/components/app-shell/app-shell.tsx",
+      "source_location": "L8",
       "_origin": "ast",
-      "id": "apps_web_src_app_page_home",
-      "community": 25,
-      "norm_label": "home()"
+      "id": "apps_web_src_components_app_shell_app_shell_appshellprops",
+      "community": 88,
+      "norm_label": "appshellprops"
+    },
+    {
+      "label": "AppShell()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/app-shell/app-shell.tsx",
+      "source_location": "L14",
+      "_origin": "ast",
+      "id": "apps_web_src_components_app_shell_app_shell_appshell",
+      "community": 4,
+      "norm_label": "appshell()"
+    },
+    {
+      "label": "nav-config.ts",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/app-shell/nav-config.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "apps_web_src_components_app_shell_nav_config",
+      "community": 88,
+      "norm_label": "nav-config.ts"
+    },
+    {
+      "label": "NavItem",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/app-shell/nav-config.ts",
+      "source_location": "L11",
+      "_origin": "ast",
+      "id": "apps_web_src_components_app_shell_nav_config_navitem",
+      "community": 88,
+      "norm_label": "navitem"
+    },
+    {
+      "label": "NAV_ITEMS",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/app-shell/nav-config.ts",
+      "source_location": "L19",
+      "_origin": "ast",
+      "id": "apps_web_src_components_app_shell_nav_config_nav_items",
+      "community": 88,
+      "norm_label": "nav_items"
+    },
+    {
+      "label": "sidebar.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/app-shell/sidebar.tsx",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "apps_web_src_components_app_shell_sidebar",
+      "community": 88,
+      "norm_label": "sidebar.tsx"
+    },
+    {
+      "label": "SidebarContent()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/app-shell/sidebar.tsx",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "apps_web_src_components_app_shell_sidebar_sidebarcontent",
+      "community": 88,
+      "norm_label": "sidebarcontent()"
+    },
+    {
+      "label": "user-menu.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/app-shell/user-menu.tsx",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "apps_web_src_components_app_shell_user_menu",
+      "community": 88,
+      "norm_label": "user-menu.tsx"
+    },
+    {
+      "label": "ROLE_LABELS",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/app-shell/user-menu.tsx",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "apps_web_src_components_app_shell_user_menu_role_labels",
+      "community": 88,
+      "norm_label": "role_labels"
+    },
+    {
+      "label": "UserMenu()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/app-shell/user-menu.tsx",
+      "source_location": "L22",
+      "_origin": "ast",
+      "id": "apps_web_src_components_app_shell_user_menu_usermenu",
+      "community": 88,
+      "norm_label": "usermenu()"
+    },
+    {
+      "label": "auth-layout.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/auth/auth-layout.tsx",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "apps_web_src_components_auth_auth_layout",
+      "community": 88,
+      "norm_label": "auth-layout.tsx"
+    },
+    {
+      "label": "AuthLayoutProps",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/auth/auth-layout.tsx",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "apps_web_src_components_auth_auth_layout_authlayoutprops",
+      "community": 88,
+      "norm_label": "authlayoutprops"
+    },
+    {
+      "label": "AuthLayout()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/auth/auth-layout.tsx",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "apps_web_src_components_auth_auth_layout_authlayout",
+      "community": 88,
+      "norm_label": "authlayout()"
     },
     {
       "label": "logo.tsx",
@@ -1584,6 +1884,226 @@
       "id": "apps_web_src_components_brand_wave_motif_wavemotif",
       "community": 88,
       "norm_label": "wavemotif()"
+    },
+    {
+      "label": "data-table.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_data_table",
+      "community": 88,
+      "norm_label": "data-table.tsx"
+    },
+    {
+      "label": "DataTable()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_data_table_datatable",
+      "community": 88,
+      "norm_label": "datatable()"
+    },
+    {
+      "label": "TableHeader()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_data_table_tableheader",
+      "community": 88,
+      "norm_label": "tableheader()"
+    },
+    {
+      "label": "TableBody()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L17",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_data_table_tablebody",
+      "community": 88,
+      "norm_label": "tablebody()"
+    },
+    {
+      "label": "TableRow()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L21",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_data_table_tablerow",
+      "community": 88,
+      "norm_label": "tablerow()"
+    },
+    {
+      "label": "TableHead()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L30",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_data_table_tablehead",
+      "community": 88,
+      "norm_label": "tablehead()"
+    },
+    {
+      "label": "TableCell()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L42",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_data_table_tablecell",
+      "community": 88,
+      "norm_label": "tablecell()"
+    },
+    {
+      "label": "empty-state.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/empty-state.tsx",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_empty_state",
+      "community": 88,
+      "norm_label": "empty-state.tsx"
+    },
+    {
+      "label": "EmptyStateProps",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/empty-state.tsx",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_empty_state_emptystateprops",
+      "community": 88,
+      "norm_label": "emptystateprops"
+    },
+    {
+      "label": "EmptyState()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/empty-state.tsx",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_empty_state_emptystate",
+      "community": 88,
+      "norm_label": "emptystate()"
+    },
+    {
+      "label": "form-field.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/form-field.tsx",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_form_field",
+      "community": 88,
+      "norm_label": "form-field.tsx"
+    },
+    {
+      "label": "FormFieldProps",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/form-field.tsx",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_form_field_formfieldprops",
+      "community": 88,
+      "norm_label": "formfieldprops"
+    },
+    {
+      "label": "FormField()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/form-field.tsx",
+      "source_location": "L15",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_form_field_formfield",
+      "community": 88,
+      "norm_label": "formfield()"
+    },
+    {
+      "label": "page-header.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/page-header.tsx",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_page_header",
+      "community": 88,
+      "norm_label": "page-header.tsx"
+    },
+    {
+      "label": "PageHeaderProps",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/page-header.tsx",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_page_header_pageheaderprops",
+      "community": 88,
+      "norm_label": "pageheaderprops"
+    },
+    {
+      "label": "PageHeader()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/page-header.tsx",
+      "source_location": "L11",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_page_header_pageheader",
+      "community": 88,
+      "norm_label": "pageheader()"
+    },
+    {
+      "label": "status-badge.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/status-badge.tsx",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_status_badge",
+      "community": 5,
+      "norm_label": "status-badge.tsx"
+    },
+    {
+      "label": "StatusKind",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/status-badge.tsx",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_status_badge_statuskind",
+      "community": 5,
+      "norm_label": "statuskind"
+    },
+    {
+      "label": "Tone",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/status-badge.tsx",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_status_badge_tone",
+      "community": 5,
+      "norm_label": "tone"
+    },
+    {
+      "label": "TONES",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/status-badge.tsx",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_status_badge_tones",
+      "community": 5,
+      "norm_label": "tones"
+    },
+    {
+      "label": "StatusBadgeProps",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/status-badge.tsx",
+      "source_location": "L25",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_status_badge_statusbadgeprops",
+      "community": 5,
+      "norm_label": "statusbadgeprops"
+    },
+    {
+      "label": "StatusBadge()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/patterns/status-badge.tsx",
+      "source_location": "L32",
+      "_origin": "ast",
+      "id": "apps_web_src_components_patterns_status_badge_statusbadge",
+      "community": 5,
+      "norm_label": "statusbadge()"
     },
     {
       "label": "alert.tsx",
@@ -1672,7 +2192,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_components_ui_badge",
-      "community": 88,
+      "community": 5,
       "norm_label": "badge.tsx"
     },
     {
@@ -1682,7 +2202,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "apps_web_src_components_ui_badge_badgevariants",
-      "community": 88,
+      "community": 5,
       "norm_label": "badgevariants"
     },
     {
@@ -1692,7 +2212,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "apps_web_src_components_ui_badge_badgeprops",
-      "community": 88,
+      "community": 5,
       "norm_label": "badgeprops"
     },
     {
@@ -1702,7 +2222,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "apps_web_src_components_ui_badge_badge",
-      "community": 88,
+      "community": 5,
       "norm_label": "badge()"
     },
     {
@@ -2102,7 +2622,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service",
-      "community": 5,
+      "community": 12,
       "norm_label": "service.ts"
     },
     {
@@ -2112,7 +2632,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_companyrow",
-      "community": 5,
+      "community": 12,
       "norm_label": "companyrow"
     },
     {
@@ -2122,7 +2642,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_companymutationresult",
-      "community": 5,
+      "community": 12,
       "norm_label": "companymutationresult"
     },
     {
@@ -2132,7 +2652,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_str",
-      "community": 5,
+      "community": 12,
       "norm_label": "str()"
     },
     {
@@ -2142,7 +2662,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_companyinputfrom",
-      "community": 5,
+      "community": 12,
       "norm_label": "companyinputfrom()"
     },
     {
@@ -2152,7 +2672,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_companypatchfrom",
-      "community": 5,
+      "community": 12,
       "norm_label": "companypatchfrom()"
     },
     {
@@ -2162,7 +2682,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_companyrowtoinput",
-      "community": 5,
+      "community": 12,
       "norm_label": "companyrowtoinput()"
     },
     {
@@ -2172,7 +2692,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_listcompanies",
-      "community": 5,
+      "community": 12,
       "norm_label": "listcompanies()"
     },
     {
@@ -2182,7 +2702,7 @@
       "source_location": "L114",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_getcompany",
-      "community": 5,
+      "community": 12,
       "norm_label": "getcompany()"
     },
     {
@@ -2192,7 +2712,7 @@
       "source_location": "L122",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_admin",
-      "community": 5,
+      "community": 12,
       "norm_label": "admin"
     },
     {
@@ -2202,7 +2722,7 @@
       "source_location": "L124",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_torow",
-      "community": 5,
+      "community": 12,
       "norm_label": "torow()"
     },
     {
@@ -2212,7 +2732,7 @@
       "source_location": "L145",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_repoerror",
-      "community": 5,
+      "community": 12,
       "norm_label": "repoerror()"
     },
     {
@@ -2222,7 +2742,7 @@
       "source_location": "L151",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_companyrepo",
-      "community": 5,
+      "community": 12,
       "norm_label": "companyrepo()"
     },
     {
@@ -2232,7 +2752,7 @@
       "source_location": "L188",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_mutationerror",
-      "community": 5,
+      "community": 12,
       "norm_label": "mutationerror()"
     },
     {
@@ -2242,7 +2762,7 @@
       "source_location": "L197",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_requirewriter",
-      "community": 5,
+      "community": 12,
       "norm_label": "requirewriter()"
     },
     {
@@ -2252,7 +2772,7 @@
       "source_location": "L208",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_createcompanyfrominput",
-      "community": 5,
+      "community": 12,
       "norm_label": "createcompanyfrominput()"
     },
     {
@@ -2262,7 +2782,7 @@
       "source_location": "L258",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_updatecompanyfrominput",
-      "community": 5,
+      "community": 12,
       "norm_label": "updatecompanyfrominput()"
     },
     {
@@ -2272,7 +2792,7 @@
       "source_location": "L311",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_deletecompany",
-      "community": 5,
+      "community": 12,
       "norm_label": "deletecompany()"
     },
     {
@@ -2364,6 +2884,36 @@
       "id": "apps_web_src_lib_observability_startaction",
       "community": 12,
       "norm_label": "startaction()"
+    },
+    {
+      "label": "tracer.ts",
+      "file_type": "code",
+      "source_file": "apps/web/src/lib/observability/tracer.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "apps_web_src_lib_observability_tracer",
+      "community": 0,
+      "norm_label": "tracer.ts"
+    },
+    {
+      "label": "getWebTracer()",
+      "file_type": "code",
+      "source_file": "apps/web/src/lib/observability/tracer.ts",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "apps_web_src_lib_observability_tracer_getwebtracer",
+      "community": 0,
+      "norm_label": "getwebtracer()"
+    },
+    {
+      "label": "logUserEvent()",
+      "file_type": "code",
+      "source_file": "apps/web/src/lib/observability/tracer.ts",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "apps_web_src_lib_observability_tracer_loguserevent",
+      "community": 12,
+      "norm_label": "loguserevent()"
     },
     {
       "label": "admin.ts",
@@ -3896,10 +4446,20 @@
       "norm_label": "devdependencies"
     },
     {
-      "label": "@toc/config",
+      "label": "@supabase/supabase-js",
       "file_type": "code",
       "source_file": "packages/core/package.json",
       "source_location": "L23",
+      "_origin": "ast",
+      "id": "packages_core_package_devdependencies_supabase_supabase_js",
+      "community": 10,
+      "norm_label": "@supabase/supabase-js"
+    },
+    {
+      "label": "@toc/config",
+      "file_type": "code",
+      "source_file": "packages/core/package.json",
+      "source_location": "L24",
       "_origin": "ast",
       "id": "packages_core_package_devdependencies_toc_config",
       "community": 10,
@@ -3909,7 +4469,7 @@
       "label": "@types/node",
       "file_type": "code",
       "source_file": "packages/core/package.json",
-      "source_location": "L24",
+      "source_location": "L25",
       "_origin": "ast",
       "id": "packages_core_package_devdependencies_types_node",
       "community": 10,
@@ -3919,7 +4479,7 @@
       "label": "vitest",
       "file_type": "code",
       "source_file": "packages/core/package.json",
-      "source_location": "L25",
+      "source_location": "L26",
       "_origin": "ast",
       "id": "packages_core_package_devdependencies_vitest",
       "community": 10,
@@ -3929,7 +4489,7 @@
       "label": "typescript",
       "file_type": "code",
       "source_file": "packages/core/package.json",
-      "source_location": "L26",
+      "source_location": "L27",
       "_origin": "ast",
       "id": "packages_core_package_devdependencies_typescript",
       "community": 10,
@@ -3939,7 +4499,7 @@
       "label": "eslint",
       "file_type": "code",
       "source_file": "packages/core/package.json",
-      "source_location": "L27",
+      "source_location": "L28",
       "_origin": "ast",
       "id": "packages_core_package_devdependencies_eslint",
       "community": 10,
@@ -4322,7 +4882,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "packages_core_src_domain_company_validate_companyfielderrors",
-      "community": 5,
+      "community": 12,
       "norm_label": "companyfielderrors"
     },
     {
@@ -4622,7 +5182,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "packages_core_src_index",
-      "community": 2,
+      "community": 0,
       "norm_label": "index.ts"
     },
     {
@@ -4722,14 +5282,14 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "packages_core_src_observability_store",
-      "community": 0,
+      "community": 2,
       "norm_label": "store.ts"
     },
     {
       "label": "ObservabilityStore",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L10",
+      "source_location": "L11",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_observabilitystore",
       "community": 0,
@@ -4739,7 +5299,7 @@
       "label": ".saveTrace()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L11",
+      "source_location": "L12",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_observabilitystore_savetrace",
       "community": 0,
@@ -4749,7 +5309,7 @@
       "label": ".updateTrace()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_observabilitystore_updatetrace",
       "community": 0,
@@ -4759,7 +5319,7 @@
       "label": ".saveEvent()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L13",
+      "source_location": "L14",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_observabilitystore_saveevent",
       "community": 0,
@@ -4769,7 +5329,7 @@
       "label": ".updateEvent()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_observabilitystore_updateevent",
       "community": 0,
@@ -4779,7 +5339,7 @@
       "label": ".saveLog()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L15",
+      "source_location": "L16",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_observabilitystore_savelog",
       "community": 0,
@@ -4789,7 +5349,7 @@
       "label": ".newId()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L16",
+      "source_location": "L17",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_observabilitystore_newid",
       "community": 0,
@@ -4799,7 +5359,7 @@
       "label": "InMemoryStore",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L19",
+      "source_location": "L20",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_inmemorystore",
       "community": 0,
@@ -4809,7 +5369,7 @@
       "label": ".newId()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L25",
+      "source_location": "L26",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_inmemorystore_newid",
       "community": 0,
@@ -4819,7 +5379,7 @@
       "label": ".saveTrace()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L28",
+      "source_location": "L29",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_inmemorystore_savetrace",
       "community": 0,
@@ -4829,7 +5389,7 @@
       "label": ".updateTrace()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L31",
+      "source_location": "L32",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_inmemorystore_updatetrace",
       "community": 0,
@@ -4839,7 +5399,7 @@
       "label": ".saveEvent()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L35",
+      "source_location": "L36",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_inmemorystore_saveevent",
       "community": 0,
@@ -4849,7 +5409,7 @@
       "label": ".updateEvent()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L38",
+      "source_location": "L39",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_inmemorystore_updateevent",
       "community": 0,
@@ -4859,7 +5419,7 @@
       "label": ".saveLog()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L42",
+      "source_location": "L43",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_inmemorystore_savelog",
       "community": 0,
@@ -4869,19 +5429,99 @@
       "label": "DbStore",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L47",
+      "source_location": "L48",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_dbstore",
-      "community": 0,
+      "community": 2,
       "norm_label": "dbstore"
     },
     {
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L48",
+      "source_location": "L49",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_dbstore_constructor",
+      "community": 2,
+      "norm_label": ".constructor()"
+    },
+    {
+      "label": ".newId()",
+      "file_type": "code",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L51",
+      "_origin": "ast",
+      "id": "packages_core_src_observability_store_dbstore_newid",
+      "community": 2,
+      "norm_label": ".newid()"
+    },
+    {
+      "label": ".saveTrace()",
+      "file_type": "code",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L54",
+      "_origin": "ast",
+      "id": "packages_core_src_observability_store_dbstore_savetrace",
+      "community": 2,
+      "norm_label": ".savetrace()"
+    },
+    {
+      "label": ".updateTrace()",
+      "file_type": "code",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L65",
+      "_origin": "ast",
+      "id": "packages_core_src_observability_store_dbstore_updatetrace",
+      "community": 2,
+      "norm_label": ".updatetrace()"
+    },
+    {
+      "label": ".saveEvent()",
+      "file_type": "code",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L71",
+      "_origin": "ast",
+      "id": "packages_core_src_observability_store_dbstore_saveevent",
+      "community": 2,
+      "norm_label": ".saveevent()"
+    },
+    {
+      "label": ".updateEvent()",
+      "file_type": "code",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L83",
+      "_origin": "ast",
+      "id": "packages_core_src_observability_store_dbstore_updateevent",
+      "community": 2,
+      "norm_label": ".updateevent()"
+    },
+    {
+      "label": ".saveLog()",
+      "file_type": "code",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L93",
+      "_origin": "ast",
+      "id": "packages_core_src_observability_store_dbstore_savelog",
+      "community": 2,
+      "norm_label": ".savelog()"
+    },
+    {
+      "label": "SupabaseStore",
+      "file_type": "code",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L113",
+      "_origin": "ast",
+      "id": "packages_core_src_observability_store_supabasestore",
+      "community": 0,
+      "norm_label": "supabasestore"
+    },
+    {
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L114",
+      "_origin": "ast",
+      "id": "packages_core_src_observability_store_supabasestore_constructor",
       "community": 0,
       "norm_label": ".constructor()"
     },
@@ -4889,9 +5529,9 @@
       "label": ".newId()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L50",
+      "source_location": "L116",
       "_origin": "ast",
-      "id": "packages_core_src_observability_store_dbstore_newid",
+      "id": "packages_core_src_observability_store_supabasestore_newid",
       "community": 0,
       "norm_label": ".newid()"
     },
@@ -4899,9 +5539,9 @@
       "label": ".saveTrace()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L53",
+      "source_location": "L119",
       "_origin": "ast",
-      "id": "packages_core_src_observability_store_dbstore_savetrace",
+      "id": "packages_core_src_observability_store_supabasestore_savetrace",
       "community": 0,
       "norm_label": ".savetrace()"
     },
@@ -4909,9 +5549,9 @@
       "label": ".updateTrace()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L64",
+      "source_location": "L131",
       "_origin": "ast",
-      "id": "packages_core_src_observability_store_dbstore_updatetrace",
+      "id": "packages_core_src_observability_store_supabasestore_updatetrace",
       "community": 0,
       "norm_label": ".updatetrace()"
     },
@@ -4919,9 +5559,9 @@
       "label": ".saveEvent()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L70",
+      "source_location": "L138",
       "_origin": "ast",
-      "id": "packages_core_src_observability_store_dbstore_saveevent",
+      "id": "packages_core_src_observability_store_supabasestore_saveevent",
       "community": 0,
       "norm_label": ".saveevent()"
     },
@@ -4929,9 +5569,9 @@
       "label": ".updateEvent()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L82",
+      "source_location": "L151",
       "_origin": "ast",
-      "id": "packages_core_src_observability_store_dbstore_updateevent",
+      "id": "packages_core_src_observability_store_supabasestore_updateevent",
       "community": 0,
       "norm_label": ".updateevent()"
     },
@@ -4939,9 +5579,9 @@
       "label": ".saveLog()",
       "file_type": "code",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L92",
+      "source_location": "L162",
       "_origin": "ast",
-      "id": "packages_core_src_observability_store_dbstore_savelog",
+      "id": "packages_core_src_observability_store_supabasestore_savelog",
       "community": 0,
       "norm_label": ".savelog()"
     },
@@ -5216,6 +5856,36 @@
       "norm_label": "errorinput"
     },
     {
+      "label": "user-events.ts",
+      "file_type": "code",
+      "source_file": "packages/core/src/observability/user-events.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "packages_core_src_observability_user_events",
+      "community": 0,
+      "norm_label": "user-events.ts"
+    },
+    {
+      "label": "UserEventInput",
+      "file_type": "code",
+      "source_file": "packages/core/src/observability/user-events.ts",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "packages_core_src_observability_user_events_usereventinput",
+      "community": 0,
+      "norm_label": "usereventinput"
+    },
+    {
+      "label": "recordUserEvent()",
+      "file_type": "code",
+      "source_file": "packages/core/src/observability/user-events.ts",
+      "source_location": "L26",
+      "_origin": "ast",
+      "id": "packages_core_src_observability_user_events_recorduserevent",
+      "community": 0,
+      "norm_label": "recorduserevent()"
+    },
+    {
       "label": "company-service.test.ts",
       "file_type": "code",
       "source_file": "packages/core/test/company-service.test.ts",
@@ -5376,6 +6046,76 @@
       "norm_label": "roles.test.ts"
     },
     {
+      "label": "supabase-store.test.ts",
+      "file_type": "code",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "packages_core_test_supabase_store_test",
+      "community": 0,
+      "norm_label": "supabase-store.test.ts"
+    },
+    {
+      "label": "RecordedCall",
+      "file_type": "code",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "packages_core_test_supabase_store_test_recordedcall",
+      "community": 0,
+      "norm_label": "recordedcall"
+    },
+    {
+      "label": "fakeClient()",
+      "file_type": "code",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L17",
+      "_origin": "ast",
+      "id": "packages_core_test_supabase_store_test_fakeclient",
+      "community": 0,
+      "norm_label": "fakeclient()"
+    },
+    {
+      "label": "makeStore()",
+      "file_type": "code",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L40",
+      "_origin": "ast",
+      "id": "packages_core_test_supabase_store_test_makestore",
+      "community": 0,
+      "norm_label": "makestore()"
+    },
+    {
+      "label": "startedAt",
+      "file_type": "code",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L46",
+      "_origin": "ast",
+      "id": "packages_core_test_supabase_store_test_startedat",
+      "community": 0,
+      "norm_label": "startedat"
+    },
+    {
+      "label": "occurredAt",
+      "file_type": "code",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L47",
+      "_origin": "ast",
+      "id": "packages_core_test_supabase_store_test_occurredat",
+      "community": 0,
+      "norm_label": "occurredat"
+    },
+    {
+      "label": "loggedAt",
+      "file_type": "code",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L48",
+      "_origin": "ast",
+      "id": "packages_core_test_supabase_store_test_loggedat",
+      "community": 0,
+      "norm_label": "loggedat"
+    },
+    {
       "label": "team-service.test.ts",
       "file_type": "code",
       "source_file": "packages/core/test/team-service.test.ts",
@@ -5444,6 +6184,16 @@
       "id": "packages_core_test_tracer_test",
       "community": 0,
       "norm_label": "tracer.test.ts"
+    },
+    {
+      "label": "user-events.test.ts",
+      "file_type": "code",
+      "source_file": "packages/core/test/user-events.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "packages_core_test_user_events_test",
+      "community": 0,
+      "norm_label": "user-events.test.ts"
     },
     {
       "label": "validate-pt.test.ts",
@@ -5792,7 +6542,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "packages_db_src_client_database",
-      "community": 0,
+      "community": 2,
       "norm_label": "database"
     },
     {
@@ -6741,8 +7491,8 @@
       "source_file": "CLAUDE.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "users_gabrieltorresbolognani_automacao_toc_online_claude_md",
-      "community": 7,
+      "id": "claude",
+      "community": 25,
       "norm_label": "claude.md"
     },
     {
@@ -6751,8 +7501,8 @@
       "source_file": "CLAUDE.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "users_gabrieltorresbolognani_automacao_toc_online_claude_claude_md_automa\u00e7\u00e3o_de_guias_fiscais_toconline",
-      "community": 7,
+      "id": "claude_claude_md_automa\u00e7\u00e3o_de_guias_fiscais_toconline",
+      "community": 25,
       "norm_label": "claude.md \u2014 automacao de guias fiscais (toconline)"
     },
     {
@@ -6761,8 +7511,8 @@
       "source_file": "CLAUDE.md",
       "source_location": "L6",
       "_origin": "ast",
-      "id": "users_gabrieltorresbolognani_automacao_toc_online_claude_estrutura",
-      "community": 7,
+      "id": "claude_estrutura",
+      "community": 25,
       "norm_label": "estrutura"
     },
     {
@@ -6771,8 +7521,8 @@
       "source_file": "CLAUDE.md",
       "source_location": "L17",
       "_origin": "ast",
-      "id": "users_gabrieltorresbolognani_automacao_toc_online_claude_comandos_essenciais",
-      "community": 7,
+      "id": "claude_comandos_essenciais",
+      "community": 25,
       "norm_label": "comandos essenciais"
     },
     {
@@ -6781,38 +7531,38 @@
       "source_file": "CLAUDE.md",
       "source_location": "L30",
       "_origin": "ast",
-      "id": "users_gabrieltorresbolognani_automacao_toc_online_claude_regras_de_trabalho",
-      "community": 7,
+      "id": "claude_regras_de_trabalho",
+      "community": 25,
       "norm_label": "regras de trabalho"
     },
     {
       "label": "Conven\u00e7\u00f5es t\u00e9cnicas",
       "file_type": "document",
       "source_file": "CLAUDE.md",
-      "source_location": "L42",
+      "source_location": "L49",
       "_origin": "ast",
-      "id": "users_gabrieltorresbolognani_automacao_toc_online_claude_conven\u00e7\u00f5es_t\u00e9cnicas",
-      "community": 7,
+      "id": "claude_conven\u00e7\u00f5es_t\u00e9cnicas",
+      "community": 25,
       "norm_label": "convencoes tecnicas"
     },
     {
       "label": "Mapa da documenta\u00e7\u00e3o",
       "file_type": "document",
       "source_file": "CLAUDE.md",
-      "source_location": "L48",
+      "source_location": "L55",
       "_origin": "ast",
-      "id": "users_gabrieltorresbolognani_automacao_toc_online_claude_mapa_da_documenta\u00e7\u00e3o",
-      "community": 7,
+      "id": "claude_mapa_da_documenta\u00e7\u00e3o",
+      "community": 25,
       "norm_label": "mapa da documentacao"
     },
     {
       "label": "graphify",
       "file_type": "document",
       "source_file": "CLAUDE.md",
-      "source_location": "L58",
+      "source_location": "L65",
       "_origin": "ast",
-      "id": "users_gabrieltorresbolognani_automacao_toc_online_claude_graphify",
-      "community": 7,
+      "id": "claude_graphify",
+      "community": 25,
       "norm_label": "graphify"
     },
     {
@@ -7381,48 +8131,118 @@
       "source_file": "docs/event-logging.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "users_gabrieltorresbolognani_automacao_toc_online_docs_event_logging_md",
-      "community": 20,
+      "id": "docs_event_logging",
+      "community": 1,
       "norm_label": "event-logging.md"
     },
     {
-      "label": "Observabilidade: logs e eventos correlacionados",
+      "label": "Observabilidade: o m\u00f3dulo de logs",
       "file_type": "document",
       "source_file": "docs/event-logging.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "users_gabrieltorresbolognani_automacao_toc_online_docs_event_logging_observabilidade_logs_e_eventos_correlacionados",
-      "community": 20,
-      "norm_label": "observabilidade: logs e eventos correlacionados"
+      "id": "docs_event_logging_observabilidade_o_m\u00f3dulo_de_logs",
+      "community": 1,
+      "norm_label": "observabilidade: o modulo de logs"
     },
     {
-      "label": "Modelo",
+      "label": "Modelo (tabelas em `packages/db/src/schema/observability.ts`)",
       "file_type": "document",
       "source_file": "docs/event-logging.md",
-      "source_location": "L7",
+      "source_location": "L10",
       "_origin": "ast",
-      "id": "users_gabrieltorresbolognani_automacao_toc_online_docs_event_logging_modelo",
-      "community": 20,
-      "norm_label": "modelo"
+      "id": "docs_event_logging_modelo_tabelas_em_packages_db_src_schema_observability_ts",
+      "community": 1,
+      "norm_label": "modelo (tabelas em `packages/db/src/schema/observability.ts`)"
     },
     {
-      "label": "API (`@toc/core`)",
+      "label": "Os dois tipos de evento",
       "file_type": "document",
       "source_file": "docs/event-logging.md",
       "source_location": "L20",
       "_origin": "ast",
-      "id": "users_gabrieltorresbolognani_automacao_toc_online_docs_event_logging_api_toc_core",
-      "community": 20,
-      "norm_label": "api (`@toc/core`)"
+      "id": "docs_event_logging_os_dois_tipos_de_evento",
+      "community": 1,
+      "norm_label": "os dois tipos de evento"
+    },
+    {
+      "label": "Correla\u00e7\u00e3o (o \"correlationID\")",
+      "file_type": "document",
+      "source_file": "docs/event-logging.md",
+      "source_location": "L36",
+      "_origin": "ast",
+      "id": "docs_event_logging_correla\u00e7\u00e3o_o_correlationid",
+      "community": 1,
+      "norm_label": "correlacao (o \"correlationid\")"
+    },
+    {
+      "label": "Taxonomia de `type` (`namespace.action`, dot.case)",
+      "file_type": "document",
+      "source_file": "docs/event-logging.md",
+      "source_location": "L45",
+      "_origin": "ast",
+      "id": "docs_event_logging_taxonomia_de_type_namespace_action_dot_case",
+      "community": 1,
+      "norm_label": "taxonomia de `type` (`namespace.action`, dot.case)"
+    },
+    {
+      "label": "Receitas",
+      "file_type": "document",
+      "source_file": "docs/event-logging.md",
+      "source_location": "L60",
+      "_origin": "ast",
+      "id": "docs_event_logging_receitas",
+      "community": 1,
+      "norm_label": "receitas"
+    },
+    {
+      "label": "Evento de usu\u00e1rio no app web (login/logout)",
+      "file_type": "document",
+      "source_file": "docs/event-logging.md",
+      "source_location": "L62",
+      "_origin": "ast",
+      "id": "docs_event_logging_evento_de_usu\u00e1rio_no_app_web_login_logout",
+      "community": 1,
+      "norm_label": "evento de usuario no app web (login/logout)"
+    },
+    {
+      "label": "Fluxo de sistema / integra\u00e7\u00e3o",
+      "file_type": "document",
+      "source_file": "docs/event-logging.md",
+      "source_location": "L74",
+      "_origin": "ast",
+      "id": "docs_event_logging_fluxo_de_sistema_integra\u00e7\u00e3o",
+      "community": 1,
+      "norm_label": "fluxo de sistema / integracao"
+    },
+    {
+      "label": "Worker (RPA, futuro)",
+      "file_type": "document",
+      "source_file": "docs/event-logging.md",
+      "source_location": "L96",
+      "_origin": "ast",
+      "id": "docs_event_logging_worker_rpa_futuro",
+      "community": 1,
+      "norm_label": "worker (rpa, futuro)"
+    },
+    {
+      "label": "Checklist \"sempre logar\"",
+      "file_type": "document",
+      "source_file": "docs/event-logging.md",
+      "source_location": "L106",
+      "_origin": "ast",
+      "id": "docs_event_logging_checklist_sempre_logar",
+      "community": 1,
+      "norm_label": "checklist \"sempre logar\""
     },
     {
       "label": "Testes",
       "file_type": "document",
       "source_file": "docs/event-logging.md",
-      "source_location": "L42",
+      "source_location": "L117",
       "_origin": "ast",
-      "id": "users_gabrieltorresbolognani_automacao_toc_online_docs_event_logging_testes",
-      "community": 20,
+      "id": "docs_event_logging_testes",
+      "community": 1,
       "norm_label": "testes"
     },
     {
@@ -8132,7 +8952,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "packages_core_src_index_observability",
-      "community": 2,
+      "community": 0,
       "norm_label": "observability"
     },
     {
@@ -9204,6 +10024,16 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "apps/web/e2e/logs.spec.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_e2e_logs_spec",
+      "target": "apps_web_e2e_logs_spec_login",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "apps/web/e2e/teams.spec.ts",
       "source_location": "L9",
       "weight": 1.0,
@@ -9512,6 +10342,17 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/components/app-shell/app-shell.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_app_shell_appshell",
+      "target": "apps_web_package_dependencies_react"
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/package.json",
@@ -9669,7 +10510,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L7",
+      "source_location": "L6",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page",
       "target": "apps_web_src_app_dashboard_admin_users_createuserform",
@@ -9691,7 +10532,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L7",
+      "source_location": "L6",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page",
       "target": "apps_web_src_app_dashboard_admin_users_createuserform_createuserform",
@@ -9885,7 +10726,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L20",
+      "source_location": "L19",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page",
       "target": "apps_web_src_app_dashboard_admin_users_page_adminuserspage",
@@ -9895,32 +10736,10 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L11",
+      "source_location": "L10",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page",
       "target": "apps_web_src_app_dashboard_admin_users_page_profilerow",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L5",
-      "weight": 1.0,
-      "source": "apps_web_src_app_dashboard_admin_users_page",
-      "target": "apps_web_src_app_login_actions",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L5",
-      "weight": 1.0,
-      "source": "apps_web_src_app_dashboard_admin_users_page",
-      "target": "apps_web_src_app_login_actions_signout",
       "confidence_score": 1.0
     },
     {
@@ -9994,7 +10813,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L6",
+      "source_location": "L5",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page",
       "target": "packages_core_src_auth_index",
@@ -10005,7 +10824,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L6",
+      "source_location": "L5",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page",
       "target": "packages_core_src_auth_roles_approle",
@@ -10016,7 +10835,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L6",
+      "source_location": "L5",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page",
       "target": "packages_core_src_auth_roles_dbroletouilabel",
@@ -10027,7 +10846,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L15",
+      "source_location": "L14",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page_profilerow",
       "target": "packages_core_src_auth_roles_approle",
@@ -10039,7 +10858,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L21",
+      "source_location": "L20",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page_adminuserspage",
       "target": "apps_web_src_lib_auth_requirerole"
@@ -10050,7 +10869,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L24",
+      "source_location": "L23",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page_adminuserspage",
       "target": "apps_web_src_lib_supabase_server_getsupabaseserverclient"
@@ -10061,7 +10880,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L31",
+      "source_location": "L30",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page_adminuserspage",
       "target": "apps_web_src_lib_teams_service_listteams"
@@ -10072,7 +10891,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L65",
+      "source_location": "L54",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page_adminuserspage",
       "target": "packages_core_src_auth_roles_dbroletouilabel"
@@ -11568,17 +12387,279 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/layout.tsx",
-      "source_location": "L7",
+      "source_location": "L10",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_layout",
       "target": "apps_web_src_app_dashboard_layout_dashboardlayout",
       "confidence_score": 1.0
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/layout.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_layout",
+      "target": "apps_web_src_components_app_shell_app_shell",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/layout.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_layout",
+      "target": "apps_web_src_components_app_shell_app_shell_appshell",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/layout.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_layout",
+      "target": "apps_web_src_lib_auth",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/layout.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_layout",
+      "target": "apps_web_src_lib_auth_getsessionuser",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/app/(dashboard)/layout.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_layout_dashboardlayout",
+      "target": "apps_web_src_lib_auth_getsessionuser"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/logs/[traceId]/page.tsx",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_logs_traceid_page",
+      "target": "apps_web_src_app_dashboard_logs_traceid_page_eventrow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/logs/[traceId]/page.tsx",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_logs_traceid_page",
+      "target": "apps_web_src_app_dashboard_logs_traceid_page_logrow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/logs/[traceId]/page.tsx",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_logs_traceid_page",
+      "target": "apps_web_src_app_dashboard_logs_traceid_page_rendereventtree",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/logs/[traceId]/page.tsx",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_logs_traceid_page",
+      "target": "apps_web_src_app_dashboard_logs_traceid_page_tracedetailpage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/logs/[traceId]/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_logs_traceid_page",
+      "target": "apps_web_src_app_dashboard_logs_traceid_page_tracerow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/logs/[traceId]/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_logs_traceid_page",
+      "target": "apps_web_src_lib_supabase_server",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/logs/[traceId]/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_logs_traceid_page",
+      "target": "apps_web_src_lib_supabase_server_getsupabaseserverclient",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/logs/[traceId]/page.tsx",
+      "source_location": "L119",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_logs_traceid_page_tracedetailpage",
+      "target": "apps_web_src_app_dashboard_logs_traceid_page_rendereventtree",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/app/(dashboard)/logs/[traceId]/page.tsx",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_logs_traceid_page_tracedetailpage",
+      "target": "apps_web_src_lib_supabase_server_getsupabaseserverclient"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/logs/page.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_logs_page",
+      "target": "apps_web_src_app_dashboard_logs_page_logspage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/logs/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_logs_page",
+      "target": "apps_web_src_app_dashboard_logs_page_tracerow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/logs/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_logs_page",
+      "target": "apps_web_src_lib_supabase_server",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/logs/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_logs_page",
+      "target": "apps_web_src_lib_supabase_server_getsupabaseserverclient",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/app/(dashboard)/logs/page.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_logs_page_logspage",
+      "target": "apps_web_src_lib_supabase_server_getsupabaseserverclient"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/page.tsx",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_page",
+      "target": "apps_web_src_app_dashboard_page_integracoespage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_page",
+      "target": "apps_web_src_app_dashboard_page_integration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_page",
+      "target": "apps_web_src_app_dashboard_page_integrations",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
-      "source_location": "L8",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_traces_page",
+      "target": "apps_web_src_app_dashboard_traces_page_capitalize",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_traces_page",
+      "target": "apps_web_src_app_dashboard_traces_page_datefmt",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_traces_page",
+      "target": "apps_web_src_app_dashboard_traces_page_formatdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L19",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_traces_page",
       "target": "apps_web_src_app_dashboard_traces_page_tracerow",
@@ -11588,7 +12669,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
-      "source_location": "L15",
+      "source_location": "L37",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_traces_page",
       "target": "apps_web_src_app_dashboard_traces_page_tracespage",
@@ -11599,10 +12680,10 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
-      "source_location": "L4",
+      "source_location": "L8",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_traces_page",
-      "target": "apps_web_src_app_login_actions",
+      "target": "apps_web_src_components_patterns_data_table",
       "confidence_score": 1.0
     },
     {
@@ -11610,10 +12691,65 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
-      "source_location": "L4",
+      "source_location": "L8",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_traces_page",
-      "target": "apps_web_src_app_login_actions_signout",
+      "target": "apps_web_src_components_patterns_data_table_datatable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_traces_page",
+      "target": "apps_web_src_components_patterns_data_table_tablebody",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_traces_page",
+      "target": "apps_web_src_components_patterns_data_table_tablecell",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_traces_page",
+      "target": "apps_web_src_components_patterns_data_table_tablehead",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_traces_page",
+      "target": "apps_web_src_components_patterns_data_table_tableheader",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_traces_page",
+      "target": "apps_web_src_components_patterns_data_table_tablerow",
       "confidence_score": 1.0
     },
     {
@@ -11621,7 +12757,73 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
-      "source_location": "L2",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_traces_page",
+      "target": "apps_web_src_components_patterns_empty_state",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_traces_page",
+      "target": "apps_web_src_components_patterns_empty_state_emptystate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_traces_page",
+      "target": "apps_web_src_components_patterns_page_header",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_traces_page",
+      "target": "apps_web_src_components_patterns_page_header_pageheader",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_traces_page",
+      "target": "apps_web_src_components_patterns_status_badge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_traces_page",
+      "target": "apps_web_src_components_patterns_status_badge_statusbadge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L3",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_traces_page",
       "target": "apps_web_src_lib_auth",
@@ -11632,7 +12834,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
-      "source_location": "L2",
+      "source_location": "L3",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_traces_page",
       "target": "apps_web_src_lib_auth_getsessionuser",
@@ -11643,7 +12845,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_traces_page",
       "target": "apps_web_src_lib_supabase_server",
@@ -11654,7 +12856,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_traces_page",
       "target": "apps_web_src_lib_supabase_server_getsupabaseserverclient",
@@ -11664,9 +12866,31 @@
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L75",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_traces_page_tracespage",
+      "target": "apps_web_src_app_dashboard_traces_page_formatdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
+      "source_location": "L73",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_traces_page_tracespage",
+      "target": "apps_web_src_app_dashboard_traces_page_capitalize",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
-      "source_location": "L16",
+      "source_location": "L38",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_traces_page_tracespage",
       "target": "apps_web_src_lib_auth_getsessionuser"
@@ -11677,7 +12901,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/traces/page.tsx",
-      "source_location": "L19",
+      "source_location": "L41",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_traces_page_tracespage",
       "target": "apps_web_src_lib_supabase_server_getsupabaseserverclient"
@@ -12454,10 +13678,131 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/change-password/page.tsx",
-      "source_location": "L7",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "apps_web_src_app_change_password_page",
       "target": "apps_web_src_app_change_password_page_changepasswordpage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/change-password/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_app_change_password_page",
+      "target": "apps_web_src_components_auth_auth_layout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/change-password/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_app_change_password_page",
+      "target": "apps_web_src_components_auth_auth_layout_authlayout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/change-password/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_app_change_password_page",
+      "target": "apps_web_src_components_patterns_form_field",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/change-password/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_app_change_password_page",
+      "target": "apps_web_src_components_patterns_form_field_formfield",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/change-password/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_change_password_page",
+      "target": "apps_web_src_components_ui_alert",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/change-password/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_change_password_page",
+      "target": "apps_web_src_components_ui_alert_alert",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/change-password/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_change_password_page",
+      "target": "apps_web_src_components_ui_alert_alertdescription",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/change-password/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "apps_web_src_app_change_password_page",
+      "target": "apps_web_src_components_ui_button",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/change-password/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "apps_web_src_app_change_password_page",
+      "target": "apps_web_src_components_ui_button_button",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/change-password/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_app_change_password_page",
+      "target": "apps_web_src_components_ui_input",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/change-password/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_app_change_password_page",
+      "target": "apps_web_src_components_ui_input_input",
       "confidence_score": 1.0
     },
     {
@@ -12488,7 +13833,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/change-password/page.tsx",
-      "source_location": "L12",
+      "source_location": "L17",
       "weight": 1.0,
       "source": "apps_web_src_app_change_password_page_changepasswordpage",
       "target": "apps_web_src_lib_auth_getsessionuser"
@@ -12537,7 +13882,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/login/actions.ts",
-      "source_location": "L6",
+      "source_location": "L8",
       "weight": 1.0,
       "source": "apps_web_src_app_login_actions",
       "target": "apps_web_src_app_login_actions_signin",
@@ -12547,7 +13892,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/login/actions.ts",
-      "source_location": "L21",
+      "source_location": "L30",
       "weight": 1.0,
       "source": "apps_web_src_app_login_actions",
       "target": "apps_web_src_app_login_actions_signout",
@@ -12561,7 +13906,7 @@
       "source_location": "L4",
       "weight": 1.0,
       "source": "apps_web_src_app_login_actions",
-      "target": "apps_web_src_lib_supabase_server",
+      "target": "apps_web_src_lib_auth",
       "confidence_score": 1.0
     },
     {
@@ -12570,6 +13915,50 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/login/actions.ts",
       "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_app_login_actions",
+      "target": "apps_web_src_lib_auth_getsessionuser",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/login/actions.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_app_login_actions",
+      "target": "apps_web_src_lib_observability_tracer",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/login/actions.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_app_login_actions",
+      "target": "apps_web_src_lib_observability_tracer_loguserevent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/login/actions.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_app_login_actions",
+      "target": "apps_web_src_lib_supabase_server",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/login/actions.ts",
+      "source_location": "L6",
       "weight": 1.0,
       "source": "apps_web_src_app_login_actions",
       "target": "apps_web_src_lib_supabase_server_getsupabaseserverclient",
@@ -12587,12 +13976,34 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/user-menu.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_user_menu",
+      "target": "apps_web_src_app_login_actions",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/login/actions.ts",
-      "source_location": "L7",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "apps_web_src_app_login_actions_signin",
+      "target": "apps_web_src_lib_observability_tracer_loguserevent"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/app/login/actions.ts",
+      "source_location": "L10",
       "weight": 1.0,
       "source": "apps_web_src_app_login_actions_signin",
       "target": "apps_web_src_lib_supabase_server_getsupabaseserverclient"
@@ -12614,29 +14025,571 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/login/actions.ts",
-      "source_location": "L22",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "apps_web_src_app_login_actions_signout",
+      "target": "apps_web_src_lib_auth_getsessionuser"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/app/login/actions.ts",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "apps_web_src_app_login_actions_signout",
+      "target": "apps_web_src_lib_observability_tracer_loguserevent"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/app/login/actions.ts",
+      "source_location": "L33",
       "weight": 1.0,
       "source": "apps_web_src_app_login_actions_signout",
       "target": "apps_web_src_lib_supabase_server_getsupabaseserverclient"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/user-menu.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_user_menu",
+      "target": "apps_web_src_app_login_actions_signout",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/login/page.tsx",
-      "source_location": "L3",
+      "source_location": "L8",
       "weight": 1.0,
       "source": "apps_web_src_app_login_page",
       "target": "apps_web_src_app_login_page_loginpage",
       "confidence_score": 1.0
     },
     {
-      "relation": "contains",
+      "relation": "imports_from",
+      "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/page.tsx",
+      "source_file": "apps/web/src/app/login/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_app_login_page",
+      "target": "apps_web_src_components_auth_auth_layout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/login/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_app_login_page",
+      "target": "apps_web_src_components_auth_auth_layout_authlayout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/login/page.tsx",
       "source_location": "L3",
       "weight": 1.0,
-      "source": "apps_web_src_app_page",
-      "target": "apps_web_src_app_page_home",
+      "source": "apps_web_src_app_login_page",
+      "target": "apps_web_src_components_patterns_form_field",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/login/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "apps_web_src_app_login_page",
+      "target": "apps_web_src_components_patterns_form_field_formfield",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/login/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_app_login_page",
+      "target": "apps_web_src_components_ui_alert",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/login/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_app_login_page",
+      "target": "apps_web_src_components_ui_alert_alert",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/login/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_app_login_page",
+      "target": "apps_web_src_components_ui_alert_alertdescription",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/login/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_app_login_page",
+      "target": "apps_web_src_components_ui_button",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/login/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_app_login_page",
+      "target": "apps_web_src_components_ui_button_button",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/login/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_app_login_page",
+      "target": "apps_web_src_components_ui_input",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/login/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_app_login_page",
+      "target": "apps_web_src_components_ui_input_input",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/app-shell.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_app_shell",
+      "target": "apps_web_src_components_app_shell_app_shell_appshell",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/app-shell.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_app_shell",
+      "target": "apps_web_src_components_app_shell_app_shell_appshellprops",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/app-shell.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_app_shell",
+      "target": "apps_web_src_components_app_shell_sidebar",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/app-shell.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_app_shell",
+      "target": "apps_web_src_components_app_shell_sidebar_sidebarcontent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/app-shell.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_app_shell",
+      "target": "apps_web_src_components_app_shell_user_menu",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/app-shell.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_app_shell",
+      "target": "apps_web_src_components_app_shell_user_menu_usermenu",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/nav-config.ts",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_nav_config",
+      "target": "apps_web_src_components_app_shell_nav_config_nav_items",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/nav-config.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_nav_config",
+      "target": "apps_web_src_components_app_shell_nav_config_navitem",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/sidebar.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_sidebar",
+      "target": "apps_web_src_components_app_shell_nav_config",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/sidebar.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_sidebar",
+      "target": "apps_web_src_components_app_shell_nav_config_nav_items",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/sidebar.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_sidebar",
+      "target": "apps_web_src_components_app_shell_sidebar_sidebarcontent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/sidebar.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_sidebar",
+      "target": "apps_web_src_components_brand_logo",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/sidebar.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_sidebar",
+      "target": "apps_web_src_components_brand_logo_logo",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/sidebar.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_sidebar",
+      "target": "apps_web_src_lib_utils",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/sidebar.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_sidebar",
+      "target": "apps_web_src_lib_utils_cn",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/components/app-shell/sidebar.tsx",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_sidebar_sidebarcontent",
+      "target": "apps_web_src_lib_utils_cn"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/user-menu.tsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_user_menu",
+      "target": "apps_web_src_components_app_shell_user_menu_role_labels",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/user-menu.tsx",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_user_menu",
+      "target": "apps_web_src_components_app_shell_user_menu_usermenu",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/user-menu.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_user_menu",
+      "target": "apps_web_src_components_ui_avatar",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/user-menu.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_user_menu",
+      "target": "apps_web_src_components_ui_avatar_avatar",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/user-menu.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_user_menu",
+      "target": "apps_web_src_components_ui_avatar_initialsfrom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/user-menu.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_user_menu",
+      "target": "apps_web_src_components_ui_dropdown_menu",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/user-menu.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_user_menu",
+      "target": "apps_web_src_components_ui_dropdown_menu_dropdownmenucontent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/user-menu.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_user_menu",
+      "target": "apps_web_src_components_ui_dropdown_menu_dropdownmenuitem",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/user-menu.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_user_menu",
+      "target": "apps_web_src_components_ui_dropdown_menu_dropdownmenulabel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/app-shell/user-menu.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_user_menu",
+      "target": "apps_web_src_components_ui_dropdown_menu_dropdownmenuseparator",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/components/app-shell/user-menu.tsx",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "apps_web_src_components_app_shell_user_menu_usermenu",
+      "target": "apps_web_src_components_ui_avatar_initialsfrom"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/auth/auth-layout.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "apps_web_src_components_auth_auth_layout",
+      "target": "apps_web_src_components_auth_auth_layout_authlayout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/auth/auth-layout.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_components_auth_auth_layout",
+      "target": "apps_web_src_components_auth_auth_layout_authlayoutprops",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/auth/auth-layout.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_components_auth_auth_layout",
+      "target": "apps_web_src_components_brand_logo",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/auth/auth-layout.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_components_auth_auth_layout",
+      "target": "apps_web_src_components_brand_logo_logo",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/auth/auth-layout.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "apps_web_src_components_auth_auth_layout",
+      "target": "apps_web_src_components_brand_wave_motif",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/auth/auth-layout.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "apps_web_src_components_auth_auth_layout",
+      "target": "apps_web_src_components_brand_wave_motif_wavemotif",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/auth/auth-layout.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_components_auth_auth_layout",
+      "target": "apps_web_src_components_ui_card",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/auth/auth-layout.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_components_auth_auth_layout",
+      "target": "apps_web_src_components_ui_card_card",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/auth/auth-layout.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_components_auth_auth_layout",
+      "target": "apps_web_src_components_ui_card_cardcontent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/auth/auth-layout.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_components_auth_auth_layout",
+      "target": "apps_web_src_components_ui_card_cardheader",
       "confidence_score": 1.0
     },
     {
@@ -12745,6 +14698,17 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/empty-state.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_empty_state",
+      "target": "apps_web_src_components_brand_wave_motif",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -12754,6 +14718,429 @@
       "weight": 1.0,
       "source": "apps_web_src_components_brand_wave_motif_wavemotif",
       "target": "apps_web_src_lib_utils_cn"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/empty-state.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_empty_state",
+      "target": "apps_web_src_components_brand_wave_motif_wavemotif",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_data_table",
+      "target": "apps_web_src_components_patterns_data_table_datatable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_data_table",
+      "target": "apps_web_src_components_patterns_data_table_tablebody",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_data_table",
+      "target": "apps_web_src_components_patterns_data_table_tablecell",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_data_table",
+      "target": "apps_web_src_components_patterns_data_table_tablehead",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_data_table",
+      "target": "apps_web_src_components_patterns_data_table_tableheader",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_data_table",
+      "target": "apps_web_src_components_patterns_data_table_tablerow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_data_table",
+      "target": "apps_web_src_lib_utils",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_data_table",
+      "target": "apps_web_src_lib_utils_cn",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_data_table_datatable",
+      "target": "apps_web_src_lib_utils_cn"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_data_table_tableheader",
+      "target": "apps_web_src_lib_utils_cn"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_data_table_tablebody",
+      "target": "apps_web_src_lib_utils_cn"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_data_table_tablerow",
+      "target": "apps_web_src_lib_utils_cn"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_data_table_tablehead",
+      "target": "apps_web_src_lib_utils_cn"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/components/patterns/data-table.tsx",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_data_table_tablecell",
+      "target": "apps_web_src_lib_utils_cn"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/empty-state.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_empty_state",
+      "target": "apps_web_src_components_patterns_empty_state_emptystate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/empty-state.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_empty_state",
+      "target": "apps_web_src_components_patterns_empty_state_emptystateprops",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/empty-state.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_empty_state",
+      "target": "apps_web_src_lib_utils",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/empty-state.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_empty_state",
+      "target": "apps_web_src_lib_utils_cn",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/components/patterns/empty-state.tsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_empty_state_emptystate",
+      "target": "apps_web_src_lib_utils_cn"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/form-field.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_form_field",
+      "target": "apps_web_src_components_patterns_form_field_formfield",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/form-field.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_form_field",
+      "target": "apps_web_src_components_patterns_form_field_formfieldprops",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/form-field.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_form_field",
+      "target": "apps_web_src_components_ui_label",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/form-field.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_form_field",
+      "target": "apps_web_src_components_ui_label_label",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/form-field.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_form_field",
+      "target": "apps_web_src_lib_utils",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/form-field.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_form_field",
+      "target": "apps_web_src_lib_utils_cn",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/components/patterns/form-field.tsx",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_form_field_formfield",
+      "target": "apps_web_src_lib_utils_cn"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/page-header.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_page_header",
+      "target": "apps_web_src_components_patterns_page_header_pageheader",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/page-header.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_page_header",
+      "target": "apps_web_src_components_patterns_page_header_pageheaderprops",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/page-header.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_page_header",
+      "target": "apps_web_src_lib_utils",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/page-header.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_page_header",
+      "target": "apps_web_src_lib_utils_cn",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/components/patterns/page-header.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_page_header_pageheader",
+      "target": "apps_web_src_lib_utils_cn"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/status-badge.tsx",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_status_badge",
+      "target": "apps_web_src_components_patterns_status_badge_statusbadge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/status-badge.tsx",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_status_badge",
+      "target": "apps_web_src_components_patterns_status_badge_statusbadgeprops",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/status-badge.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_status_badge",
+      "target": "apps_web_src_components_patterns_status_badge_statuskind",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/status-badge.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_status_badge",
+      "target": "apps_web_src_components_patterns_status_badge_tone",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/status-badge.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_status_badge",
+      "target": "apps_web_src_components_patterns_status_badge_tones",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/status-badge.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_status_badge",
+      "target": "apps_web_src_components_ui_badge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/status-badge.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_status_badge",
+      "target": "apps_web_src_components_ui_badge_badge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/patterns/status-badge.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_components_patterns_status_badge",
+      "target": "apps_web_src_components_ui_badge_badgeprops",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -14721,6 +17108,158 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/observability/tracer.ts",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "apps_web_src_lib_observability_tracer",
+      "target": "apps_web_src_lib_observability_tracer_getwebtracer",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/observability/tracer.ts",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "apps_web_src_lib_observability_tracer",
+      "target": "apps_web_src_lib_observability_tracer_loguserevent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/observability/tracer.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_lib_observability_tracer",
+      "target": "apps_web_src_lib_supabase_admin",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/observability/tracer.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_lib_observability_tracer",
+      "target": "apps_web_src_lib_supabase_admin_getsupabaseadminclient",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/observability/tracer.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_lib_observability_tracer",
+      "target": "packages_core_src_observability_index",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/observability/tracer.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_lib_observability_tracer",
+      "target": "packages_core_src_observability_store_supabasestore",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/observability/tracer.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_lib_observability_tracer",
+      "target": "packages_core_src_observability_tracer_createtracer",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/observability/tracer.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_lib_observability_tracer",
+      "target": "packages_core_src_observability_tracer_tracer",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/observability/tracer.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_lib_observability_tracer",
+      "target": "packages_core_src_observability_user_events_recorduserevent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/observability/tracer.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "apps_web_src_lib_observability_tracer",
+      "target": "packages_core_src_observability_user_events_usereventinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/lib/observability/tracer.ts",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "apps_web_src_lib_observability_tracer_getwebtracer",
+      "target": "apps_web_src_lib_supabase_admin_getsupabaseadminclient"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/lib/observability/tracer.ts",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "apps_web_src_lib_observability_tracer_getwebtracer",
+      "target": "packages_core_src_observability_tracer_createtracer"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/observability/tracer.ts",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "apps_web_src_lib_observability_tracer_loguserevent",
+      "target": "apps_web_src_lib_observability_tracer_getwebtracer",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/lib/observability/tracer.ts",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "apps_web_src_lib_observability_tracer_loguserevent",
+      "target": "packages_core_src_observability_user_events_recorduserevent"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "apps/web/src/lib/supabase/admin.ts",
       "source_location": "L9",
       "weight": 1.0,
@@ -16466,7 +19005,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/package.json",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0,
       "source": "packages_core_package_devdependencies",
       "target": "packages_core_package_devdependencies_eslint",
@@ -16479,7 +19018,7 @@
       "source_location": "L23",
       "weight": 1.0,
       "source": "packages_core_package_devdependencies",
-      "target": "packages_core_package_devdependencies_toc_config",
+      "target": "packages_core_package_devdependencies_supabase_supabase_js",
       "confidence_score": 1.0
     },
     {
@@ -16489,6 +19028,16 @@
       "source_location": "L24",
       "weight": 1.0,
       "source": "packages_core_package_devdependencies",
+      "target": "packages_core_package_devdependencies_toc_config",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/package.json",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "packages_core_package_devdependencies",
       "target": "packages_core_package_devdependencies_types_node",
       "confidence_score": 1.0
     },
@@ -16496,7 +19045,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/package.json",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "source": "packages_core_package_devdependencies",
       "target": "packages_core_package_devdependencies_typescript",
@@ -16506,7 +19055,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/package.json",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "source": "packages_core_package_devdependencies",
       "target": "packages_core_package_devdependencies_vitest",
@@ -18505,6 +21054,17 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "re_exports",
+      "context": "export",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/index.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_index",
+      "target": "packages_core_src_observability_user_events",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -18523,6 +21083,17 @@
       "source_location": "L2",
       "weight": 1.0,
       "source": "packages_core_test_tracer_test",
+      "target": "packages_core_src_observability_index",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/test/user-events.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "packages_core_test_user_events_test",
       "target": "packages_core_src_observability_index",
       "confidence_score": 1.0
     },
@@ -18776,7 +21347,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0,
       "source": "packages_core_src_observability_store",
       "target": "packages_core_src_observability_store_dbstore",
@@ -18786,7 +21357,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0,
       "source": "packages_core_src_observability_store",
       "target": "packages_core_src_observability_store_inmemorystore",
@@ -18796,10 +21367,20 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0,
       "source": "packages_core_src_observability_store",
       "target": "packages_core_src_observability_store_observabilitystore",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L113",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_store",
+      "target": "packages_core_src_observability_store_supabasestore",
       "confidence_score": 1.0
     },
     {
@@ -18807,7 +21388,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "source": "packages_core_src_observability_store",
       "target": "packages_core_src_observability_types",
@@ -18818,7 +21399,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "source": "packages_core_src_observability_store",
       "target": "packages_core_src_observability_types_eventrecord",
@@ -18829,7 +21410,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "source": "packages_core_src_observability_store",
       "target": "packages_core_src_observability_types_logrecord",
@@ -18840,7 +21421,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "source": "packages_core_src_observability_store",
       "target": "packages_core_src_observability_types_tracerecord",
@@ -18851,7 +21432,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L2",
+      "source_location": "L3",
       "weight": 1.0,
       "source": "packages_core_src_observability_store",
       "target": "packages_db_src_client_database",
@@ -18862,7 +21443,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0,
       "source": "packages_core_src_observability_store",
       "target": "packages_db_src_index",
@@ -18873,7 +21454,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0,
       "source": "packages_core_src_observability_store",
       "target": "packages_db_src_index_schema",
@@ -18891,11 +21472,22 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "packages_core_test_supabase_store_test",
+      "target": "packages_core_src_observability_store",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "implements",
       "context": "type",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore",
       "target": "packages_core_src_observability_store_observabilitystore",
@@ -18906,7 +21498,7 @@
       "context": "type",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_inmemorystore",
       "target": "packages_core_src_observability_store_observabilitystore",
@@ -18916,7 +21508,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_observabilitystore",
       "target": "packages_core_src_observability_store_observabilitystore_newid",
@@ -18926,7 +21518,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_observabilitystore",
       "target": "packages_core_src_observability_store_observabilitystore_saveevent",
@@ -18936,7 +21528,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_observabilitystore",
       "target": "packages_core_src_observability_store_observabilitystore_savelog",
@@ -18946,7 +21538,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_observabilitystore",
       "target": "packages_core_src_observability_store_observabilitystore_savetrace",
@@ -18956,7 +21548,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_observabilitystore",
       "target": "packages_core_src_observability_store_observabilitystore_updateevent",
@@ -18966,10 +21558,21 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_observabilitystore",
       "target": "packages_core_src_observability_store_observabilitystore_updatetrace",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "implements",
+      "context": "type",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L113",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_store_supabasestore",
+      "target": "packages_core_src_observability_store_observabilitystore",
       "confidence_score": 1.0
     },
     {
@@ -19010,7 +21613,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_observabilitystore_savetrace",
       "target": "packages_core_src_observability_types_tracerecord",
@@ -19021,7 +21624,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_observabilitystore_updatetrace",
       "target": "packages_core_src_observability_types_tracerecord",
@@ -19054,7 +21657,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_observabilitystore_saveevent",
       "target": "packages_core_src_observability_types_eventrecord",
@@ -19076,7 +21679,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_observabilitystore_updateevent",
       "target": "packages_core_src_observability_types_eventrecord",
@@ -19120,7 +21723,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_observabilitystore_savelog",
       "target": "packages_core_src_observability_types_logrecord",
@@ -19141,7 +21744,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_inmemorystore",
       "target": "packages_core_src_observability_store_inmemorystore_newid",
@@ -19151,7 +21754,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_inmemorystore",
       "target": "packages_core_src_observability_store_inmemorystore_saveevent",
@@ -19161,7 +21764,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L42",
+      "source_location": "L43",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_inmemorystore",
       "target": "packages_core_src_observability_store_inmemorystore_savelog",
@@ -19171,7 +21774,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_inmemorystore",
       "target": "packages_core_src_observability_store_inmemorystore_savetrace",
@@ -19181,7 +21784,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L38",
+      "source_location": "L39",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_inmemorystore",
       "target": "packages_core_src_observability_store_inmemorystore_updateevent",
@@ -19191,7 +21794,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_inmemorystore",
       "target": "packages_core_src_observability_store_inmemorystore_updatetrace",
@@ -19220,11 +21823,22 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/test/user-events.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "packages_core_test_user_events_test",
+      "target": "packages_core_src_observability_store_inmemorystore",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "references",
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_inmemorystore_savetrace",
       "target": "packages_core_src_observability_types_tracerecord",
@@ -19235,7 +21849,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_inmemorystore_updatetrace",
       "target": "packages_core_src_observability_types_tracerecord",
@@ -19246,7 +21860,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_inmemorystore_saveevent",
       "target": "packages_core_src_observability_types_eventrecord",
@@ -19257,7 +21871,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L38",
+      "source_location": "L39",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_inmemorystore_updateevent",
       "target": "packages_core_src_observability_types_eventrecord",
@@ -19268,7 +21882,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L42",
+      "source_location": "L43",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_inmemorystore_savelog",
       "target": "packages_core_src_observability_types_logrecord",
@@ -19278,7 +21892,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L48",
+      "source_location": "L49",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore",
       "target": "packages_core_src_observability_store_dbstore_constructor",
@@ -19288,7 +21902,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L50",
+      "source_location": "L51",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore",
       "target": "packages_core_src_observability_store_dbstore_newid",
@@ -19298,7 +21912,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L70",
+      "source_location": "L71",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore",
       "target": "packages_core_src_observability_store_dbstore_saveevent",
@@ -19308,7 +21922,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L92",
+      "source_location": "L93",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore",
       "target": "packages_core_src_observability_store_dbstore_savelog",
@@ -19318,7 +21932,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L53",
+      "source_location": "L54",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore",
       "target": "packages_core_src_observability_store_dbstore_savetrace",
@@ -19328,7 +21942,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L82",
+      "source_location": "L83",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore",
       "target": "packages_core_src_observability_store_dbstore_updateevent",
@@ -19338,7 +21952,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L64",
+      "source_location": "L65",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore",
       "target": "packages_core_src_observability_store_dbstore_updatetrace",
@@ -19349,7 +21963,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L48",
+      "source_location": "L49",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore_constructor",
       "target": "packages_db_src_client_database",
@@ -19360,7 +21974,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L53",
+      "source_location": "L54",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore_savetrace",
       "target": "packages_core_src_observability_types_tracerecord",
@@ -19372,7 +21986,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L54",
+      "source_location": "L55",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore_savetrace",
       "target": "packages_db_src_client_database"
@@ -19381,22 +21995,22 @@
       "relation": "references",
       "context": "generic_arg",
       "confidence": "EXTRACTED",
-      "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L64",
-      "weight": 1.0,
-      "source": "packages_core_src_observability_store_dbstore_updatetrace",
-      "target": "packages_core_src_observability_types_tracerecord",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "packages/core/src/observability/store.ts",
       "source_location": "L65",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore_updatetrace",
+      "target": "packages_core_src_observability_types_tracerecord",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L66",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_store_dbstore_updatetrace",
       "target": "packages_db_src_client_database"
     },
     {
@@ -19404,7 +22018,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L70",
+      "source_location": "L71",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore_saveevent",
       "target": "packages_core_src_observability_types_eventrecord",
@@ -19416,7 +22030,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L71",
+      "source_location": "L72",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore_saveevent",
       "target": "packages_db_src_client_database"
@@ -19426,7 +22040,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L82",
+      "source_location": "L83",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore_updateevent",
       "target": "packages_core_src_observability_types_eventrecord",
@@ -19438,7 +22052,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L83",
+      "source_location": "L84",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore_updateevent",
       "target": "packages_db_src_client_database"
@@ -19448,7 +22062,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L92",
+      "source_location": "L93",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore_savelog",
       "target": "packages_core_src_observability_types_logrecord",
@@ -19460,10 +22074,146 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/core/src/observability/store.ts",
-      "source_location": "L93",
+      "source_location": "L94",
       "weight": 1.0,
       "source": "packages_core_src_observability_store_dbstore_savelog",
       "target": "packages_db_src_client_database"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L114",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_store_supabasestore",
+      "target": "packages_core_src_observability_store_supabasestore_constructor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L116",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_store_supabasestore",
+      "target": "packages_core_src_observability_store_supabasestore_newid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L138",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_store_supabasestore",
+      "target": "packages_core_src_observability_store_supabasestore_saveevent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L162",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_store_supabasestore",
+      "target": "packages_core_src_observability_store_supabasestore_savelog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L119",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_store_supabasestore",
+      "target": "packages_core_src_observability_store_supabasestore_savetrace",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L151",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_store_supabasestore",
+      "target": "packages_core_src_observability_store_supabasestore_updateevent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L131",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_store_supabasestore",
+      "target": "packages_core_src_observability_store_supabasestore_updatetrace",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "packages_core_test_supabase_store_test",
+      "target": "packages_core_src_observability_store_supabasestore",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L119",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_store_supabasestore_savetrace",
+      "target": "packages_core_src_observability_types_tracerecord",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L131",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_store_supabasestore_updatetrace",
+      "target": "packages_core_src_observability_types_tracerecord",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L138",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_store_supabasestore_saveevent",
+      "target": "packages_core_src_observability_types_eventrecord",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L151",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_store_supabasestore_updateevent",
+      "target": "packages_core_src_observability_types_eventrecord",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/store.ts",
+      "source_location": "L162",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_store_supabasestore_savelog",
+      "target": "packages_core_src_observability_types_logrecord",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -19557,6 +22307,17 @@
       "weight": 1.0,
       "source": "packages_core_src_observability_tracer",
       "target": "packages_core_src_observability_types_starttraceinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/user-events.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_user_events",
+      "target": "packages_core_src_observability_tracer",
       "confidence_score": 1.0
     },
     {
@@ -19726,6 +22487,17 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/user-events.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_user_events",
+      "target": "packages_core_src_observability_tracer_tracer",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "references",
       "context": "parameter_type",
       "confidence": "EXTRACTED",
@@ -19735,6 +22507,17 @@
       "source": "packages_core_src_observability_tracer_tracer_starttrace",
       "target": "packages_core_src_observability_types_starttraceinput",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/core/src/observability/user-events.ts",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_user_events_recorduserevent",
+      "target": "packages_core_src_observability_tracer_tracer_starttrace"
     },
     {
       "relation": "imports",
@@ -19755,6 +22538,17 @@
       "source_location": "L2",
       "weight": 1.0,
       "source": "packages_core_test_tracer_test",
+      "target": "packages_core_src_observability_tracer_createtracer",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/test/user-events.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "packages_core_test_user_events_test",
       "target": "packages_core_src_observability_tracer_createtracer",
       "confidence_score": 1.0
     },
@@ -19859,6 +22653,114 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/user-events.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_user_events",
+      "target": "packages_core_src_observability_types",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "packages_core_test_supabase_store_test",
+      "target": "packages_core_src_observability_types",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "packages_core_test_supabase_store_test",
+      "target": "packages_core_src_observability_types_tracerecord",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "packages_core_test_supabase_store_test",
+      "target": "packages_core_src_observability_types_eventrecord",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "packages_core_test_supabase_store_test",
+      "target": "packages_core_src_observability_types_logrecord",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/user-events.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_user_events",
+      "target": "packages_core_src_observability_types_errorinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "field",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/user-events.ts",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_user_events_usereventinput",
+      "target": "packages_core_src_observability_types_errorinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/user-events.ts",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_user_events",
+      "target": "packages_core_src_observability_user_events_recorduserevent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/src/observability/user-events.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "packages_core_src_observability_user_events",
+      "target": "packages_core_src_observability_user_events_usereventinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/test/user-events.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "packages_core_test_user_events_test",
+      "target": "packages_core_src_observability_user_events_recorduserevent",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/core/test/company-service.test.ts",
@@ -19946,6 +22848,77 @@
       "weight": 1.0,
       "source": "packages_core_test_register_test",
       "target": "packages_core_test_register_test_makedeps",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "packages_core_test_supabase_store_test",
+      "target": "packages_core_test_supabase_store_test_fakeclient",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L48",
+      "weight": 1.0,
+      "source": "packages_core_test_supabase_store_test",
+      "target": "packages_core_test_supabase_store_test_loggedat",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "packages_core_test_supabase_store_test",
+      "target": "packages_core_test_supabase_store_test_makestore",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L47",
+      "weight": 1.0,
+      "source": "packages_core_test_supabase_store_test",
+      "target": "packages_core_test_supabase_store_test_occurredat",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "packages_core_test_supabase_store_test",
+      "target": "packages_core_test_supabase_store_test_recordedcall",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "packages_core_test_supabase_store_test",
+      "target": "packages_core_test_supabase_store_test_startedat",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/core/test/supabase-store.test.ts",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "packages_core_test_supabase_store_test_makestore",
+      "target": "packages_core_test_supabase_store_test_fakeclient",
       "confidence_score": 1.0
     },
     {
@@ -21737,18 +24710,8 @@
       "source_file": "CLAUDE.md",
       "source_location": "L1",
       "weight": 1.0,
-      "source": "users_gabrieltorresbolognani_automacao_toc_online_claude_md",
-      "target": "users_gabrieltorresbolognani_automacao_toc_online_claude_claude_md_automa\u00e7\u00e3o_de_guias_fiscais_toconline",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "README.md",
-      "source_location": "L39",
-      "weight": 1.0,
-      "source": "users_gabrieltorresbolognani_automacao_toc_online_readme_md",
-      "target": "users_gabrieltorresbolognani_automacao_toc_online_claude_md",
+      "source": "claude",
+      "target": "claude_claude_md_automa\u00e7\u00e3o_de_guias_fiscais_toconline",
       "confidence_score": 1.0
     },
     {
@@ -21757,18 +24720,18 @@
       "source_file": "CLAUDE.md",
       "source_location": "L17",
       "weight": 1.0,
-      "source": "users_gabrieltorresbolognani_automacao_toc_online_claude_claude_md_automa\u00e7\u00e3o_de_guias_fiscais_toconline",
-      "target": "users_gabrieltorresbolognani_automacao_toc_online_claude_comandos_essenciais",
+      "source": "claude_claude_md_automa\u00e7\u00e3o_de_guias_fiscais_toconline",
+      "target": "claude_comandos_essenciais",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "CLAUDE.md",
-      "source_location": "L42",
+      "source_location": "L49",
       "weight": 1.0,
-      "source": "users_gabrieltorresbolognani_automacao_toc_online_claude_claude_md_automa\u00e7\u00e3o_de_guias_fiscais_toconline",
-      "target": "users_gabrieltorresbolognani_automacao_toc_online_claude_conven\u00e7\u00f5es_t\u00e9cnicas",
+      "source": "claude_claude_md_automa\u00e7\u00e3o_de_guias_fiscais_toconline",
+      "target": "claude_conven\u00e7\u00f5es_t\u00e9cnicas",
       "confidence_score": 1.0
     },
     {
@@ -21777,28 +24740,28 @@
       "source_file": "CLAUDE.md",
       "source_location": "L6",
       "weight": 1.0,
-      "source": "users_gabrieltorresbolognani_automacao_toc_online_claude_claude_md_automa\u00e7\u00e3o_de_guias_fiscais_toconline",
-      "target": "users_gabrieltorresbolognani_automacao_toc_online_claude_estrutura",
+      "source": "claude_claude_md_automa\u00e7\u00e3o_de_guias_fiscais_toconline",
+      "target": "claude_estrutura",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "CLAUDE.md",
-      "source_location": "L58",
+      "source_location": "L65",
       "weight": 1.0,
-      "source": "users_gabrieltorresbolognani_automacao_toc_online_claude_claude_md_automa\u00e7\u00e3o_de_guias_fiscais_toconline",
-      "target": "users_gabrieltorresbolognani_automacao_toc_online_claude_graphify",
+      "source": "claude_claude_md_automa\u00e7\u00e3o_de_guias_fiscais_toconline",
+      "target": "claude_graphify",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "CLAUDE.md",
-      "source_location": "L48",
+      "source_location": "L55",
       "weight": 1.0,
-      "source": "users_gabrieltorresbolognani_automacao_toc_online_claude_claude_md_automa\u00e7\u00e3o_de_guias_fiscais_toconline",
-      "target": "users_gabrieltorresbolognani_automacao_toc_online_claude_mapa_da_documenta\u00e7\u00e3o",
+      "source": "claude_claude_md_automa\u00e7\u00e3o_de_guias_fiscais_toconline",
+      "target": "claude_mapa_da_documenta\u00e7\u00e3o",
       "confidence_score": 1.0
     },
     {
@@ -21807,8 +24770,8 @@
       "source_file": "CLAUDE.md",
       "source_location": "L30",
       "weight": 1.0,
-      "source": "users_gabrieltorresbolognani_automacao_toc_online_claude_claude_md_automa\u00e7\u00e3o_de_guias_fiscais_toconline",
-      "target": "users_gabrieltorresbolognani_automacao_toc_online_claude_regras_de_trabalho",
+      "source": "claude_claude_md_automa\u00e7\u00e3o_de_guias_fiscais_toconline",
+      "target": "claude_regras_de_trabalho",
       "confidence_score": 1.0
     },
     {
@@ -22152,16 +25115,6 @@
       "confidence_score": 1.0
     },
     {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "docs/conventions.md",
-      "source_location": "L39",
-      "weight": 1.0,
-      "source": "users_gabrieltorresbolognani_automacao_toc_online_docs_conventions_md",
-      "target": "users_gabrieltorresbolognani_automacao_toc_online_docs_event_logging_md",
-      "confidence_score": 1.0
-    },
-    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/conventions.md",
@@ -22219,6 +25172,16 @@
       "weight": 1.0,
       "source": "docs_database",
       "target": "docs_database_banco_de_dados",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/database.md",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "docs_database",
+      "target": "docs_event_logging",
       "confidence_score": 1.0
     },
     {
@@ -22327,8 +25290,38 @@
       "source_file": "docs/event-logging.md",
       "source_location": "L1",
       "weight": 1.0,
-      "source": "users_gabrieltorresbolognani_automacao_toc_online_docs_event_logging_md",
-      "target": "users_gabrieltorresbolognani_automacao_toc_online_docs_event_logging_observabilidade_logs_e_eventos_correlacionados",
+      "source": "docs_event_logging",
+      "target": "docs_event_logging_observabilidade_o_m\u00f3dulo_de_logs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/event-logging.md",
+      "source_location": "L106",
+      "weight": 1.0,
+      "source": "docs_event_logging_observabilidade_o_m\u00f3dulo_de_logs",
+      "target": "docs_event_logging_checklist_sempre_logar",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/event-logging.md",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "docs_event_logging_observabilidade_o_m\u00f3dulo_de_logs",
+      "target": "docs_event_logging_correla\u00e7\u00e3o_o_correlationid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/event-logging.md",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "docs_event_logging_observabilidade_o_m\u00f3dulo_de_logs",
+      "target": "docs_event_logging_modelo_tabelas_em_packages_db_src_schema_observability_ts",
       "confidence_score": 1.0
     },
     {
@@ -22337,28 +25330,68 @@
       "source_file": "docs/event-logging.md",
       "source_location": "L20",
       "weight": 1.0,
-      "source": "users_gabrieltorresbolognani_automacao_toc_online_docs_event_logging_observabilidade_logs_e_eventos_correlacionados",
-      "target": "users_gabrieltorresbolognani_automacao_toc_online_docs_event_logging_api_toc_core",
+      "source": "docs_event_logging_observabilidade_o_m\u00f3dulo_de_logs",
+      "target": "docs_event_logging_os_dois_tipos_de_evento",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/event-logging.md",
-      "source_location": "L7",
+      "source_location": "L60",
       "weight": 1.0,
-      "source": "users_gabrieltorresbolognani_automacao_toc_online_docs_event_logging_observabilidade_logs_e_eventos_correlacionados",
-      "target": "users_gabrieltorresbolognani_automacao_toc_online_docs_event_logging_modelo",
+      "source": "docs_event_logging_observabilidade_o_m\u00f3dulo_de_logs",
+      "target": "docs_event_logging_receitas",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/event-logging.md",
-      "source_location": "L42",
+      "source_location": "L45",
       "weight": 1.0,
-      "source": "users_gabrieltorresbolognani_automacao_toc_online_docs_event_logging_observabilidade_logs_e_eventos_correlacionados",
-      "target": "users_gabrieltorresbolognani_automacao_toc_online_docs_event_logging_testes",
+      "source": "docs_event_logging_observabilidade_o_m\u00f3dulo_de_logs",
+      "target": "docs_event_logging_taxonomia_de_type_namespace_action_dot_case",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/event-logging.md",
+      "source_location": "L117",
+      "weight": 1.0,
+      "source": "docs_event_logging_observabilidade_o_m\u00f3dulo_de_logs",
+      "target": "docs_event_logging_testes",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/event-logging.md",
+      "source_location": "L62",
+      "weight": 1.0,
+      "source": "docs_event_logging_receitas",
+      "target": "docs_event_logging_evento_de_usu\u00e1rio_no_app_web_login_logout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/event-logging.md",
+      "source_location": "L74",
+      "weight": 1.0,
+      "source": "docs_event_logging_receitas",
+      "target": "docs_event_logging_fluxo_de_sistema_integra\u00e7\u00e3o",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/event-logging.md",
+      "source_location": "L96",
+      "weight": 1.0,
+      "source": "docs_event_logging_receitas",
+      "target": "docs_event_logging_worker_rpa_futuro",
       "confidence_score": 1.0
     },
     {
@@ -23083,5 +26116,5 @@
       "source_file": "apps/web/public/next.svg"
     }
   ],
-  "built_at_commit": "e015da6c7ea5a65b2b3cb2b1f4fa837dbc532e30"
+  "built_at_commit": "9688db7e9d7dfbd3d928d66bfabf135cc37b2659"
 }
