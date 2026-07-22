@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getTeam } from "@/lib/teams/service";
-import { signOut } from "@/app/login/actions";
+import { PageHeader } from "@/components/patterns/page-header";
 import { TeamForm } from "../TeamForm";
 import { updateTeamAction } from "../actions";
 
@@ -17,22 +18,14 @@ export default async function EditTeamPage({ params }: { params: Promise<{ id: s
   if (!team) notFound();
 
   return (
-    <main style={{ maxWidth: 900, margin: "40px auto", padding: "0 16px" }}>
-      <header
-        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}
+    <div>
+      <Link
+        href="/equipes"
+        className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
-        <h1>Editar equipe</h1>
-        <form action={signOut} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span>
-            {admin.email} ({admin.role})
-          </span>
-          <button type="submit">Sair</button>
-        </form>
-      </header>
-
-      <p>
-        <Link href="/equipes">← Voltar para equipes</Link>
-      </p>
+        <ArrowLeft className="size-4" /> Voltar para equipes
+      </Link>
+      <PageHeader title="Editar equipe" description={team.name} />
 
       <TeamForm
         action={updateTeamAction.bind(null, id)}
@@ -40,6 +33,6 @@ export default async function EditTeamPage({ params }: { params: Promise<{ id: s
         title={team.name}
         submitLabel="Salvar alterações"
       />
-    </main>
+    </div>
   );
 }
