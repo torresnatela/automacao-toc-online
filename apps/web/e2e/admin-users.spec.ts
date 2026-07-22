@@ -18,7 +18,7 @@ test.describe.serial("cadastro de usuário pelo admin", () => {
 
   test("admin cria usuário e vê a senha temporária uma vez", async ({ page }) => {
     await login(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page).toHaveURL(/\/traces/);
+    await expect(page.getByRole("heading", { name: "Integrações" })).toBeVisible();
 
     await page.goto("/admin/users");
     await expect(page.getByRole("heading", { name: "Usuários" })).toBeVisible();
@@ -45,6 +45,6 @@ test.describe.serial("cadastro de usuário pelo admin", () => {
     await page.getByLabel("confirmar senha").fill(novaSenha);
     await page.getByRole("button", { name: "Salvar" }).click();
 
-    await expect(page).toHaveURL(/\/traces/);
+    await expect(page.getByRole("heading", { name: "Integrações" })).toBeVisible();
   });
 });

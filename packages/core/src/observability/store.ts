@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@toc/db";
 import { schema } from "@toc/db";
 import type { EventRecord, LogRecord, TraceRecord } from "./types";
@@ -99,5 +100,75 @@ export class DbStore implements ObservabilityStore {
       data: l.data,
       loggedAt: l.loggedAt,
     });
+  }
+}
+
+/**
+ * Store que persiste via um SupabaseClient com service role (bypassa RLS).
+ * Usado pelo app web, que já tem um client admin, evitando abrir uma conexão
+ * `pg` direta na Vercel. O client é injetado — não há acoplamento em runtime.
+ *
+ * O Supabase JS usa os nomes reais das colunas (snake_case), diferente do Drizzle.
+ */
+export class SupabaseStore implements ObservabilityStore {
+  constructor(private readonly client: SupabaseClient) {}
+
+  newId(): string {
+    return crypto.randomUUID();
+  }
+  async saveTrace(t: TraceRecord) {
+    const { error } = await this.client.from("traces").insert({
+      id: t.id,
+      root_trigger: t.rootTrigger,
+      trigger_source: t.triggerSource ?? null,
+      correlation_key: t.correlationKey ?? null,
+      status: t.status,
+      created_by: t.createdBy ?? null,
+      started_at: t.startedAt.toISOString(),
+    });
+    if (error) throw error;
+  }
+  async updateTrace(id: string, patch: Partial<TraceRecord>) {
+    const { error } = await this.client
+      .from("traces")
+      .update({ status: patch.status, ended_at: patch.endedAt?.toISOString() ?? null })
+      .eq("id", id);
+    if (error) throw error;
+  }
+  async saveEvent(e: EventRecord) {
+    const { error } = await this.client.from("events").insert({
+      id: e.id,
+      trace_id: e.traceId,
+      parent_event_id: e.parentEventId ?? null,
+      type: e.type,
+      source: e.source,
+      status: e.status,
+      payload: e.payload,
+      occurred_at: e.occurredAt.toISOString(),
+    });
+    if (error) throw error;
+  }
+  async updateEvent(id: string, patch: Partial<EventRecord>) {
+    const { error } = await this.client
+      .from("events")
+      .update({
+        status: patch.status,
+        error: patch.error ?? null,
+        duration_ms: patch.durationMs ?? null,
+      })
+      .eq("id", id);
+    if (error) throw error;
+  }
+  async saveLog(l: LogRecord) {
+    const { error } = await this.client.from("logs").insert({
+      id: l.id,
+      trace_id: l.traceId,
+      event_id: l.eventId ?? null,
+      level: l.level,
+      message: l.message,
+      data: l.data,
+      logged_at: l.loggedAt.toISOString(),
+    });
+    if (error) throw error;
   }
 }

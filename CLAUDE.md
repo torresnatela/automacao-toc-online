@@ -33,8 +33,15 @@ Supabase = Postgres (fonte da verdade) + Auth + Storage (PDFs). Ambos os apps fa
 - **Feature branches**: crie uma branch a partir de `main` → PR → review da equipe → merge.
 - **Schema**: fonte da verdade em `packages/db/src/schema/*`. Gere migrations com `pnpm db:generate`;
   edite SQL à mão **apenas** para RLS/policies/triggers (arquivos `*_rls.sql`).
-- **Observabilidade**: todo fluxo com efeito colateral cria um `trace` e encadeia `events`/`logs`
-  via `@toc/core` (`createTracer` + `DbStore`). Ver `docs/event-logging.md`.
+- **Logs/Observabilidade (OBRIGATÓRIO)**: todo evento novo do sistema **tem** que gerar log.
+  Todo fluxo com efeito colateral **abre um `trace`** e encadeia `events`/`logs` via `@toc/core`.
+  - **Evento de usuário** (login/logout/…): use `logUserEvent(...)` no app web (`apps/web/src/lib/observability/tracer.ts`,
+    fail-open) — internamente `recordUserEvent` abre trace `manual` + event `user.<action>`.
+  - **Evento de sistema** (integração em cadeia): abra `startTrace({ rootTrigger })` e use `event()`/`child()`;
+    um gatilho = um trace (o `traceId` é o correlationID); passos subsequentes são `child()`.
+  - **Escrita**: no web use `getWebTracer()` (`SupabaseStore`, service role); no worker use `DbStore` (`pg` direto).
+  - Nomeie `type` pela taxonomia (`user.*`/`integration.*`/`http.*`/`rpa.*`/`job.*`/`webhook.*`). Nunca logue senha/segredo/PII.
+  - Ver `docs/event-logging.md` (modelo, taxonomia, receitas e checklist "sempre logar").
 - **RLS ligado** em todas as tabelas: o worker usa a service role (bypass); o dashboard respeita `profiles.role`.
 - **Segredos**: só em `.env` (nunca commitado). Há `.env.example` como referência.
 - **Testes de DB** exigem o Supabase local; no CI são pulados com `SKIP_DB_TESTS=1`.

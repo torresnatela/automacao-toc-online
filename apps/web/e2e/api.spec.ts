@@ -9,7 +9,8 @@ async function login(page: Page) {
   await page.getByLabel("email").fill(ADMIN_EMAIL);
   await page.getByLabel("senha").fill(ADMIN_PASSWORD);
   await page.getByRole("button", { name: "Entrar" }).click();
-  await expect(page).toHaveURL(/\/traces/);
+  // Após o login o app leva à tela inicial (Integrações em "/"); basta sair de /login.
+  await expect(page).not.toHaveURL(/\/login/);
 }
 
 test("API sem sessão responde 401 JSON (não redireciona)", async ({ request }) => {

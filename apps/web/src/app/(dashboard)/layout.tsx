@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { getSessionUser } from "@/lib/auth";
 import { AppShell } from "@/components/app-shell/app-shell";
 
+export const dynamic = "force-dynamic";
+
 // Casca compartilhada do dashboard. Busca a sessão uma vez e envolve as páginas
 // na AppShell (sidebar + topbar). As páginas mantêm seu próprio gate por papel.
 export default async function DashboardLayout({ children }: { children: ReactNode }) {

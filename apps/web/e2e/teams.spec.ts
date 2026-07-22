@@ -15,7 +15,7 @@ async function login(page: Page, email: string, password: string) {
 
 test("admin cadastra uma equipe e ela aparece na lista", async ({ page }) => {
   await login(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-  await expect(page).toHaveURL(/\/traces/);
+  await expect(page).not.toHaveURL(/\/login/); // login concluído (leva a "/")
 
   await page.goto("/equipes");
   await expect(page.getByRole("heading", { name: "Equipes" })).toBeVisible();
