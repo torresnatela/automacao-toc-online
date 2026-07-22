@@ -1,10 +1,22 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Building2, Pencil } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { listCompanies } from "@/lib/companies/service";
 import { listTeams } from "@/lib/teams/service";
-import { signOut } from "@/app/login/actions";
 import { CONTRIBUTOR_TYPE_LABELS, COMPANY_STATUS_LABELS, labelOf } from "@/lib/labels";
+import { PageHeader } from "@/components/patterns/page-header";
+import { EmptyState } from "@/components/patterns/empty-state";
+import { StatusBadge } from "@/components/patterns/status-badge";
+import {
+  DataTable,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/patterns/data-table";
+import { buttonVariants } from "@/components/ui/button";
 import { CompanyForm } from "./CompanyForm";
 import { createCompanyAction } from "./actions";
 
@@ -21,18 +33,8 @@ export default async function EmpresasPage() {
   const teams = user.role === "admin" ? await listTeams() : [];
 
   return (
-    <main style={{ maxWidth: 900, margin: "40px auto", padding: "0 16px" }}>
-      <header
-        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}
-      >
-        <h1>Empresas</h1>
-        <form action={signOut} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span>
-            {user.email} ({user.role})
-          </span>
-          <button type="submit">Sair</button>
-        </form>
-      </header>
+    <div>
+      <PageHeader title="Empresas" description="Contribuintes sob gestão do gabinete." />
 
       <CompanyForm
         action={createCompanyAction}
@@ -44,35 +46,52 @@ export default async function EmpresasPage() {
       />
 
       {companies.length === 0 ? (
-        <p>Nenhuma empresa ainda.</p>
+        <EmptyState
+          icon={<Building2 />}
+          title="Nenhuma empresa ainda"
+          description="Cadastre a primeira empresa no formulário acima."
+        />
       ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th style={{ textAlign: "left" }}>Nome</th>
-              <th style={{ textAlign: "left" }}>NISS</th>
-              <th style={{ textAlign: "left" }}>NIF</th>
-              <th style={{ textAlign: "left" }}>Tipo</th>
-              <th style={{ textAlign: "left" }}>Status</th>
-              <th style={{ textAlign: "left" }}></th>
-            </tr>
-          </thead>
-          <tbody>
+        <DataTable>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead>NISS</TableHead>
+              <TableHead>NIF</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {companies.map((c) => (
-              <tr key={c.id}>
-                <td>{c.name}</td>
-                <td>{c.niss}</td>
-                <td>{c.nif ?? "—"}</td>
-                <td>{labelOf(CONTRIBUTOR_TYPE_LABELS, c.type)}</td>
-                <td>{labelOf(COMPANY_STATUS_LABELS, c.status)}</td>
-                <td>
-                  <Link href={`/empresas/${c.id}`}>Editar</Link>
-                </td>
-              </tr>
+              <TableRow key={c.id}>
+                <TableCell className="font-medium text-foreground">{c.name}</TableCell>
+                <TableCell className="tabular-nums text-muted-foreground">{c.niss}</TableCell>
+                <TableCell className="text-muted-foreground">{c.nif ?? "—"}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {labelOf(CONTRIBUTOR_TYPE_LABELS, c.type)}
+                </TableCell>
+                <TableCell>
+                  <StatusBadge
+                    kind="company"
+                    value={c.status}
+                    label={labelOf(COMPANY_STATUS_LABELS, c.status)}
+                  />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Link
+                    href={`/empresas/${c.id}`}
+                    className={buttonVariants({ variant: "ghost", size: "sm" })}
+                  >
+                    <Pencil aria-hidden /> Editar
+                  </Link>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </DataTable>
       )}
-    </main>
+    </div>
   );
 }

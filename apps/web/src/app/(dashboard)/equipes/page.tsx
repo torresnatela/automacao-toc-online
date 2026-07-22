@@ -1,9 +1,21 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { UsersRound, Pencil } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { listTeams } from "@/lib/teams/service";
-import { signOut } from "@/app/login/actions";
 import { TEAM_STATUS_LABELS, labelOf } from "@/lib/labels";
+import { PageHeader } from "@/components/patterns/page-header";
+import { EmptyState } from "@/components/patterns/empty-state";
+import { StatusBadge } from "@/components/patterns/status-badge";
+import {
+  DataTable,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/patterns/data-table";
+import { buttonVariants } from "@/components/ui/button";
 import { TeamForm } from "./TeamForm";
 import { createTeamAction } from "./actions";
 
@@ -16,47 +28,52 @@ export default async function EquipesPage() {
   const teams = await listTeams();
 
   return (
-    <main style={{ maxWidth: 900, margin: "40px auto", padding: "0 16px" }}>
-      <header
-        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}
-      >
-        <h1>Equipes</h1>
-        <form action={signOut} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span>
-            {admin.email} ({admin.role})
-          </span>
-          <button type="submit">Sair</button>
-        </form>
-      </header>
+    <div>
+      <PageHeader title="Equipes" description="Gabinetes de contabilidade (tenants)." />
 
       <TeamForm action={createTeamAction} title="Cadastrar equipe" submitLabel="Cadastrar" />
 
       {teams.length === 0 ? (
-        <p>Nenhuma equipe ainda.</p>
+        <EmptyState
+          icon={<UsersRound />}
+          title="Nenhuma equipe ainda"
+          description="Cadastre o primeiro gabinete no formulário acima."
+        />
       ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th style={{ textAlign: "left" }}>Nome</th>
-              <th style={{ textAlign: "left" }}>NIF</th>
-              <th style={{ textAlign: "left" }}>Status</th>
-              <th style={{ textAlign: "left" }}></th>
-            </tr>
-          </thead>
-          <tbody>
+        <DataTable>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead>NIF</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {teams.map((t) => (
-              <tr key={t.id}>
-                <td>{t.name}</td>
-                <td>{t.nif ?? "—"}</td>
-                <td>{labelOf(TEAM_STATUS_LABELS, t.status)}</td>
-                <td>
-                  <Link href={`/equipes/${t.id}`}>Editar</Link>
-                </td>
-              </tr>
+              <TableRow key={t.id}>
+                <TableCell className="font-medium text-foreground">{t.name}</TableCell>
+                <TableCell className="text-muted-foreground">{t.nif ?? "—"}</TableCell>
+                <TableCell>
+                  <StatusBadge
+                    kind="team"
+                    value={t.status}
+                    label={labelOf(TEAM_STATUS_LABELS, t.status)}
+                  />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Link
+                    href={`/equipes/${t.id}`}
+                    className={buttonVariants({ variant: "ghost", size: "sm" })}
+                  >
+                    <Pencil aria-hidden /> Editar
+                  </Link>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </DataTable>
       )}
-    </main>
+    </div>
   );
 }

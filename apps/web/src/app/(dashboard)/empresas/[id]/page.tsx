@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getCompany } from "@/lib/companies/service";
 import { listTeams } from "@/lib/teams/service";
-import { signOut } from "@/app/login/actions";
+import { PageHeader } from "@/components/patterns/page-header";
 import { CompanyForm } from "../CompanyForm";
 import { updateCompanyAction } from "../actions";
 
@@ -20,22 +21,14 @@ export default async function EditCompanyPage({ params }: { params: Promise<{ id
   const teams = user.role === "admin" ? await listTeams() : [];
 
   return (
-    <main style={{ maxWidth: 900, margin: "40px auto", padding: "0 16px" }}>
-      <header
-        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}
+    <div>
+      <Link
+        href="/empresas"
+        className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
-        <h1>Editar empresa</h1>
-        <form action={signOut} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span>
-            {user.email} ({user.role})
-          </span>
-          <button type="submit">Sair</button>
-        </form>
-      </header>
-
-      <p>
-        <Link href="/empresas">← Voltar para empresas</Link>
-      </p>
+        <ArrowLeft className="size-4" /> Voltar para empresas
+      </Link>
+      <PageHeader title="Editar empresa" description={company.name} />
 
       <CompanyForm
         action={updateCompanyAction.bind(null, id)}
@@ -46,6 +39,6 @@ export default async function EditCompanyPage({ params }: { params: Promise<{ id
         title={company.name}
         submitLabel="Salvar alterações"
       />
-    </main>
+    </div>
   );
 }

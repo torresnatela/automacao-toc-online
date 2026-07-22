@@ -1,16 +1,16 @@
 # Graph Report - automacao-toc-online  (2026-07-21)
 
 ## Corpus Check
-- 170 files · ~53,160 words
+- 170 files · ~53,112 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 957 nodes · 1546 edges · 113 communities (47 shown, 66 thin omitted)
+- 953 nodes · 1633 edges · 112 communities (46 shown, 66 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 2 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9688db7e`
+- Built from commit: `697afb9b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -20,7 +20,6 @@
 - DB Schema (Drizzle)
 - Observability Stores & DB Client
 - Web App Dependencies
-- DB Package Manifest
 - Fiscal Domain & RLS
 - Turborepo & Lint Config
 - Root Package Scripts
@@ -130,16 +129,16 @@
 10. `compilerOptions` - 14 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `createUser()` --calls--> `registerUser()`  [EXTRACTED]
+  apps/web/src/app/(dashboard)/admin/users/actions.ts → packages/core/src/auth/register.ts
 - `ProfileRow` --references--> `AppRole`  [EXTRACTED]
   apps/web/src/app/(dashboard)/admin/users/page.tsx → packages/core/src/auth/roles.ts
-- `changePassword()` --calls--> `validateNewPassword()`  [EXTRACTED]
-  apps/web/src/app/change-password/actions.ts → packages/core/src/auth/validate.ts
-- `SessionUser` --references--> `AppRole`  [EXTRACTED]
-  apps/web/src/lib/auth.ts → packages/core/src/auth/roles.ts
-- `requireRole()` --references--> `ROLE_ORDER`  [EXTRACTED]
-  apps/web/src/lib/auth.ts → packages/core/src/auth/roles.ts
-- `requireWriter()` --references--> `ROLE_ORDER`  [EXTRACTED]
-  apps/web/src/lib/companies/service.ts → packages/core/src/auth/roles.ts
+- `AdminUsersPage()` --calls--> `dbRoleToUiLabel()`  [EXTRACTED]
+  apps/web/src/app/(dashboard)/admin/users/page.tsx → packages/core/src/auth/roles.ts
+- `CompanyFormState` --references--> `CompanyFieldErrors`  [EXTRACTED]
+  apps/web/src/app/(dashboard)/empresas/actions.ts → packages/core/src/domain/company/validate.ts
+- `TeamFormState` --references--> `TeamFieldErrors`  [EXTRACTED]
+  apps/web/src/app/(dashboard)/equipes/actions.ts → packages/core/src/domain/team/validate.ts
 
 ## Import Cycles
 - None detected.
@@ -148,11 +147,11 @@
 - **CI verification pipeline (lint, typecheck, unit tests, DB tests, build web)** — github_workflows_ci_verify, github_workflows_ci_skip_db_tests, github_workflows_ci_build_web, github_pull_request_template_pr_checklist [INFERRED 0.75]
 - **Next.js scaffold default assets** — apps_web_public_file_icon, apps_web_public_globe_icon, apps_web_public_next_logo, apps_web_public_vercel_logo, apps_web_public_window_icon [INFERRED 0.85]
 
-## Communities (113 total, 66 thin omitted)
+## Communities (112 total, 66 thin omitted)
 
 ### Community 0 - "Observability Tracer/Logger"
 Cohesion: 0.05
-Nodes (29): getWebTracer(), observability, Logger, InMemoryStore, ObservabilityStore, SupabaseStore, createEvent(), createTracer() (+21 more)
+Nodes (30): Logger, DbStore, InMemoryStore, ObservabilityStore, SupabaseStore, createEvent(), createTracer(), EventHandle (+22 more)
 
 ### Community 1 - "Architecture & Domain Overview"
 Cohesion: 0.08
@@ -160,19 +159,15 @@ Nodes (22): Acesso a dados, Auth / autorização, Banco de dados, Bootstrap do a
 
 ### Community 2 - "DB Schema (Drizzle)"
 Cohesion: 0.06
-Nodes (40): ActionMeta, getTracer(), DbStore, createDb(), Database, schema, profiles, companies (+32 more)
+Nodes (39): ActionMeta, getTracer(), startAction(), observability, createDb(), profiles, companies, documents (+31 more)
 
 ### Community 3 - "Observability Stores & DB Client"
-Cohesion: 0.08
-Nodes (28): CompanyRepo, CompanyServiceOutput, createCompany(), nn(), normalizeCompany(), updateCompany(), CompanyField, validateCompanyInput() (+20 more)
+Cohesion: 0.06
+Nodes (51): Ctx, DELETE(), GET(), PATCH(), GET(), POST(), createCompanyAction(), deleteCompanyAction() (+43 more)
 
 ### Community 4 - "Web App Dependencies"
 Cohesion: 0.05
 Nodes (37): dependencies, class-variance-authority, clsx, lucide-react, next, @radix-ui/react-dialog, @radix-ui/react-dropdown-menu, react (+29 more)
-
-### Community 5 - "DB Package Manifest"
-Cohesion: 0.27
-Nodes (8): StatusBadge(), StatusBadgeProps, StatusKind, Tone, TONES, Badge(), BadgeProps, badgeVariants
 
 ### Community 7 - "Turborepo & Lint Config"
 Cohesion: 0.09
@@ -195,8 +190,8 @@ Cohesion: 0.10
 Nodes (19): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+11 more)
 
 ### Community 12 - "Web Auth & Pages"
-Cohesion: 0.05
-Nodes (86): Ctx, DELETE(), GET(), PATCH(), GET(), POST(), Ctx, DELETE() (+78 more)
+Cohesion: 0.06
+Nodes (74): Ctx, DELETE(), GET(), PATCH(), GET(), POST(), changePassword(), ChangePasswordPage() (+66 more)
 
 ### Community 13 - "Shared Base tsconfig"
 Cohesion: 0.11
@@ -263,8 +258,8 @@ Cohesion: 0.40
 Nodes (4): Checklist, Como testar, O que muda, Por quê
 
 ### Community 80 - "clients (empresas do gabinete)"
-Cohesion: 0.08
-Nodes (29): createUser(), CreateUserState, VALID_UI_ROLES, CreateUserForm(), initialState, AdminUsersPage(), ProfileRow, CookieToSet (+21 more)
+Cohesion: 0.10
+Nodes (23): ProfileRow, CookieToSet, updateSession(), config, proxy(), ChangePasswordGuardInput, shouldRedirectToChangePassword(), generateTempPassword() (+15 more)
 
 ### Community 81 - "README.md"
 Cohesion: 0.50
@@ -275,8 +270,8 @@ Cohesion: 0.40
 Nodes (5): EventRow, LogRow, renderEventTree(), TraceDetailPage(), TraceRow
 
 ### Community 88 - "cn"
-Cohesion: 0.05
-Nodes (57): ChangePasswordPage(), AppShellProps, NAV_ITEMS, NavItem, SidebarContent(), ROLE_LABELS, UserMenu(), AuthLayout() (+49 more)
+Cohesion: 0.06
+Nodes (56): createUser(), CreateUserState, VALID_UI_ROLES, CreateUserForm(), initialState, CompanyFormState, CompanyFormProps, TeamFormState (+48 more)
 
 ### Community 89 - "Design System Cliconta + Reformulação do Front-end — Design"
 Cohesion: 0.09
@@ -291,7 +286,7 @@ Cohesion: 0.12
 Nodes (16): Cliconta Design System + Reformulação do Front-end — Implementation Plan, File Structure, Global Constraints, Self-Review (cobertura da spec), Task 10: Equipes (lista + form em Dialog + edição), Task 11: Admin / Usuários, Task 12: Verificação final, Task 1: Fundação — Tailwind v4, tokens, fontes, `cn` (+8 more)
 
 ## Knowledge Gaps
-- **432 isolated node(s):** `$schema`, `style`, `rsc`, `tsx`, `config` (+427 more)
+- **428 isolated node(s):** `$schema`, `style`, `rsc`, `tsx`, `config` (+423 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **66 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -301,14 +296,14 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `AppShell()` connect `Web App Dependencies` to `cn`, `Web Auth & Pages`?**
   _High betweenness centrality (0.037) - this node is a cross-community bridge._
 - **What connects `$schema`, `style`, `rsc` to the rest of the system?**
-  _444 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _440 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Observability Tracer/Logger` be split into smaller, more focused modules?**
-  _Cohesion score 0.05333333333333334 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.051490514905149054 - nodes in this community are weakly interconnected._
 - **Should `Architecture & Domain Overview` be split into smaller, more focused modules?**
   _Cohesion score 0.08333333333333333 - nodes in this community are weakly interconnected._
 - **Should `DB Schema (Drizzle)` be split into smaller, more focused modules?**
-  _Cohesion score 0.0574400723654455 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06428988895382817 - nodes in this community are weakly interconnected._
 - **Should `Observability Stores & DB Client` be split into smaller, more focused modules?**
-  _Cohesion score 0.08385744234800839 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05612694681163679 - nodes in this community are weakly interconnected._
 - **Should `Web App Dependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.05263157894736842 - nodes in this community are weakly interconnected._

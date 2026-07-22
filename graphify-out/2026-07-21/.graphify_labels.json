@@ -109,5 +109,7 @@
   "107": "PR Checklist (TDD, lint/typecheck/test, migrations, no secrets)",
   "108": "pnpm workspace config (apps/*, packages/*)",
   "109": "Monorepo structure (apps/web, apps/worker, packages/db, packages/core, packages/config)",
-  "110": "Automação de Guias Fiscais (TOConline) project overview"
+  "110": "Automação de Guias Fiscais (TOConline) project overview",
+  "111": "page.tsx",
+  "112": "logs.spec.ts"
 }

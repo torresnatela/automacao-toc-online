@@ -2,6 +2,12 @@
 
 import { useActionState } from "react";
 import { createUser, type CreateUserState } from "./actions";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormField } from "@/components/patterns/form-field";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const initialState: CreateUserState = {};
 
@@ -9,78 +15,70 @@ export function CreateUserForm({ teams }: { teams: { id: string; name: string }[
   const [state, formAction, pending] = useActionState(createUser, initialState);
 
   return (
-    <section
-      style={{
-        border: "1px solid #ccc",
-        borderRadius: 8,
-        padding: 16,
-        marginBottom: 24,
-      }}
-    >
-      <h2 style={{ marginTop: 0 }}>Cadastrar usuário</h2>
-      <form action={formAction} style={{ display: "grid", gap: 12, maxWidth: 420 }}>
-        <label style={{ display: "grid", gap: 4 }}>
-          <span>Email</span>
-          <input name="email" type="email" required />
-        </label>
-        <label style={{ display: "grid", gap: 4 }}>
-          <span>Nome completo</span>
-          <input name="full_name" type="text" />
-        </label>
-        <label style={{ display: "grid", gap: 4 }}>
-          <span>Papel</span>
-          <select name="role" defaultValue="member">
-            <option value="member">Member</option>
-            <option value="operator">Operator</option>
-            <option value="admin">Admin</option>
-          </select>
-        </label>
-        <label style={{ display: "grid", gap: 4 }}>
-          <span>Equipe</span>
-          <select name="team_id" defaultValue="">
-            <option value="">— sem equipe (admin global) —</option>
-            {teams.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="submit" disabled={pending}>
-          {pending ? "Cadastrando..." : "Cadastrar"}
-        </button>
-      </form>
+    <Card className="mb-8 max-w-xl">
+      <CardHeader>
+        <CardTitle>Cadastrar usuário</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form action={formAction} className="grid gap-5">
+          <FormField label="Email" htmlFor="u-email">
+            <Input id="u-email" name="email" type="email" required />
+          </FormField>
 
-      {state.error && (
-        <p role="alert" style={{ color: "crimson" }}>
-          {state.error}
-        </p>
-      )}
+          <FormField label="Nome completo" htmlFor="u-name">
+            <Input id="u-name" name="full_name" type="text" />
+          </FormField>
 
-      {state.ok && (
-        <div
-          role="status"
-          style={{
-            marginTop: 12,
-            padding: 12,
-            background: "#f0fff0",
-            border: "1px solid #9c9",
-            borderRadius: 6,
-          }}
-        >
-          <p style={{ margin: "0 0 8px" }}>
-            Usuário <strong>{state.email}</strong> criado. Envie a senha temporária
-            abaixo (mostrada apenas uma vez):
-          </p>
-          <code style={{ fontSize: 18, userSelect: "all" }}>{state.tempPassword}</code>
-          {state.warning && (
-            <p style={{ margin: "8px 0 0", color: "#a15c00" }}>
-              Atenção: {state.warning}. O usuário foi criado como Member — ajuste o
-              papel se necessário.
-            </p>
+          <FormField label="Papel" htmlFor="u-role">
+            <Select id="u-role" name="role" defaultValue="member">
+              <option value="member">Member</option>
+              <option value="operator">Operator</option>
+              <option value="admin">Admin</option>
+            </Select>
+          </FormField>
+
+          <FormField label="Equipe" htmlFor="u-team">
+            <Select id="u-team" name="team_id" defaultValue="">
+              <option value="">— sem equipe (admin global) —</option>
+              {teams.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </Select>
+          </FormField>
+
+          <div>
+            <Button type="submit" disabled={pending}>
+              {pending ? "Cadastrando..." : "Cadastrar"}
+            </Button>
+          </div>
+
+          {state.error && (
+            <Alert variant="destructive">
+              <AlertDescription>{state.error}</AlertDescription>
+            </Alert>
           )}
-        </div>
-      )}
-    </section>
+        </form>
+
+        {state.ok && (
+          <Alert variant="success" role="status" className="mt-4 flex-col items-start">
+            <AlertDescription className="opacity-100">
+              Usuário <strong>{state.email}</strong> criado. Envie a senha temporária abaixo
+              (mostrada apenas uma vez):
+            </AlertDescription>
+            <code className="mt-2 block rounded-md bg-success/10 px-2 py-1 text-lg select-all">
+              {state.tempPassword}
+            </code>
+            {state.warning && (
+              <p className="mt-2 text-sm text-warning">
+                Atenção: {state.warning}. O usuário foi criado como Member — ajuste o papel se
+                necessário.
+              </p>
+            )}
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
   );
 }

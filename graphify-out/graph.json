@@ -792,27 +792,27 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_createuserform",
-      "community": 80,
+      "community": 88,
       "norm_label": "createuserform.tsx"
     },
     {
       "label": "initialState",
       "file_type": "code",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
-      "source_location": "L6",
+      "source_location": "L12",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_createuserform_initialstate",
-      "community": 80,
+      "community": 88,
       "norm_label": "initialstate"
     },
     {
       "label": "CreateUserForm()",
       "file_type": "code",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
-      "source_location": "L8",
+      "source_location": "L14",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_createuserform_createuserform",
-      "community": 80,
+      "community": 88,
       "norm_label": "createuserform()"
     },
     {
@@ -822,7 +822,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_actions",
-      "community": 80,
+      "community": 88,
       "norm_label": "actions.ts"
     },
     {
@@ -832,7 +832,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_actions_valid_ui_roles",
-      "community": 80,
+      "community": 88,
       "norm_label": "valid_ui_roles"
     },
     {
@@ -842,7 +842,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_actions_createuserstate",
-      "community": 80,
+      "community": 88,
       "norm_label": "createuserstate"
     },
     {
@@ -852,7 +852,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_actions_createuser",
-      "community": 80,
+      "community": 88,
       "norm_label": "createuser()"
     },
     {
@@ -862,14 +862,14 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_page",
-      "community": 80,
+      "community": 12,
       "norm_label": "page.tsx"
     },
     {
       "label": "ProfileRow",
       "file_type": "code",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L10",
+      "source_location": "L21",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_page_profilerow",
       "community": 80,
@@ -879,10 +879,10 @@
       "label": "AdminUsersPage()",
       "file_type": "code",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L19",
+      "source_location": "L30",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_admin_users_page_adminuserspage",
-      "community": 80,
+      "community": 12,
       "norm_label": "adminuserspage()"
     },
     {
@@ -892,44 +892,24 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_companyform",
-      "community": 12,
+      "community": 88,
       "norm_label": "companyform.tsx"
-    },
-    {
-      "label": "labelStyle",
-      "file_type": "code",
-      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
-      "source_location": "L9",
-      "_origin": "ast",
-      "id": "apps_web_src_app_dashboard_empresas_companyform_labelstyle",
-      "community": 12,
-      "norm_label": "labelstyle"
-    },
-    {
-      "label": "errStyle",
-      "file_type": "code",
-      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
-      "source_location": "L10",
-      "_origin": "ast",
-      "id": "apps_web_src_app_dashboard_empresas_companyform_errstyle",
-      "community": 12,
-      "norm_label": "errstyle"
     },
     {
       "label": "CompanyFormProps",
       "file_type": "code",
       "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
-      "source_location": "L12",
+      "source_location": "L16",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_companyform_companyformprops",
-      "community": 12,
+      "community": 88,
       "norm_label": "companyformprops"
     },
     {
       "label": "CompanyForm()",
       "file_type": "code",
       "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
-      "source_location": "L22",
+      "source_location": "L26",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_companyform_companyform",
       "community": 12,
@@ -949,7 +929,7 @@
       "label": "EditCompanyPage()",
       "file_type": "code",
       "source_file": "apps/web/src/app/(dashboard)/empresas/[id]/page.tsx",
-      "source_location": "L12",
+      "source_location": "L13",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_id_page_editcompanypage",
       "community": 12,
@@ -962,7 +942,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_actions",
-      "community": 12,
+      "community": 3,
       "norm_label": "actions.ts"
     },
     {
@@ -972,7 +952,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_actions_companyformstate",
-      "community": 12,
+      "community": 88,
       "norm_label": "companyformstate"
     },
     {
@@ -982,7 +962,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_actions_createcompanyaction",
-      "community": 12,
+      "community": 3,
       "norm_label": "createcompanyaction()"
     },
     {
@@ -992,7 +972,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_actions_updatecompanyaction",
-      "community": 12,
+      "community": 3,
       "norm_label": "updatecompanyaction()"
     },
     {
@@ -1002,7 +982,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_actions_deletecompanyaction",
-      "community": 12,
+      "community": 3,
       "norm_label": "deletecompanyaction()"
     },
     {
@@ -1019,7 +999,7 @@
       "label": "EmpresasPage()",
       "file_type": "code",
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L13",
+      "source_location": "L25",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_empresas_page_empresaspage",
       "community": 12,
@@ -1032,44 +1012,24 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_equipes_teamform",
-      "community": 12,
+      "community": 88,
       "norm_label": "teamform.tsx"
-    },
-    {
-      "label": "labelStyle",
-      "file_type": "code",
-      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
-      "source_location": "L9",
-      "_origin": "ast",
-      "id": "apps_web_src_app_dashboard_equipes_teamform_labelstyle",
-      "community": 12,
-      "norm_label": "labelstyle"
-    },
-    {
-      "label": "errStyle",
-      "file_type": "code",
-      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
-      "source_location": "L10",
-      "_origin": "ast",
-      "id": "apps_web_src_app_dashboard_equipes_teamform_errstyle",
-      "community": 12,
-      "norm_label": "errstyle"
     },
     {
       "label": "TeamFormProps",
       "file_type": "code",
       "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
-      "source_location": "L12",
+      "source_location": "L15",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_equipes_teamform_teamformprops",
-      "community": 12,
+      "community": 88,
       "norm_label": "teamformprops"
     },
     {
       "label": "TeamForm()",
       "file_type": "code",
       "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
-      "source_location": "L19",
+      "source_location": "L22",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_equipes_teamform_teamform",
       "community": 12,
@@ -1089,7 +1049,7 @@
       "label": "EditTeamPage()",
       "file_type": "code",
       "source_file": "apps/web/src/app/(dashboard)/equipes/[id]/page.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_equipes_id_page_editteampage",
       "community": 12,
@@ -1112,7 +1072,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_equipes_actions_teamformstate",
-      "community": 12,
+      "community": 88,
       "norm_label": "teamformstate"
     },
     {
@@ -1159,7 +1119,7 @@
       "label": "EquipesPage()",
       "file_type": "code",
       "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
-      "source_location": "L12",
+      "source_location": "L24",
       "_origin": "ast",
       "id": "apps_web_src_app_dashboard_equipes_page_equipespage",
       "community": 12,
@@ -1382,7 +1342,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_api_companies_id_route",
-      "community": 12,
+      "community": 3,
       "norm_label": "route.ts"
     },
     {
@@ -1392,7 +1352,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "apps_web_src_app_api_companies_id_route_ctx",
-      "community": 12,
+      "community": 3,
       "norm_label": "ctx"
     },
     {
@@ -1402,7 +1362,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "apps_web_src_app_api_companies_id_route_get",
-      "community": 12,
+      "community": 3,
       "norm_label": "get()"
     },
     {
@@ -1412,7 +1372,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "apps_web_src_app_api_companies_id_route_patch",
-      "community": 12,
+      "community": 3,
       "norm_label": "patch()"
     },
     {
@@ -1422,7 +1382,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "apps_web_src_app_api_companies_id_route_delete",
-      "community": 12,
+      "community": 3,
       "norm_label": "delete()"
     },
     {
@@ -1432,7 +1392,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_api_companies_route",
-      "community": 12,
+      "community": 3,
       "norm_label": "route.ts"
     },
     {
@@ -1442,7 +1402,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "apps_web_src_app_api_companies_route_get",
-      "community": 12,
+      "community": 3,
       "norm_label": "get()"
     },
     {
@@ -1452,7 +1412,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "apps_web_src_app_api_companies_route_post",
-      "community": 12,
+      "community": 3,
       "norm_label": "post()"
     },
     {
@@ -1562,7 +1522,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_app_change_password_page",
-      "community": 88,
+      "community": 12,
       "norm_label": "page.tsx"
     },
     {
@@ -1572,7 +1532,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "apps_web_src_app_change_password_page_changepasswordpage",
-      "community": 88,
+      "community": 12,
       "norm_label": "changepasswordpage()"
     },
     {
@@ -1892,7 +1852,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_data_table",
-      "community": 88,
+      "community": 12,
       "norm_label": "data-table.tsx"
     },
     {
@@ -1902,7 +1862,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_data_table_datatable",
-      "community": 88,
+      "community": 12,
       "norm_label": "datatable()"
     },
     {
@@ -1912,7 +1872,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_data_table_tableheader",
-      "community": 88,
+      "community": 12,
       "norm_label": "tableheader()"
     },
     {
@@ -1922,7 +1882,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_data_table_tablebody",
-      "community": 88,
+      "community": 12,
       "norm_label": "tablebody()"
     },
     {
@@ -1932,7 +1892,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_data_table_tablerow",
-      "community": 88,
+      "community": 12,
       "norm_label": "tablerow()"
     },
     {
@@ -1942,7 +1902,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_data_table_tablehead",
-      "community": 88,
+      "community": 12,
       "norm_label": "tablehead()"
     },
     {
@@ -1952,7 +1912,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_data_table_tablecell",
-      "community": 88,
+      "community": 12,
       "norm_label": "tablecell()"
     },
     {
@@ -1962,7 +1922,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_empty_state",
-      "community": 88,
+      "community": 12,
       "norm_label": "empty-state.tsx"
     },
     {
@@ -1972,7 +1932,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_empty_state_emptystateprops",
-      "community": 88,
+      "community": 12,
       "norm_label": "emptystateprops"
     },
     {
@@ -1982,7 +1942,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_empty_state_emptystate",
-      "community": 88,
+      "community": 12,
       "norm_label": "emptystate()"
     },
     {
@@ -2022,7 +1982,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_page_header",
-      "community": 88,
+      "community": 12,
       "norm_label": "page-header.tsx"
     },
     {
@@ -2032,7 +1992,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_page_header_pageheaderprops",
-      "community": 88,
+      "community": 12,
       "norm_label": "pageheaderprops"
     },
     {
@@ -2042,7 +2002,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_page_header_pageheader",
-      "community": 88,
+      "community": 12,
       "norm_label": "pageheader()"
     },
     {
@@ -2052,7 +2012,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_status_badge",
-      "community": 5,
+      "community": 12,
       "norm_label": "status-badge.tsx"
     },
     {
@@ -2062,7 +2022,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_status_badge_statuskind",
-      "community": 5,
+      "community": 12,
       "norm_label": "statuskind"
     },
     {
@@ -2072,7 +2032,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_status_badge_tone",
-      "community": 5,
+      "community": 12,
       "norm_label": "tone"
     },
     {
@@ -2082,7 +2042,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_status_badge_tones",
-      "community": 5,
+      "community": 12,
       "norm_label": "tones"
     },
     {
@@ -2092,7 +2052,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_status_badge_statusbadgeprops",
-      "community": 5,
+      "community": 12,
       "norm_label": "statusbadgeprops"
     },
     {
@@ -2102,7 +2062,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "apps_web_src_components_patterns_status_badge_statusbadge",
-      "community": 5,
+      "community": 12,
       "norm_label": "statusbadge()"
     },
     {
@@ -2192,7 +2152,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_components_ui_badge",
-      "community": 5,
+      "community": 12,
       "norm_label": "badge.tsx"
     },
     {
@@ -2202,7 +2162,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "apps_web_src_components_ui_badge_badgevariants",
-      "community": 5,
+      "community": 12,
       "norm_label": "badgevariants"
     },
     {
@@ -2212,7 +2172,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "apps_web_src_components_ui_badge_badgeprops",
-      "community": 5,
+      "community": 12,
       "norm_label": "badgeprops"
     },
     {
@@ -2222,7 +2182,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "apps_web_src_components_ui_badge_badge",
-      "community": 5,
+      "community": 12,
       "norm_label": "badge()"
     },
     {
@@ -2242,7 +2202,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "apps_web_src_components_ui_button_buttonvariants",
-      "community": 88,
+      "community": 12,
       "norm_label": "buttonvariants"
     },
     {
@@ -2622,7 +2582,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service",
-      "community": 12,
+      "community": 3,
       "norm_label": "service.ts"
     },
     {
@@ -2632,7 +2592,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_companyrow",
-      "community": 12,
+      "community": 88,
       "norm_label": "companyrow"
     },
     {
@@ -2642,7 +2602,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_companymutationresult",
-      "community": 12,
+      "community": 3,
       "norm_label": "companymutationresult"
     },
     {
@@ -2652,7 +2612,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_str",
-      "community": 12,
+      "community": 3,
       "norm_label": "str()"
     },
     {
@@ -2662,7 +2622,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_companyinputfrom",
-      "community": 12,
+      "community": 3,
       "norm_label": "companyinputfrom()"
     },
     {
@@ -2672,7 +2632,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_companypatchfrom",
-      "community": 12,
+      "community": 3,
       "norm_label": "companypatchfrom()"
     },
     {
@@ -2682,7 +2642,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_companyrowtoinput",
-      "community": 12,
+      "community": 3,
       "norm_label": "companyrowtoinput()"
     },
     {
@@ -2712,7 +2672,7 @@
       "source_location": "L122",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_admin",
-      "community": 12,
+      "community": 3,
       "norm_label": "admin"
     },
     {
@@ -2722,7 +2682,7 @@
       "source_location": "L124",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_torow",
-      "community": 12,
+      "community": 3,
       "norm_label": "torow()"
     },
     {
@@ -2732,7 +2692,7 @@
       "source_location": "L145",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_repoerror",
-      "community": 12,
+      "community": 3,
       "norm_label": "repoerror()"
     },
     {
@@ -2742,7 +2702,7 @@
       "source_location": "L151",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_companyrepo",
-      "community": 12,
+      "community": 3,
       "norm_label": "companyrepo()"
     },
     {
@@ -2752,7 +2712,7 @@
       "source_location": "L188",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_mutationerror",
-      "community": 12,
+      "community": 3,
       "norm_label": "mutationerror()"
     },
     {
@@ -2762,7 +2722,7 @@
       "source_location": "L197",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_requirewriter",
-      "community": 12,
+      "community": 3,
       "norm_label": "requirewriter()"
     },
     {
@@ -2772,7 +2732,7 @@
       "source_location": "L208",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_createcompanyfrominput",
-      "community": 12,
+      "community": 3,
       "norm_label": "createcompanyfrominput()"
     },
     {
@@ -2782,7 +2742,7 @@
       "source_location": "L258",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_updatecompanyfrominput",
-      "community": 12,
+      "community": 3,
       "norm_label": "updatecompanyfrominput()"
     },
     {
@@ -2792,7 +2752,7 @@
       "source_location": "L311",
       "_origin": "ast",
       "id": "apps_web_src_lib_companies_service_deletecompany",
-      "community": 12,
+      "community": 3,
       "norm_label": "deletecompany()"
     },
     {
@@ -2882,7 +2842,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "apps_web_src_lib_observability_startaction",
-      "community": 12,
+      "community": 2,
       "norm_label": "startaction()"
     },
     {
@@ -2892,7 +2852,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "apps_web_src_lib_observability_tracer",
-      "community": 0,
+      "community": 12,
       "norm_label": "tracer.ts"
     },
     {
@@ -2902,7 +2862,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "apps_web_src_lib_observability_tracer_getwebtracer",
-      "community": 0,
+      "community": 12,
       "norm_label": "getwebtracer()"
     },
     {
@@ -3012,7 +2972,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "apps_web_src_lib_teams_service_teamrow",
-      "community": 12,
+      "community": 88,
       "norm_label": "teamrow"
     },
     {
@@ -4882,7 +4842,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "packages_core_src_domain_company_validate_companyfielderrors",
-      "community": 12,
+      "community": 3,
       "norm_label": "companyfielderrors"
     },
     {
@@ -5022,7 +4982,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "packages_core_src_domain_team_validate_teamfielderrors",
-      "community": 12,
+      "community": 3,
       "norm_label": "teamfielderrors"
     },
     {
@@ -5182,7 +5142,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "packages_core_src_index",
-      "community": 0,
+      "community": 2,
       "norm_label": "index.ts"
     },
     {
@@ -5282,7 +5242,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "packages_core_src_observability_store",
-      "community": 2,
+      "community": 0,
       "norm_label": "store.ts"
     },
     {
@@ -5432,7 +5392,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_dbstore",
-      "community": 2,
+      "community": 0,
       "norm_label": "dbstore"
     },
     {
@@ -5442,7 +5402,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_dbstore_constructor",
-      "community": 2,
+      "community": 0,
       "norm_label": ".constructor()"
     },
     {
@@ -5452,7 +5412,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_dbstore_newid",
-      "community": 2,
+      "community": 0,
       "norm_label": ".newid()"
     },
     {
@@ -5462,7 +5422,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_dbstore_savetrace",
-      "community": 2,
+      "community": 0,
       "norm_label": ".savetrace()"
     },
     {
@@ -5472,7 +5432,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_dbstore_updatetrace",
-      "community": 2,
+      "community": 0,
       "norm_label": ".updatetrace()"
     },
     {
@@ -5482,7 +5442,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_dbstore_saveevent",
-      "community": 2,
+      "community": 0,
       "norm_label": ".saveevent()"
     },
     {
@@ -5492,7 +5452,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_dbstore_updateevent",
-      "community": 2,
+      "community": 0,
       "norm_label": ".updateevent()"
     },
     {
@@ -5502,7 +5462,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "packages_core_src_observability_store_dbstore_savelog",
-      "community": 2,
+      "community": 0,
       "norm_label": ".savelog()"
     },
     {
@@ -6542,7 +6502,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "packages_db_src_client_database",
-      "community": 2,
+      "community": 0,
       "norm_label": "database"
     },
     {
@@ -8952,7 +8912,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "packages_core_src_index_observability",
-      "community": 0,
+      "community": 2,
       "norm_label": "observability"
     },
     {
@@ -8962,7 +8922,7 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "packages_db_src_index_schema",
-      "community": 2,
+      "community": 0,
       "norm_label": "schema"
     },
     {
@@ -10489,7 +10449,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
-      "source_location": "L8",
+      "source_location": "L14",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_createuserform",
       "target": "apps_web_src_app_dashboard_admin_users_createuserform_createuserform",
@@ -10499,7 +10459,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
-      "source_location": "L6",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_createuserform",
       "target": "apps_web_src_app_dashboard_admin_users_createuserform_initialstate",
@@ -10509,8 +10469,184 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
       "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_createuserform",
+      "target": "apps_web_src_components_patterns_form_field",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_createuserform",
+      "target": "apps_web_src_components_patterns_form_field_formfield",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_createuserform",
+      "target": "apps_web_src_components_ui_alert",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_createuserform",
+      "target": "apps_web_src_components_ui_alert_alert",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_createuserform",
+      "target": "apps_web_src_components_ui_alert_alertdescription",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_createuserform",
+      "target": "apps_web_src_components_ui_button",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_createuserform",
+      "target": "apps_web_src_components_ui_button_button",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_createuserform",
+      "target": "apps_web_src_components_ui_card",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_createuserform",
+      "target": "apps_web_src_components_ui_card_card",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_createuserform",
+      "target": "apps_web_src_components_ui_card_cardcontent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_createuserform",
+      "target": "apps_web_src_components_ui_card_cardheader",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_createuserform",
+      "target": "apps_web_src_components_ui_card_cardtitle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_createuserform",
+      "target": "apps_web_src_components_ui_input",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_createuserform",
+      "target": "apps_web_src_components_ui_input_input",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_createuserform",
+      "target": "apps_web_src_components_ui_select",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_createuserform",
+      "target": "apps_web_src_components_ui_select_select",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
+      "source_location": "L17",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page",
       "target": "apps_web_src_app_dashboard_admin_users_createuserform",
@@ -10522,7 +10658,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/web/src/app/(dashboard)/admin/users/CreateUserForm.tsx",
-      "source_location": "L9",
+      "source_location": "L15",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_createuserform_createuserform",
       "target": "apps_web_src_app_dashboard_admin_users_actions_createuser"
@@ -10532,7 +10668,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L6",
+      "source_location": "L17",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page",
       "target": "apps_web_src_app_dashboard_admin_users_createuserform_createuserform",
@@ -10726,7 +10862,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L19",
+      "source_location": "L30",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page",
       "target": "apps_web_src_app_dashboard_admin_users_page_adminuserspage",
@@ -10736,10 +10872,153 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L10",
+      "source_location": "L21",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page",
       "target": "apps_web_src_app_dashboard_admin_users_page_profilerow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_page",
+      "target": "apps_web_src_components_patterns_data_table",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_page",
+      "target": "apps_web_src_components_patterns_data_table_datatable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_page",
+      "target": "apps_web_src_components_patterns_data_table_tablebody",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_page",
+      "target": "apps_web_src_components_patterns_data_table_tablecell",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_page",
+      "target": "apps_web_src_components_patterns_data_table_tablehead",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_page",
+      "target": "apps_web_src_components_patterns_data_table_tableheader",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_page",
+      "target": "apps_web_src_components_patterns_data_table_tablerow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_page",
+      "target": "apps_web_src_components_patterns_page_header",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_page",
+      "target": "apps_web_src_components_patterns_page_header_pageheader",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_page",
+      "target": "apps_web_src_components_patterns_status_badge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_page",
+      "target": "apps_web_src_components_patterns_status_badge_statusbadge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_page",
+      "target": "apps_web_src_components_ui_badge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_admin_users_page",
+      "target": "apps_web_src_components_ui_badge_badge",
       "confidence_score": 1.0
     },
     {
@@ -10846,7 +11125,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L14",
+      "source_location": "L25",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page_profilerow",
       "target": "packages_core_src_auth_roles_approle",
@@ -10858,7 +11137,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L20",
+      "source_location": "L31",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page_adminuserspage",
       "target": "apps_web_src_lib_auth_requirerole"
@@ -10869,7 +11148,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L23",
+      "source_location": "L34",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page_adminuserspage",
       "target": "apps_web_src_lib_supabase_server_getsupabaseserverclient"
@@ -10880,7 +11159,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L30",
+      "source_location": "L41",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page_adminuserspage",
       "target": "apps_web_src_lib_teams_service_listteams"
@@ -10891,7 +11170,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/admin/users/page.tsx",
-      "source_location": "L54",
+      "source_location": "L66",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_admin_users_page_adminuserspage",
       "target": "packages_core_src_auth_roles_dbroletouilabel"
@@ -10922,7 +11201,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
-      "source_location": "L22",
+      "source_location": "L26",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_companyform",
       "target": "apps_web_src_app_dashboard_empresas_companyform_companyform",
@@ -10932,30 +11211,208 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
-      "source_location": "L12",
+      "source_location": "L16",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_companyform",
       "target": "apps_web_src_app_dashboard_empresas_companyform_companyformprops",
       "confidence_score": 1.0
     },
     {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
-      "source_location": "L10",
-      "weight": 1.0,
-      "source": "apps_web_src_app_dashboard_empresas_companyform",
-      "target": "apps_web_src_app_dashboard_empresas_companyform_errstyle",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
+      "relation": "imports_from",
+      "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
       "source_location": "L9",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_companyform",
-      "target": "apps_web_src_app_dashboard_empresas_companyform_labelstyle",
+      "target": "apps_web_src_components_patterns_form_field",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_companyform",
+      "target": "apps_web_src_components_patterns_form_field_formfield",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_companyform",
+      "target": "apps_web_src_components_ui_alert",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_companyform",
+      "target": "apps_web_src_components_ui_alert_alert",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_companyform",
+      "target": "apps_web_src_components_ui_alert_alertdescription",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_companyform",
+      "target": "apps_web_src_components_ui_button",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_companyform",
+      "target": "apps_web_src_components_ui_button_button",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_companyform",
+      "target": "apps_web_src_components_ui_card",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_companyform",
+      "target": "apps_web_src_components_ui_card_card",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_companyform",
+      "target": "apps_web_src_components_ui_card_cardcontent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_companyform",
+      "target": "apps_web_src_components_ui_card_cardheader",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_companyform",
+      "target": "apps_web_src_components_ui_card_cardtitle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_companyform",
+      "target": "apps_web_src_components_ui_input",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_companyform",
+      "target": "apps_web_src_components_ui_input_input",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_companyform",
+      "target": "apps_web_src_components_ui_select",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_companyform",
+      "target": "apps_web_src_components_ui_select_select",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_companyform",
+      "target": "apps_web_src_components_ui_textarea",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_companyform",
+      "target": "apps_web_src_components_ui_textarea_textarea",
       "confidence_score": 1.0
     },
     {
@@ -11062,7 +11519,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/[id]/page.tsx",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_id_page",
       "target": "apps_web_src_app_dashboard_empresas_companyform",
@@ -11073,7 +11530,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L8",
+      "source_location": "L20",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_page",
       "target": "apps_web_src_app_dashboard_empresas_companyform",
@@ -11084,7 +11541,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
-      "source_location": "L13",
+      "source_location": "L17",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_companyform_companyformprops",
       "target": "apps_web_src_app_dashboard_empresas_actions_companyformstate",
@@ -11095,7 +11552,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
-      "source_location": "L17",
+      "source_location": "L21",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_companyform_companyformprops",
       "target": "apps_web_src_lib_companies_service_companyrow",
@@ -11107,7 +11564,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx",
-      "source_location": "L108",
+      "source_location": "L104",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_companyform_companyform",
       "target": "apps_web_src_lib_labels_labelof"
@@ -11117,7 +11574,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/[id]/page.tsx",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_id_page",
       "target": "apps_web_src_app_dashboard_empresas_companyform_companyform",
@@ -11128,7 +11585,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L8",
+      "source_location": "L20",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_page",
       "target": "apps_web_src_app_dashboard_empresas_companyform_companyform",
@@ -11139,7 +11596,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/[id]/page.tsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_id_page",
       "target": "apps_web_src_app_dashboard_empresas_actions",
@@ -11150,7 +11607,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/[id]/page.tsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_id_page",
       "target": "apps_web_src_app_dashboard_empresas_actions_updatecompanyaction",
@@ -11160,7 +11617,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/[id]/page.tsx",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_id_page",
       "target": "apps_web_src_app_dashboard_empresas_id_page_editcompanypage",
@@ -11171,10 +11628,10 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/[id]/page.tsx",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_id_page",
-      "target": "apps_web_src_app_login_actions",
+      "target": "apps_web_src_components_patterns_page_header",
       "confidence_score": 1.0
     },
     {
@@ -11182,10 +11639,10 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/[id]/page.tsx",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_id_page",
-      "target": "apps_web_src_app_login_actions_signout",
+      "target": "apps_web_src_components_patterns_page_header_pageheader",
       "confidence_score": 1.0
     },
     {
@@ -11193,7 +11650,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/[id]/page.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_id_page",
       "target": "apps_web_src_lib_auth",
@@ -11204,7 +11661,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/[id]/page.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_id_page",
       "target": "apps_web_src_lib_auth_requirerole",
@@ -11215,7 +11672,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/[id]/page.tsx",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_id_page",
       "target": "apps_web_src_lib_companies_service",
@@ -11226,7 +11683,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/[id]/page.tsx",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_id_page",
       "target": "apps_web_src_lib_companies_service_getcompany",
@@ -11237,7 +11694,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/[id]/page.tsx",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_id_page",
       "target": "apps_web_src_lib_teams_service",
@@ -11248,7 +11705,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/[id]/page.tsx",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_id_page",
       "target": "apps_web_src_lib_teams_service_listteams",
@@ -11260,7 +11717,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/empresas/[id]/page.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_id_page_editcompanypage",
       "target": "apps_web_src_lib_auth_requirerole"
@@ -11271,7 +11728,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/empresas/[id]/page.tsx",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_id_page_editcompanypage",
       "target": "apps_web_src_lib_companies_service_getcompany"
@@ -11282,7 +11739,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/empresas/[id]/page.tsx",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_id_page_editcompanypage",
       "target": "apps_web_src_lib_teams_service_listteams"
@@ -11420,7 +11877,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L9",
+      "source_location": "L21",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_page",
       "target": "apps_web_src_app_dashboard_empresas_actions",
@@ -11464,7 +11921,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L9",
+      "source_location": "L21",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_page",
       "target": "apps_web_src_app_dashboard_empresas_actions_createcompanyaction",
@@ -11507,7 +11964,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L13",
+      "source_location": "L25",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_page",
       "target": "apps_web_src_app_dashboard_empresas_page_empresaspage",
@@ -11518,10 +11975,10 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L6",
+      "source_location": "L11",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_page",
-      "target": "apps_web_src_app_login_actions",
+      "target": "apps_web_src_components_patterns_data_table",
       "confidence_score": 1.0
     },
     {
@@ -11529,10 +11986,65 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L6",
+      "source_location": "L11",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_page",
-      "target": "apps_web_src_app_login_actions_signout",
+      "target": "apps_web_src_components_patterns_data_table_datatable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_page",
+      "target": "apps_web_src_components_patterns_data_table_tablebody",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_page",
+      "target": "apps_web_src_components_patterns_data_table_tablecell",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_page",
+      "target": "apps_web_src_components_patterns_data_table_tablehead",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_page",
+      "target": "apps_web_src_components_patterns_data_table_tableheader",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_page",
+      "target": "apps_web_src_components_patterns_data_table_tablerow",
       "confidence_score": 1.0
     },
     {
@@ -11540,7 +12052,95 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L3",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_page",
+      "target": "apps_web_src_components_patterns_empty_state",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_page",
+      "target": "apps_web_src_components_patterns_empty_state_emptystate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_page",
+      "target": "apps_web_src_components_patterns_page_header",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_page",
+      "target": "apps_web_src_components_patterns_page_header_pageheader",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_page",
+      "target": "apps_web_src_components_patterns_status_badge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_page",
+      "target": "apps_web_src_components_patterns_status_badge_statusbadge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_page",
+      "target": "apps_web_src_components_ui_button",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_page",
+      "target": "apps_web_src_components_ui_button_buttonvariants",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
+      "source_location": "L4",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_page",
       "target": "apps_web_src_lib_auth",
@@ -11551,7 +12151,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_page",
       "target": "apps_web_src_lib_auth_requirerole",
@@ -11562,7 +12162,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_page",
       "target": "apps_web_src_lib_companies_service",
@@ -11573,7 +12173,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_page",
       "target": "apps_web_src_lib_companies_service_listcompanies",
@@ -11628,7 +12228,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_page",
       "target": "apps_web_src_lib_teams_service",
@@ -11639,7 +12239,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_page",
       "target": "apps_web_src_lib_teams_service_listteams",
@@ -11651,7 +12251,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L16",
+      "source_location": "L85",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_empresas_page_empresaspage",
+      "target": "apps_web_src_components_ui_button_buttonvariants"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
+      "source_location": "L28",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_page_empresaspage",
       "target": "apps_web_src_lib_auth_requirerole"
@@ -11662,7 +12273,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L19",
+      "source_location": "L31",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_page_empresaspage",
       "target": "apps_web_src_lib_companies_service_listcompanies"
@@ -11673,7 +12284,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L66",
+      "source_location": "L73",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_page_empresaspage",
       "target": "apps_web_src_lib_labels_labelof"
@@ -11684,7 +12295,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/empresas/page.tsx",
-      "source_location": "L21",
+      "source_location": "L33",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_empresas_page_empresaspage",
       "target": "apps_web_src_lib_teams_service_listteams"
@@ -11694,7 +12305,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/[id]/page.tsx",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_id_page",
       "target": "apps_web_src_app_dashboard_equipes_teamform",
@@ -11705,7 +12316,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
-      "source_location": "L7",
+      "source_location": "L19",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_page",
       "target": "apps_web_src_app_dashboard_equipes_teamform",
@@ -11737,27 +12348,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
-      "source_location": "L10",
-      "weight": 1.0,
-      "source": "apps_web_src_app_dashboard_equipes_teamform",
-      "target": "apps_web_src_app_dashboard_equipes_teamform_errstyle",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
-      "source_location": "L9",
-      "weight": 1.0,
-      "source": "apps_web_src_app_dashboard_equipes_teamform",
-      "target": "apps_web_src_app_dashboard_equipes_teamform_labelstyle",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
-      "source_location": "L19",
+      "source_location": "L22",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_teamform",
       "target": "apps_web_src_app_dashboard_equipes_teamform_teamform",
@@ -11767,10 +12358,186 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
-      "source_location": "L12",
+      "source_location": "L15",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_teamform",
       "target": "apps_web_src_app_dashboard_equipes_teamform_teamformprops",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_teamform",
+      "target": "apps_web_src_components_patterns_form_field",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_teamform",
+      "target": "apps_web_src_components_patterns_form_field_formfield",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_teamform",
+      "target": "apps_web_src_components_ui_alert",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_teamform",
+      "target": "apps_web_src_components_ui_alert_alert",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_teamform",
+      "target": "apps_web_src_components_ui_alert_alertdescription",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_teamform",
+      "target": "apps_web_src_components_ui_button",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_teamform",
+      "target": "apps_web_src_components_ui_button_button",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_teamform",
+      "target": "apps_web_src_components_ui_card",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_teamform",
+      "target": "apps_web_src_components_ui_card_card",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_teamform",
+      "target": "apps_web_src_components_ui_card_cardcontent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_teamform",
+      "target": "apps_web_src_components_ui_card_cardheader",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_teamform",
+      "target": "apps_web_src_components_ui_card_cardtitle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_teamform",
+      "target": "apps_web_src_components_ui_input",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_teamform",
+      "target": "apps_web_src_components_ui_input_input",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_teamform",
+      "target": "apps_web_src_components_ui_select",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_teamform",
+      "target": "apps_web_src_components_ui_select_select",
       "confidence_score": 1.0
     },
     {
@@ -11855,7 +12622,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
-      "source_location": "L13",
+      "source_location": "L16",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_teamform_teamformprops",
       "target": "apps_web_src_app_dashboard_equipes_actions_teamformstate",
@@ -11866,7 +12633,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
-      "source_location": "L14",
+      "source_location": "L17",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_teamform_teamformprops",
       "target": "apps_web_src_lib_teams_service_teamrow",
@@ -11877,7 +12644,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/[id]/page.tsx",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_id_page",
       "target": "apps_web_src_app_dashboard_equipes_teamform_teamform",
@@ -11888,7 +12655,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
-      "source_location": "L7",
+      "source_location": "L19",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_page",
       "target": "apps_web_src_app_dashboard_equipes_teamform_teamform",
@@ -11900,7 +12667,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/equipes/TeamForm.tsx",
-      "source_location": "L54",
+      "source_location": "L52",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_teamform_teamform",
       "target": "apps_web_src_lib_labels_labelof"
@@ -11910,7 +12677,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/[id]/page.tsx",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_id_page",
       "target": "apps_web_src_app_dashboard_equipes_actions",
@@ -11921,7 +12688,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/[id]/page.tsx",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_id_page",
       "target": "apps_web_src_app_dashboard_equipes_actions_updateteamaction",
@@ -11931,7 +12698,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/[id]/page.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_id_page",
       "target": "apps_web_src_app_dashboard_equipes_id_page_editteampage",
@@ -11942,10 +12709,10 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/[id]/page.tsx",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_id_page",
-      "target": "apps_web_src_app_login_actions",
+      "target": "apps_web_src_components_patterns_page_header",
       "confidence_score": 1.0
     },
     {
@@ -11953,10 +12720,10 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/[id]/page.tsx",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_id_page",
-      "target": "apps_web_src_app_login_actions_signout",
+      "target": "apps_web_src_components_patterns_page_header_pageheader",
       "confidence_score": 1.0
     },
     {
@@ -11964,7 +12731,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/[id]/page.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_id_page",
       "target": "apps_web_src_lib_auth",
@@ -11975,7 +12742,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/[id]/page.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_id_page",
       "target": "apps_web_src_lib_auth_requirerole",
@@ -11986,7 +12753,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/[id]/page.tsx",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_id_page",
       "target": "apps_web_src_lib_teams_service",
@@ -11997,7 +12764,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/[id]/page.tsx",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_id_page",
       "target": "apps_web_src_lib_teams_service_getteam",
@@ -12009,7 +12776,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/equipes/[id]/page.tsx",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_id_page_editteampage",
       "target": "apps_web_src_lib_auth_requirerole"
@@ -12020,7 +12787,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/equipes/[id]/page.tsx",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_id_page_editteampage",
       "target": "apps_web_src_lib_teams_service_getteam"
@@ -12158,7 +12925,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
-      "source_location": "L8",
+      "source_location": "L20",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_page",
       "target": "apps_web_src_app_dashboard_equipes_actions",
@@ -12202,7 +12969,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
-      "source_location": "L8",
+      "source_location": "L20",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_page",
       "target": "apps_web_src_app_dashboard_equipes_actions_createteamaction",
@@ -12245,7 +13012,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
-      "source_location": "L12",
+      "source_location": "L24",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_page",
       "target": "apps_web_src_app_dashboard_equipes_page_equipespage",
@@ -12256,10 +13023,10 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
-      "source_location": "L5",
+      "source_location": "L10",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_page",
-      "target": "apps_web_src_app_login_actions",
+      "target": "apps_web_src_components_patterns_data_table",
       "confidence_score": 1.0
     },
     {
@@ -12267,10 +13034,65 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
-      "source_location": "L5",
+      "source_location": "L10",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_page",
-      "target": "apps_web_src_app_login_actions_signout",
+      "target": "apps_web_src_components_patterns_data_table_datatable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_page",
+      "target": "apps_web_src_components_patterns_data_table_tablebody",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_page",
+      "target": "apps_web_src_components_patterns_data_table_tablecell",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_page",
+      "target": "apps_web_src_components_patterns_data_table_tablehead",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_page",
+      "target": "apps_web_src_components_patterns_data_table_tableheader",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_page",
+      "target": "apps_web_src_components_patterns_data_table_tablerow",
       "confidence_score": 1.0
     },
     {
@@ -12278,7 +13100,95 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
-      "source_location": "L3",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_page",
+      "target": "apps_web_src_components_patterns_empty_state",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_page",
+      "target": "apps_web_src_components_patterns_empty_state_emptystate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_page",
+      "target": "apps_web_src_components_patterns_page_header",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_page",
+      "target": "apps_web_src_components_patterns_page_header_pageheader",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_page",
+      "target": "apps_web_src_components_patterns_status_badge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_page",
+      "target": "apps_web_src_components_patterns_status_badge_statusbadge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_page",
+      "target": "apps_web_src_components_ui_button",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_page",
+      "target": "apps_web_src_components_ui_button_buttonvariants",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
+      "source_location": "L4",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_page",
       "target": "apps_web_src_lib_auth",
@@ -12289,7 +13199,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_page",
       "target": "apps_web_src_lib_auth_requirerole",
@@ -12333,7 +13243,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_page",
       "target": "apps_web_src_lib_teams_service",
@@ -12344,7 +13254,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_page",
       "target": "apps_web_src_lib_teams_service_listteams",
@@ -12356,7 +13266,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
-      "source_location": "L13",
+      "source_location": "L67",
+      "weight": 1.0,
+      "source": "apps_web_src_app_dashboard_equipes_page_equipespage",
+      "target": "apps_web_src_components_ui_button_buttonvariants"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
+      "source_location": "L25",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_page_equipespage",
       "target": "apps_web_src_lib_auth_requirerole"
@@ -12367,7 +13288,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
-      "source_location": "L51",
+      "source_location": "L61",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_page_equipespage",
       "target": "apps_web_src_lib_labels_labelof"
@@ -12378,7 +13299,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/src/app/(dashboard)/equipes/page.tsx",
-      "source_location": "L16",
+      "source_location": "L28",
       "weight": 1.0,
       "source": "apps_web_src_app_dashboard_equipes_page_equipespage",
       "target": "apps_web_src_lib_teams_service_listteams"
@@ -26116,5 +27037,5 @@
       "source_file": "apps/web/public/next.svg"
     }
   ],
-  "built_at_commit": "9688db7e9d7dfbd3d928d66bfabf135cc37b2659"
+  "built_at_commit": "697afb9b02a7a96d95aca964d1aaab98846a0d92"
 }
