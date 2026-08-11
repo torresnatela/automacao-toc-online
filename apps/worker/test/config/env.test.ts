@@ -47,4 +47,26 @@ describe("loadEnv", () => {
       expect((err as Error).message).not.toContain("segredo-super-secreto");
     }
   });
+
+  describe("RPA_CONCURRENCY", () => {
+    it("usa o valor indicado quando é um inteiro positivo válido", () => {
+      const env = loadEnv({ ...complete, RPA_CONCURRENCY: "3" });
+      expect(env.rpaConcurrency).toBe(3);
+    });
+
+    it("assume 1 quando a variável está vazia", () => {
+      const env = loadEnv({ ...complete, RPA_CONCURRENCY: "" });
+      expect(env.rpaConcurrency).toBe(1);
+    });
+
+    it("assume 1 quando a variável não é numérica", () => {
+      const env = loadEnv({ ...complete, RPA_CONCURRENCY: "abc" });
+      expect(env.rpaConcurrency).toBe(1);
+    });
+
+    it("assume 1 quando a variável está omitida", () => {
+      const env = loadEnv(complete);
+      expect(env.rpaConcurrency).toBe(1);
+    });
+  });
 });

@@ -24,6 +24,19 @@ const REQUIRED = [
   "TOCONLINE_PASSWORD",
 ] as const;
 
+const DEFAULT_RPA_CONCURRENCY = 1;
+
+/**
+ * Interpreta `RPA_CONCURRENCY`, caindo para o valor por omissão quando a
+ * variável está ausente, vazia, não é numérica ou não é um inteiro positivo.
+ */
+function parseRpaConcurrency(raw: string | undefined): number {
+  if (!raw) return DEFAULT_RPA_CONCURRENCY;
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed <= 0) return DEFAULT_RPA_CONCURRENCY;
+  return parsed;
+}
+
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): WorkerEnv {
   const missing = REQUIRED.filter((key) => !source[key]);
   if (missing.length > 0) throw new MissingEnvError([...missing]);
@@ -35,6 +48,6 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): WorkerEnv {
     toconlineUser: source.TOCONLINE_USER as string,
     toconlinePassword: source.TOCONLINE_PASSWORD as string,
     headless: source.RPA_HEADLESS !== "false",
-    rpaConcurrency: Number(source.RPA_CONCURRENCY ?? "1"),
+    rpaConcurrency: parseRpaConcurrency(source.RPA_CONCURRENCY),
   };
 }
