@@ -14,6 +14,7 @@
     "@supabase/supabase-js": "^2.110.0",
     "@toc/core": "workspace:*",
     "@toc/db": "workspace:*",
+    "drizzle-orm": "^0.38.0",
     "playwright": "^1.62.1"
   },
   "devDependencies": {
