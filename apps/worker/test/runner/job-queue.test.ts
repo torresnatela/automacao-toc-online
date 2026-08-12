@@ -54,6 +54,29 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("JobQueue", () => {
     expect(second).toBeNull();
   });
 
+  // Prova de atomicidade: dois claims disparados em paralelo (Promise.all, não
+  // sequenciais) contra duas linhas pendentes. Um SELECT+UPDATE ingénuo poderia
+  // deixar os dois claimers lerem a mesma linha antes de qualquer UPDATE
+  // confirmar; `FOR UPDATE SKIP LOCKED` garante que cada um fica com uma linha
+  // distinta e nenhum bloqueia à espera do outro.
+  it("dois claims concorrentes reclamam linhas distintas sem bloquear um no outro", async () => {
+    await enqueue({ kind: "iva" });
+    await enqueue({ kind: "irs" });
+
+    const [a, b] = await Promise.all([queue.claimNext(JOB_TYPE), queue.claimNext(JOB_TYPE)]);
+
+    expect(a).not.toBeNull();
+    expect(b).not.toBeNull();
+    expect(a!.id).not.toBe(b!.id);
+
+    const rows = await db.select().from(schema.jobs);
+    expect(rows).toHaveLength(2);
+    for (const row of rows) {
+      expect(row.status).toBe("running");
+      expect(row.attempts).toBe(1);
+    }
+  });
+
   it("ignora jobs agendados para o futuro", async () => {
     const future = new Date(Date.now() + 60_000);
     await db
