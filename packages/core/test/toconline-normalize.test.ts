@@ -13,6 +13,7 @@ function raw(over: Partial<RawTocCompany> = {}): RawTocCompany {
     name: "Empresa Exemplo, Lda",
     cluster: 5,
     status: "active",
+    i18n_status: "Ativa",
     demo: false,
     accounting: true,
     roles: "Contabilista responsável",

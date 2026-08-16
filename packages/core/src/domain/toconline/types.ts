@@ -20,6 +20,12 @@ export interface RawTocCompany {
   name: unknown;
   cluster: unknown;
   status: unknown;
+  /**
+   * Rótulo localizado do estado ("Ativa"). Não é usado na normalização — está
+   * aqui para diagnóstico: se `status` for renomeado mas este continuar a
+   * chegar, sabe-se logo que o contrato mudou e não que a conta ficou vazia.
+   */
+  i18n_status: unknown;
   demo: unknown;
   accounting: unknown;
   roles: unknown;
