@@ -9,6 +9,7 @@ export interface ClaimedJob {
   attempts: number;
   maxAttempts: number;
   traceId: string | null;
+  triggeringEventId: string | null;
 }
 
 /** Backoff exponencial: 1min, 4min, 9min. */
@@ -43,7 +44,7 @@ export class JobQueue {
           updated_at = now()
       from next_job
       where j.id = next_job.id
-      returning j.id, j.type, j.payload, j.attempts, j.max_attempts, j.trace_id
+      returning j.id, j.type, j.payload, j.attempts, j.max_attempts, j.trace_id, j.triggering_event_id
     `);
 
     const row = result.rows[0] as
@@ -54,6 +55,7 @@ export class JobQueue {
           attempts: number;
           max_attempts: number;
           trace_id: string | null;
+          triggering_event_id: string | null;
         }
       | undefined;
     if (!row) return null;
@@ -65,6 +67,7 @@ export class JobQueue {
       attempts: row.attempts,
       maxAttempts: row.max_attempts,
       traceId: row.trace_id,
+      triggeringEventId: row.triggering_event_id,
     };
   }
 
@@ -111,9 +114,7 @@ export class JobQueue {
       .set({
         status: willRetry ? "pending" : "failed",
         lastError: error,
-        scheduledFor: willRetry
-          ? new Date(Date.now() + backoffMs(job.attempts))
-          : job.scheduledFor,
+        scheduledFor: willRetry ? new Date(Date.now() + backoffMs(job.attempts)) : job.scheduledFor,
         finishedAt: willRetry ? null : new Date(),
         updatedAt: new Date(),
       })

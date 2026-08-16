@@ -2,10 +2,19 @@ export interface WorkerEnv {
   databaseUrl: string;
   supabaseUrl: string;
   supabaseServiceRoleKey: string;
-  toconlineUser: string;
-  toconlinePassword: string;
+  /** Chave-mestra AES-256-GCM (32 bytes em base64) que decifra `integration_credentials`. */
+  credentialsEncKey: string;
+  /**
+   * Credenciais do TOConline. Opcionais de propósito: em produção vêm cifradas
+   * da base de dados, resolvidas por `credentialId` no payload do job. Só o
+   * smoke test live (TOC_LIVE=1) as lê daqui.
+   */
+  toconlineUser?: string;
+  toconlinePassword?: string;
   headless: boolean;
   rpaConcurrency: number;
+  /** Diretório do `storageState` do Playwright (equivalente a credencial — git-ignored). */
+  stateDir: string;
 }
 
 /** Erro de configuração. Carrega os NOMES das variáveis em falta — nunca valores. */
@@ -20,11 +29,11 @@ const REQUIRED = [
   "DATABASE_URL",
   "SUPABASE_URL",
   "SUPABASE_SERVICE_ROLE_KEY",
-  "TOCONLINE_USER",
-  "TOCONLINE_PASSWORD",
+  "CREDENTIALS_ENC_KEY",
 ] as const;
 
 const DEFAULT_RPA_CONCURRENCY = 1;
+const DEFAULT_STATE_DIR = ".rpa";
 
 /**
  * Interpreta `RPA_CONCURRENCY`, caindo para o valor por omissão quando a
@@ -45,9 +54,11 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): WorkerEnv {
     databaseUrl: source.DATABASE_URL as string,
     supabaseUrl: source.SUPABASE_URL as string,
     supabaseServiceRoleKey: source.SUPABASE_SERVICE_ROLE_KEY as string,
-    toconlineUser: source.TOCONLINE_USER as string,
-    toconlinePassword: source.TOCONLINE_PASSWORD as string,
+    credentialsEncKey: source.CREDENTIALS_ENC_KEY as string,
+    toconlineUser: source.TOCONLINE_USER,
+    toconlinePassword: source.TOCONLINE_PASSWORD,
     headless: source.RPA_HEADLESS !== "false",
     rpaConcurrency: parseRpaConcurrency(source.RPA_CONCURRENCY),
+    stateDir: source.RPA_STATE_DIR || DEFAULT_STATE_DIR,
   };
 }

@@ -13,3 +13,6 @@ supabase/.branches/
 supabase/.temp/
 playwright-report/
 test-results/
+# storageState do Playwright: cookies de sessão do TOConline são equivalentes a
+# credencial. Nunca versionar.
+.rpa/

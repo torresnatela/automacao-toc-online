@@ -34,6 +34,15 @@ jobs:
       - name: DB tests (@toc/db, pulados no CI)
         run: pnpm --filter @toc/db test
 
+      # O worker precisa de chromium para os testes de fixture local, que são
+      # os que provam a travessia de shadow DOM e a janela de estabilidade da
+      # leitura do grid. Não tocam na rede externa nem no TOConline.
+      - name: Install chromium (Playwright)
+        run: pnpm --filter @toc/worker exec playwright install --with-deps chromium
+
+      - name: Worker tests (@toc/worker)
+        run: pnpm --filter @toc/worker test
+
       - name: Build web
         run: pnpm --filter web build
         env:

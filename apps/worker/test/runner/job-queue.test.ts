@@ -1,28 +1,35 @@
 import { describe, it, expect, afterAll, beforeEach } from "vitest";
 import { createDb, schema } from "@toc/db";
 import { eq } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 import { JobQueue } from "../../src/runner/job-queue";
 
-const url =
-  process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54422/postgres";
+const url = process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54422/postgres";
 const db = createDb(url);
 const queue = new JobQueue(db);
 
-const JOB_TYPE = "rpa.extract_document";
+// Tipo exclusivo deste ficheiro (não o literal de produção): outros ficheiros de
+// teste (ex.: cli/extract.test.ts) tocam a mesma tabela `jobs` partilhada com o
+// Supabase local, e o Vitest corre ficheiros em paralelo por omissão. Um `type`
+// só deste ficheiro evita que o cleanup de um ficheiro apague jobs do outro.
+const JOB_TYPE = `test.job-queue.${randomUUID()}`;
 
 beforeEach(async () => {
-  await db.delete(schema.jobs);
+  await db.delete(schema.jobs).where(eq(schema.jobs.type, JOB_TYPE));
 });
 
 afterAll(async () => {
-  await db.delete(schema.jobs);
+  await db.delete(schema.jobs).where(eq(schema.jobs.type, JOB_TYPE));
   await (db.$client as { end: () => Promise<void> }).end();
 });
 
-async function enqueue(payload: unknown) {
+async function enqueue(
+  payload: unknown,
+  extra: { traceId?: string; triggeringEventId?: string } = {},
+) {
   const [row] = await db
     .insert(schema.jobs)
-    .values({ type: JOB_TYPE, payload: payload as object })
+    .values({ type: JOB_TYPE, payload: payload as object, ...extra })
     .returning();
   return row;
 }
@@ -44,6 +51,28 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("JobQueue", () => {
     expect(row!.status).toBe("running");
     expect(row!.attempts).toBe(1);
     expect(row!.startedAt).not.toBeNull();
+  });
+
+  // jobs.trace_id / jobs.triggering_event_id carregam a cadeia causal do CLI
+  // (que abre o trace) até ao worker (que a continua) através da fila.
+  it("devolve traceId e triggeringEventId quando o job os traz", async () => {
+    const traceId = randomUUID();
+    const triggeringEventId = randomUUID();
+    await enqueue({ kind: "iva" }, { traceId, triggeringEventId });
+
+    const claimed = await queue.claimNext(JOB_TYPE);
+
+    expect(claimed!.traceId).toBe(traceId);
+    expect(claimed!.triggeringEventId).toBe(triggeringEventId);
+  });
+
+  it("devolve traceId e triggeringEventId nulos quando o job não os traz", async () => {
+    await enqueue({ kind: "iva" });
+
+    const claimed = await queue.claimNext(JOB_TYPE);
+
+    expect(claimed!.traceId).toBeNull();
+    expect(claimed!.triggeringEventId).toBeNull();
   });
 
   it("não reclama duas vezes o mesmo job", async () => {
@@ -69,7 +98,7 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("JobQueue", () => {
     expect(b).not.toBeNull();
     expect(a!.id).not.toBe(b!.id);
 
-    const rows = await db.select().from(schema.jobs);
+    const rows = await db.select().from(schema.jobs).where(eq(schema.jobs.type, JOB_TYPE));
     expect(rows).toHaveLength(2);
     for (const row of rows) {
       expect(row.status).toBe("running");
@@ -79,9 +108,7 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("JobQueue", () => {
 
   it("ignora jobs agendados para o futuro", async () => {
     const future = new Date(Date.now() + 60_000);
-    await db
-      .insert(schema.jobs)
-      .values({ type: JOB_TYPE, payload: {}, scheduledFor: future });
+    await db.insert(schema.jobs).values({ type: JOB_TYPE, payload: {}, scheduledFor: future });
     expect(await queue.claimNext(JOB_TYPE)).toBeNull();
   });
 
@@ -127,14 +154,17 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("JobQueue", () => {
   });
 
   it("fail com retry esgota as tentativas e passa a failed", async () => {
-    await enqueue({});
+    const job = await enqueue({});
     for (let i = 0; i < 3; i++) {
-      await db.update(schema.jobs).set({ scheduledFor: new Date(Date.now() - 1000) });
+      await db
+        .update(schema.jobs)
+        .set({ scheduledFor: new Date(Date.now() - 1000) })
+        .where(eq(schema.jobs.id, job!.id));
       const claimed = await queue.claimNext(JOB_TYPE);
       expect(claimed).not.toBeNull();
       await queue.fail(claimed!.id, { message: "timeout" }, { retry: true });
     }
-    const [row] = await db.select().from(schema.jobs);
+    const [row] = await db.select().from(schema.jobs).where(eq(schema.jobs.id, job!.id));
     expect(row!.status).toBe("failed");
     expect(row!.attempts).toBe(3);
   });
