@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <title>Fixture — listagem de empresas</title>
+  </head>
+  <body>
+    <!--
+      Imita a estrutura real observada em app5.toconline.pt/companies:
+
+      1. Três camadas de Shadow DOM aberto (toc-app → casper-simple-page →
+         vaadin-grid). Um querySelector de topo não vê nada; o locator do
+         Playwright atravessa.
+      2. A grelha é VIRTUALIZADA: só 5 linhas existem no DOM, quaisquer que
+         sejam os dados. Raspar linhas devolveria 5 de 200.
+      3. Os dados chegam em DUAS TRANCHES, como o WebSocket do Casper: 60
+         primeiro, 200 depois. `size` acompanha `items.length` em cada tranche,
+         de propósito — assim a guarda de truncagem NÃO consegue apanhar a
+         leitura precoce, e só a janela de estabilidade a evita.
+
+      Os dados são sintéticos. NIFs gerados com dígito de controlo válido;
+      nenhum dado real de cliente vive no repositório.
+    -->
+    <toc-app></toc-app>
+
+    <script>
+      function nifValido(seq) {
+        const base = String(500000000 + seq).slice(0, 8);
+        let soma = 0;
+        for (let i = 0; i < 8; i++) soma += Number(base[i]) * (9 - i);
+        const mod = soma % 11;
+        const check = mod < 2 ? 0 : 11 - mod;
+        return base + String(check);
+      }
+
+      function fazItens(n) {
+        return Array.from({ length: n }, (_, i) => ({
+          id: 500000 + i,
+          tax_number: nifValido(i),
+          name: "Empresa Sintetica " + i + ", Lda",
+          cluster: (i % 12) + 1,
+          status: i % 25 === 0 ? "inactive" : "active",
+          i18n_status: i % 25 === 0 ? "Inativa" : "Ativa",
+          demo: i % 50 === 0,
+          accounting: i % 13 !== 0,
+          roles: "Contabilista responsavel",
+          module_mask: 255,
+          // Markup por linha: pesado e cheio de dados do cliente. A projeção
+          // corre dentro do browser justamente para isto não sair daqui.
+          _csHTML: "<div class='row'>Empresa Sintetica " + i + ", Lda</div>",
+        }));
+      }
+
+      class VaadinGrid extends HTMLElement {
+        constructor() {
+          super();
+          this.items = [];
+          this.size = 0;
+          this.attachShadow({ mode: "open" });
+        }
+        connectedCallback() {
+          this.render();
+          const tranche = (n, atraso) =>
+            setTimeout(() => {
+              this.items = fazItens(n);
+              this.size = n; // acompanha os dados: só a estabilidade salva
+              this.render();
+            }, atraso);
+          tranche(60, 100);
+          tranche(200, 500);
+        }
+        render() {
+          // Virtualização: no máximo 5 linhas no DOM.
+          const visiveis = this.items.slice(0, 5);
+          this.shadowRoot.innerHTML =
+            "<table><tbody>" +
+            visiveis
+              .map((i) => "<tr><td>" + i.tax_number + "</td><td>" + i.name + "</td></tr>")
+              .join("") +
+            "</tbody></table>";
+        }
+      }
+
+      class CasperSimplePage extends HTMLElement {
+        connectedCallback() {
+          this.attachShadow({ mode: "open" }).innerHTML = "<vaadin-grid></vaadin-grid>";
+        }
+      }
+
+      class TocApp extends HTMLElement {
+        connectedCallback() {
+          this.attachShadow({ mode: "open" }).innerHTML = "<casper-simple-page></casper-simple-page>";
+        }
+      }
+
+      customElements.define("vaadin-grid", VaadinGrid);
+      customElements.define("casper-simple-page", CasperSimplePage);
+      customElements.define("toc-app", TocApp);
+    </script>
+  </body>
+</html>

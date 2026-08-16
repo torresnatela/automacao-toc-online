@@ -1,3 +1,4 @@
+import type { Page } from "playwright";
 import { EventHandle, TraceHandle, type Tracer } from "@toc/core";
 import type { EventInput, ObservabilityStore } from "@toc/core";
 import {
@@ -36,6 +37,8 @@ export interface CredentialSource {
 }
 
 export interface AuthenticatedTocSession {
+  /** Página já autenticada e na listagem de empresas. */
+  readonly page: Page;
   /** Host efetivo pós-login (ex.: `app5.toconline.pt`). Nunca assumido. */
   readonly host: string;
   close(): Promise<void>;

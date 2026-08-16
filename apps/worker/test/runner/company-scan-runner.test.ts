@@ -87,6 +87,8 @@ class FakeSessions implements TocSessionFactory {
     if (this.failure) throw this.failure;
     this.opened += 1;
     const session: AuthenticatedTocSession = {
+      // O runner nunca toca na Page — só a repassa ao scanner, que aqui é falso.
+      page: {} as AuthenticatedTocSession["page"],
       host: "app5.toconline.pt",
       close: async () => {
         this.closed += 1;
