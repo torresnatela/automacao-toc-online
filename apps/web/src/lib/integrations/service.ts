@@ -3,20 +3,21 @@ import { getSessionUser, type SessionUser } from "@/lib/auth";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { startAction } from "@/lib/observability";
-import { ROLE_ORDER } from "@toc/core/auth";
+import { resolveTeamScope } from "@toc/core/auth";
 import { encryptSecret } from "@toc/core/crypto";
 import {
   saveCredential,
+  SCAN_JOB_TYPE,
   type CredentialFieldErrors,
   type CredentialInput,
   type CredentialRecord,
   type CredentialRepo,
   type IntegrationProvider,
+  type ScanJobResult,
   type SecretCipher,
 } from "@toc/core/domain";
 
-/** Tipo do job que o worker consome. Irmão do `rpa.extract_document` do Módulo 1. */
-export const SCAN_JOB_TYPE = "rpa.scan_companies";
+export { SCAN_JOB_TYPE };
 
 /**
  * Projeção segura de uma credencial. Vem da view `integration_credentials_safe`,
@@ -37,16 +38,13 @@ export interface CredentialSummaryRow {
 const SAFE_COLUMNS =
   "id, team_id, provider, username, status, has_secret, last_verified_at, updated_at";
 
-export interface ScanResultDoc {
-  scanned?: number;
-  create?: number;
-  link?: number;
-  update?: number;
-  unchanged?: number;
-  skip?: number;
-  conflict?: number;
-  missing?: number;
-}
+/**
+ * `jobs.result` é `jsonb`, portanto uma linha antiga pode não trazer todas as
+ * chaves — daí `Partial`. A forma em si vem de `@toc/core`, escrita pelo worker:
+ * duas declarações separadas já divergiram uma vez (`created` cá, `create` lá) e
+ * o resultado foi a página mostrar um resumo vazio sem nada falhar.
+ */
+export type ScanResultDoc = Partial<ScanJobResult>;
 
 export interface ScanJobRow {
   id: string;
@@ -90,12 +88,6 @@ export function credentialInputFrom(src: Record<string, unknown>): CredentialInp
 
 // --- Leitura (RLS aplica o escopo por equipe através da view) ----------------
 
-export async function listTeamCredentials(): Promise<CredentialSummaryRow[]> {
-  const supabase = await getSupabaseServerClient();
-  const { data } = await supabase.from("integration_credentials_safe").select(SAFE_COLUMNS);
-  return (data ?? []) as CredentialSummaryRow[];
-}
-
 /**
  * A equipe é sempre explícita, nunca inferida da RLS.
  *
@@ -138,35 +130,23 @@ export async function getLatestScanJob(teamId: string): Promise<ScanJobRow | nul
 
 type Admin = ReturnType<typeof getSupabaseAdminClient>;
 
-/** Requer papel >= operator. Distingue 401 (sem sessão) de 403 (papel insuficiente). */
-async function requireWriter(): Promise<
-  { ok: true; actor: SessionUser } | { ok: false; status: number; error: string }
+/**
+ * Sessão + equipa numa passagem. A **decisão** (papel suficiente? que equipa?)
+ * está em `@toc/core/auth`, testada sem Next nem Supabase; aqui fica só a leitura
+ * da sessão.
+ */
+async function requireWriterOn(
+  requestedTeamId: string,
+): Promise<
+  { ok: true; actor: SessionUser; teamId: string } | { ok: false; status: number; error: string }
 > {
-  const user = await getSessionUser();
-  if (!user) return { ok: false, status: 401, error: "Não autenticado." };
-  if (ROLE_ORDER.indexOf(user.role) < ROLE_ORDER.indexOf("operator")) {
-    return { ok: false, status: 403, error: "Acesso restrito a operador ou administrador." };
-  }
-  return { ok: true, actor: user };
-}
-
-/** Admin escolhe a equipe; operador fica preso à sua. */
-function resolveTeam(
-  actor: SessionUser,
-  requested: string,
-): { ok: true; teamId: string } | { ok: false; status: number; error: string } {
-  const teamId = actor.role === "admin" ? requested : (actor.teamId ?? "");
-  if (!teamId) {
-    return {
-      ok: false,
-      status: 400,
-      error:
-        actor.role === "admin"
-          ? "Selecione a equipe."
-          : "Seu usuário não está atribuído a uma equipe.",
-    };
-  }
-  return { ok: true, teamId };
+  const actor = await getSessionUser();
+  const scope = resolveTeamScope(actor, requestedTeamId);
+  if (!scope.ok) return scope;
+  // Inalcançável — sem sessão o `scope` acima já teria devolvido 401. Está aqui
+  // para estreitar o tipo sem um `as`.
+  if (!actor) return { ok: false, status: 401, error: "Não autenticado." };
+  return { ok: true, actor, teamId: scope.teamId };
 }
 
 const cipher: SecretCipher = { encrypt: (plaintext) => encryptSecret(plaintext) };
@@ -226,12 +206,9 @@ function toRow(r: CredentialRecord): Record<string, unknown> {
 export async function saveCredentialFromInput(
   input: CredentialInput,
 ): Promise<CredentialMutationResult> {
-  const auth = await requireWriter();
+  const auth = await requireWriterOn(input.teamId);
   if (!auth.ok) return auth;
-  const { actor } = auth;
-
-  const team = resolveTeam(actor, input.teamId);
-  if (!team.ok) return team;
+  const { actor, teamId } = auth;
 
   const admin = getSupabaseAdminClient();
   let act: Awaited<ReturnType<typeof startAction>> | undefined;
@@ -242,13 +219,10 @@ export async function saveCredentialFromInput(
       triggerSource: "integrations.toconline.credential",
       type: "integration.credential_saved",
       createdBy: actor.id,
-      payload: { teamId: team.teamId, provider: input.provider },
+      payload: { teamId, provider: input.provider },
     });
 
-    const result = await saveCredential(credentialRepo(admin), cipher, {
-      ...input,
-      teamId: team.teamId,
-    });
+    const result = await saveCredential(credentialRepo(admin), cipher, { ...input, teamId });
     if (!result.ok) {
       await act.failure("validação");
       return {
@@ -272,18 +246,15 @@ export async function deleteCredentialFor(
   provider: IntegrationProvider,
   requestedTeamId = "",
 ): Promise<CredentialMutationResult> {
-  const auth = await requireWriter();
+  const auth = await requireWriterOn(requestedTeamId);
   if (!auth.ok) return auth;
-  const { actor } = auth;
-
-  const team = resolveTeam(actor, requestedTeamId);
-  if (!team.ok) return team;
+  const { actor, teamId } = auth;
 
   const admin = getSupabaseAdminClient();
   const { data: existing } = await admin
     .from("integration_credentials")
     .select("id")
-    .eq("team_id", team.teamId)
+    .eq("team_id", teamId)
     .eq("provider", provider)
     .is("company_id", null)
     .maybeSingle();
@@ -296,7 +267,7 @@ export async function deleteCredentialFor(
       triggerSource: "integrations.toconline.credential",
       type: "integration.credential_removed",
       createdBy: actor.id,
-      payload: { teamId: team.teamId, provider },
+      payload: { teamId, provider },
     });
     const { error } = await admin.from("integration_credentials").delete().eq("id", id);
     if (error) throw new Error(error.message);
@@ -310,19 +281,16 @@ export async function deleteCredentialFor(
 }
 
 export async function enqueueCompanyScan(requestedTeamId = ""): Promise<ScanEnqueueResult> {
-  const auth = await requireWriter();
+  const auth = await requireWriterOn(requestedTeamId);
   if (!auth.ok) return auth;
-  const { actor } = auth;
-
-  const team = resolveTeam(actor, requestedTeamId);
-  if (!team.ok) return team;
+  const { actor, teamId } = auth;
 
   const admin = getSupabaseAdminClient();
 
   const { data: credential } = await admin
     .from("integration_credentials")
     .select("id, secret_encrypted")
-    .eq("team_id", team.teamId)
+    .eq("team_id", teamId)
     .eq("provider", "toconline")
     .is("company_id", null)
     .maybeSingle();
@@ -338,7 +306,7 @@ export async function enqueueCompanyScan(requestedTeamId = ""): Promise<ScanEnqu
     .from("jobs")
     .select("id")
     .eq("type", SCAN_JOB_TYPE)
-    .eq("team_id", team.teamId)
+    .eq("team_id", teamId)
     .in("status", ["pending", "running"])
     .limit(1)
     .maybeSingle();
@@ -352,18 +320,18 @@ export async function enqueueCompanyScan(requestedTeamId = ""): Promise<ScanEnqu
       triggerSource: "integrations.toconline.scan",
       type: "job.enqueued",
       createdBy: actor.id,
-      correlationKey: `team:${team.teamId}:toconline`,
-      payload: { teamId: team.teamId, provider: "toconline", jobType: SCAN_JOB_TYPE },
+      correlationKey: `team:${teamId}:toconline`,
+      payload: { teamId, provider: "toconline", jobType: SCAN_JOB_TYPE },
     });
 
     const { data, error } = await admin
       .from("jobs")
       .insert({
-        team_id: team.teamId,
+        team_id: teamId,
         type: SCAN_JOB_TYPE,
         trace_id: act.traceId,
         triggering_event_id: act.eventId,
-        payload: { teamId: team.teamId, credentialId: cred.id, provider: "toconline" },
+        payload: { teamId, credentialId: cred.id, provider: "toconline" },
       })
       .select("id")
       .single();

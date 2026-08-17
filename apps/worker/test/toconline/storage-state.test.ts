@@ -75,7 +75,7 @@ describe("FileStorageStateStore", () => {
     const store = new FileStorageStateStore(dir);
     await store.save("toconline:cred-1", session());
 
-    const files = await store.pathFor("toconline:cred-1");
+    const files = store.pathFor("toconline:cred-1");
     const info = await stat(files);
     expect(info.mode & 0o777).toBe(0o600);
   });
@@ -92,7 +92,7 @@ describe("FileStorageStateStore", () => {
   it("sanitiza a chave no nome do ficheiro (nada de travessia de diretórios)", async () => {
     const dir = await tempDir();
     const store = new FileStorageStateStore(dir);
-    const path = await store.pathFor("toconline:../../escapou");
+    const path = store.pathFor("toconline:../../escapou");
     expect(path.startsWith(dir)).toBe(true);
     expect(path).not.toContain("..");
   });
@@ -102,7 +102,7 @@ describe("FileStorageStateStore", () => {
     const store = new FileStorageStateStore(dir);
     await store.save("toconline:cred-1", session());
     const { writeFile } = await import("node:fs/promises");
-    await writeFile(await store.pathFor("toconline:cred-1"), "{ isto não é json");
+    await writeFile(store.pathFor("toconline:cred-1"), "{ isto não é json");
 
     expect(await store.load("toconline:cred-1")).toBeNull();
   });
@@ -112,7 +112,7 @@ describe("FileStorageStateStore", () => {
     const store = new FileStorageStateStore(dir);
     await store.save("toconline:cred-1", session());
 
-    const raw = await readFile(await store.pathFor("toconline:cred-1"), "utf8");
+    const raw = await readFile(store.pathFor("toconline:cred-1"), "utf8");
     expect(raw).toContain("cookies");
     expect(raw).not.toContain("password");
   });

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { InMemoryStore, createTracer } from "@toc/core";
-import type { ExistingCompany, ReconcilePlan } from "@toc/core/domain";
+import { SCAN_COUNT_KEYS, type ExistingCompany, type ReconcilePlan } from "@toc/core/domain";
 import { CompanyScanRunner } from "../../src/runner/company-scan-runner";
 import type {
   AuthenticatedTocSession,
@@ -11,7 +11,7 @@ import type {
   OpenedSession,
   TocSessionFactory,
   UpsertReport,
-} from "../../src/runner/company-scan-runner";
+} from "../../src/runner/ports";
 import type { GridProjection } from "../../src/toconline/project-grid";
 import type { ClaimedJob } from "../../src/runner/job-queue";
 import { StructuralError, InvalidCredentialsError } from "../../src/errors";
@@ -188,6 +188,65 @@ describe("CompanyScanRunner", () => {
     expect(plan.summary.skip).toBe(1);
   });
 
+  /**
+   * `jobs.result` é jsonb: nada no typecheck liga o que o worker escreve ao que
+   * o dashboard lê. Se as chaves divergirem, a varredura corre bem e a página
+   * mostra um resumo vazio — falha silenciosa, do lado errado.
+   */
+  describe("contrato de jobs.result", () => {
+    it("usa exatamente as chaves que o dashboard lê", async () => {
+      const { runner } = build({});
+
+      const outcome = await runner.run(job());
+
+      expect(outcome.status).toBe("succeeded");
+      if (outcome.status !== "succeeded") return;
+      expect(Object.keys(outcome.result).sort()).toEqual(
+        [...SCAN_COUNT_KEYS, "host", "via"].sort(),
+      );
+    });
+
+    it("empresa demo conta como `skipped` — o nome que a página rotula", async () => {
+      const scanner = new FakeScanner(
+        gridOf([rawRow(1, NIF_A), { ...rawRow(2, NIF_B), demo: true }]),
+      );
+      const { runner } = build({ scanner });
+
+      const outcome = await runner.run(job());
+
+      expect(outcome.status).toBe("succeeded");
+      if (outcome.status !== "succeeded") return;
+      expect(outcome.result.skipped).toBe(1);
+      expect(outcome.result.persisted).toBe(1);
+    });
+
+    it("`persisted` não conta conflitos — um conflito não escreve nada", async () => {
+      // NIF_A já está cá, mas ligado a OUTRO tocCompanyId: ambiguidade humana.
+      const existing: ExistingCompany[] = [
+        {
+          id: "c1",
+          nif: NIF_A,
+          name: "Empresa antiga",
+          status: "active",
+          tocCompanyId: 999,
+          tocCluster: 5,
+        },
+      ];
+      const directory = new FakeDirectory(existing);
+      const { runner } = build({ directory });
+
+      const outcome = await runner.run(job());
+
+      expect(outcome.status).toBe("succeeded");
+      if (outcome.status !== "succeeded") return;
+      const plan = directory.applied[0]!;
+      expect(plan.summary.conflict).toBe(1);
+      expect(outcome.result.persisted).toBe(
+        plan.summary.create + plan.summary.link + plan.summary.update + plan.summary.unchanged,
+      );
+    });
+  });
+
   describe("credenciais", () => {
     it("credencial inválida → skipped, sem sequer abrir o browser", async () => {
       const credentials = new FakeCredentials({ ok: false, reason: "invalid" });
@@ -280,6 +339,78 @@ describe("CompanyScanRunner", () => {
       const { runner } = build({ directory: new FakeDirectory(existing) });
 
       expect(await runner.run(job())).toMatchObject({ status: "failed", retry: false });
+    });
+  });
+
+  /**
+   * O dashboard abre o trace e entrega-o (`handOff`) — quem o fecha é o worker.
+   * Se o worker consome o job e volta atrás antes de tocar no trace, aquele
+   * trace fica aberto para sempre e passa a ser indistinguível de um job
+   * enfileirado e nunca consumido, que é precisamente o sinal que ele existe
+   * para dar.
+   */
+  describe("saídas antecipadas fecham o trace do dashboard", () => {
+    async function traceDoDashboard() {
+      const trace = await createTracer(store).startTrace({
+        rootTrigger: "manual",
+        triggerSource: "integrations.toconline.scan",
+      });
+      const enqueued = await trace.event({ type: "job.enqueued", source: "web" });
+      // `handOff()`: o evento fecha com sucesso, o trace fica ABERTO à espera
+      // do worker. É este o estado exato que a fila entrega.
+      await enqueued.succeed();
+      return { traceId: trace.id, triggeringEventId: enqueued.id };
+    }
+
+    const estadoDoTrace = () => [...store.traces.values()][0]?.status;
+    const jobStarted = () => [...store.events.values()].find((e) => e.type === "job.started");
+
+    it("payload inválido não deixa o trace aberto", async () => {
+      const ligacao = await traceDoDashboard();
+      const { runner } = build({});
+
+      const outcome = await runner.run(job({ ...ligacao, payload: { teamId: TEAM } }));
+
+      expect(outcome).toMatchObject({ status: "failed", retry: false });
+      expect(estadoDoTrace()).toBe("failed");
+      expect(jobStarted()?.status).toBe("failed");
+    });
+
+    it("credencial inexistente não deixa o trace aberto", async () => {
+      const ligacao = await traceDoDashboard();
+      const credentials = new FakeCredentials({ ok: false, reason: "not_found" });
+      const { runner } = build({ credentials });
+
+      const outcome = await runner.run(job(ligacao));
+
+      expect(outcome).toMatchObject({ status: "failed", retry: false });
+      expect(estadoDoTrace()).toBe("failed");
+      expect(jobStarted()?.status).toBe("failed");
+    });
+
+    it("credencial inválida encerra o trace e marca o evento como skipped", async () => {
+      const ligacao = await traceDoDashboard();
+      const credentials = new FakeCredentials({ ok: false, reason: "invalid" });
+      const sessions = new FakeSessions();
+      const { runner } = build({ credentials, sessions });
+
+      const outcome = await runner.run(job(ligacao));
+
+      expect(outcome).toEqual({ status: "skipped", reason: "credential_invalid" });
+      expect(sessions.opened).toBe(0);
+      // Nada falhou — o job foi ignorado de propósito. O trace fecha concluído.
+      expect(estadoDoTrace()).toBe("completed");
+      expect(jobStarted()?.status).toBe("skipped");
+      // O enfileiramento em si SUCEDEU: reescrevê-lo como ignorado seria mentir
+      // sobre o que o dashboard fez.
+      expect(store.events.get(ligacao.triggeringEventId)?.status).toBe("succeeded");
+    });
+
+    it("sem traceId na fila continua a não rebentar", async () => {
+      const credentials = new FakeCredentials({ ok: false, reason: "invalid" });
+      const { runner } = build({ credentials });
+
+      expect(await runner.run(job())).toEqual({ status: "skipped", reason: "credential_invalid" });
     });
   });
 

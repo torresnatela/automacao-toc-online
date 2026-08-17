@@ -141,3 +141,49 @@ export interface ReconcilePlan {
   actions: ReconcileAction[];
   summary: ReconcileSummary;
 }
+
+// ---------------------------------------------------------------------------
+// Contrato do job de varredura (dashboard ⇄ worker)
+// ---------------------------------------------------------------------------
+
+/**
+ * Tipo do job que o dashboard enfileira e o worker consome.
+ *
+ * Vive aqui e não em cada lado porque os dois processos são *deployables*
+ * distintos — o dashboard na Vercel, o worker fora dela. Duas cópias da string
+ * divergem sem que nada falhe: o dashboard enfileira, o worker nunca reclama, e
+ * o job fica pendente para sempre.
+ */
+export const SCAN_JOB_TYPE = "rpa.scan_companies";
+
+/**
+ * Contagens da varredura, na ordem em que o dashboard as apresenta.
+ *
+ * `jobs.result` é `jsonb`: **nada no typecheck liga o que o worker escreve ao
+ * que a página lê**. Foi assim que as duas pontas divergiram (`created` vs
+ * `create`) sem nenhum erro — a varredura corria bem e o resumo aparecia vazio.
+ * Declarar as chaves uma só vez transforma essa divergência em erro de
+ * compilação nos dois lados.
+ */
+export const SCAN_COUNT_KEYS = [
+  "scanned",
+  "created",
+  "linked",
+  "updated",
+  "unchanged",
+  "skipped",
+  "conflicts",
+  "missing",
+  "rejected",
+  "persisted",
+] as const;
+
+export type ScanCountKey = (typeof SCAN_COUNT_KEYS)[number];
+
+/** O que o worker grava em `jobs.result` e a página lê de volta. */
+export type ScanJobResult = Record<ScanCountKey, number> & {
+  /** Host shardado onde a varredura correu (`app5.toconline.pt`). */
+  host: string;
+  /** Propriedade do grid de onde saíram as linhas — diagnóstico. */
+  via: string;
+};

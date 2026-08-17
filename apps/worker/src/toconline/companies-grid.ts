@@ -1,5 +1,7 @@
 import type { Page } from "playwright";
 import { StructuralError } from "../errors";
+import { sleep } from "../support/sleep";
+import { TOCONLINE } from "./selectors";
 import { projectGrid, type GridProjection } from "./project-grid";
 
 /**
@@ -33,10 +35,7 @@ export interface GridRead extends GridProjection {
   durationMs: number;
 }
 
-const DEFAULT_TIMEOUT = 45_000;
 const DEFAULT_QUIET = 750;
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Conta os itens de um grid sem os projetar — barato o bastante para repetir. */
 function countItems(el: unknown): number {
@@ -52,7 +51,7 @@ export async function readCompaniesGrid(
   page: Page,
   options: GridReadOptions = {},
 ): Promise<GridRead> {
-  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT;
+  const timeoutMs = options.timeoutMs ?? TOCONLINE.defaultTimeoutMs;
   const quietMs = options.quietMs ?? DEFAULT_QUIET;
   const started = Date.now();
 
@@ -95,11 +94,25 @@ export async function readCompaniesGrid(
     // stream — nem o `size` anunciado a substitui, porque ele acompanha os
     // dados enquanto chegam.
     let previous = await handle.evaluate(countItems);
+    let settled = false;
     while (Date.now() < deadline) {
       await sleep(quietMs);
       const current = await handle.evaluate(countItems);
-      if (current === previous && current > 0) break;
+      if (current === previous && current > 0) {
+        settled = true;
+        break;
+      }
       previous = current;
+    }
+
+    // Esgotar o tempo sem o total repetir NÃO é motivo para projetar o que
+    // está lá: seria persistir meia carteira com ar de varredura bem-sucedida,
+    // e é o pior desfecho possível deste módulo. Falha alta, sem retry — se o
+    // portal ficou assim, retentar não conserta.
+    if (!settled) {
+      throw new StructuralError(
+        `A lista de empresas do TOConline não estabilizou em ${timeoutMs}ms (parou nas ${previous} linhas e continuava a mudar). Ler agora persistiria uma lista truncada.`,
+      );
     }
 
     const projection = (await handle.evaluate(projectGrid)) as GridProjection;

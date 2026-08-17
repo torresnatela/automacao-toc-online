@@ -46,13 +46,14 @@ function safeName(key: string): string {
 export class FileStorageStateStore implements StorageStateStore {
   constructor(private readonly dir: string) {}
 
-  async pathFor(key: string): Promise<string> {
+  /** Síncrono: é um `join`. Prometê-lo obrigava cada chamador a um `await` inútil. */
+  pathFor(key: string): string {
     return join(this.dir, safeName(key));
   }
 
   async load(key: string): Promise<SavedSession | null> {
     try {
-      const raw = await readFile(await this.pathFor(key), "utf8");
+      const raw = await readFile(this.pathFor(key), "utf8");
       return JSON.parse(raw) as SavedSession;
     } catch {
       // Ausente ou corrompido dão no mesmo para quem chama: não há sessão
@@ -63,7 +64,7 @@ export class FileStorageStateStore implements StorageStateStore {
 
   async save(key: string, saved: SavedSession): Promise<void> {
     await mkdir(this.dir, { recursive: true, mode: 0o700 });
-    const path = await this.pathFor(key);
+    const path = this.pathFor(key);
     await writeFile(path, JSON.stringify(saved), { mode: 0o600 });
     // chmod explícito: o `mode` do writeFile é mascarado pelo umask do processo
     // e não se aplica de todo quando o ficheiro já existia.
@@ -71,7 +72,7 @@ export class FileStorageStateStore implements StorageStateStore {
   }
 
   async clear(key: string): Promise<void> {
-    await rm(await this.pathFor(key), { force: true });
+    await rm(this.pathFor(key), { force: true });
   }
 }
 

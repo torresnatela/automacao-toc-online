@@ -1,16 +1,16 @@
-import type { Page } from "playwright";
 import { EventHandle, TraceHandle, type Tracer } from "@toc/core";
 import type { EventInput, ObservabilityStore } from "@toc/core";
-import {
-  normalizeScan,
-  planCompanyReconciliation,
-  type ExistingCompany,
-  type ReconcilePlan,
-} from "@toc/core/domain";
+import { normalizeScan, planCompanyReconciliation, type ScanJobResult } from "@toc/core/domain";
 import { InvalidCredentialsError, StructuralError } from "../errors";
 import { assertScanIntegrity } from "../toconline/guards";
-import type { GridProjection } from "../toconline/project-grid";
 import type { ClaimedJob } from "./job-queue";
+import type {
+  AuthenticatedTocSession,
+  CompanyDirectory,
+  CompanyScanner,
+  CredentialSource,
+  TocSessionFactory,
+} from "./ports";
 
 /**
  * Orquestra uma varredura de empresas: job → sessão no TOConline → leitura do
@@ -20,60 +20,6 @@ import type { ClaimedJob } from "./job-queue";
  * ficheiro — onde vivem as decisões de retry, skip e ordem dos passos — se
  * testa sem browser, sem rede e sem base de dados.
  */
-
-export interface TocOnlineCredentials {
-  username: string;
-  password: string;
-}
-
-export type CredentialLookup =
-  | { ok: true; credentials: TocOnlineCredentials }
-  | { ok: false; reason: "not_found" | "invalid" | "expired" };
-
-export interface CredentialSource {
-  load(credentialId: string): Promise<CredentialLookup>;
-  markVerified(credentialId: string): Promise<void>;
-  markInvalid(credentialId: string, reason: string): Promise<void>;
-}
-
-export interface AuthenticatedTocSession {
-  /** Página já autenticada e na listagem de empresas. */
-  readonly page: Page;
-  /** Host efetivo pós-login (ex.: `app5.toconline.pt`). Nunca assumido. */
-  readonly host: string;
-  close(): Promise<void>;
-}
-
-export interface OpenedSession {
-  session: AuthenticatedTocSession;
-  reused: boolean;
-}
-
-export interface TocSessionFactory {
-  open(input: {
-    credentialId: string;
-    credentials: TocOnlineCredentials;
-  }): Promise<OpenedSession>;
-}
-
-export interface CompanyScanner {
-  scan(session: AuthenticatedTocSession): Promise<GridProjection>;
-}
-
-export interface UpsertReport {
-  created: number;
-  linked: number;
-  updated: number;
-  unchanged: number;
-  missing: number;
-  conflicts: number;
-}
-
-export interface CompanyDirectory {
-  /** Empresas já conhecidas da equipa — base da reconciliação e do guard de encolhimento. */
-  list(teamId: string): Promise<ExistingCompany[]>;
-  apply(teamId: string, plan: ReconcilePlan): Promise<UpsertReport>;
-}
 
 export interface ScanRunnerDeps {
   tracer: Tracer;
@@ -85,17 +31,8 @@ export interface ScanRunnerDeps {
   directory: CompanyDirectory;
 }
 
-export interface ScanResult extends UpsertReport {
-  scanned: number;
-  persisted: number;
-  rejected: number;
-  demo: number;
-  host: string;
-  via: string;
-}
-
 export type ScanOutcome =
-  | { status: "succeeded"; result: ScanResult }
+  | { status: "succeeded"; result: ScanJobResult }
   | { status: "skipped"; reason: string }
   | { status: "failed"; message: string; retry: boolean };
 
@@ -118,12 +55,24 @@ export class CompanyScanRunner {
   constructor(private readonly deps: ScanRunnerDeps) {}
 
   async run(job: ClaimedJob): Promise<ScanOutcome> {
+    // O trace do dashboard não depende do payload nem da credencial: se veio na
+    // fila, continuá-lo é a PRIMEIRA coisa a fazer. Foi entregue com `handOff`
+    // e fica aberto até o worker o fechar — uma saída antecipada que o ignore
+    // deixa-o aberto para sempre, indistinguível de um job enfileirado e nunca
+    // consumido, que é justamente o sinal que ele existe para dar.
+    const handedOff = job.traceId ? new TraceHandle(this.deps.store, job.traceId) : null;
+    const enqueued =
+      handedOff && job.triggeringEventId
+        ? new EventHandle(this.deps.store, job.triggeringEventId, handedOff.id)
+        : null;
+
     let payload: ScanPayload;
     try {
       payload = parsePayload(job.payload);
     } catch (err) {
-      // Sem payload não há trace a continuar nem equipa a correlacionar.
-      return { status: "failed", message: (err as Error).message, retry: false };
+      const message = (err as Error).message;
+      await this.closeEarly(handedOff, enqueued, job, null, { kind: "failed", message });
+      return { status: "failed", message, retry: false };
     }
 
     // A credencial resolve-se ANTES de tocar no browser: uma credencial já
@@ -132,35 +81,31 @@ export class CompanyScanRunner {
     const lookup = await this.deps.credentials.load(payload.credentialId);
     if (!lookup.ok) {
       if (lookup.reason === "not_found") {
-        return {
-          status: "failed",
-          message: "Credencial do TOConline não encontrada.",
-          retry: false,
-        };
+        const message = "Credencial do TOConline não encontrada.";
+        await this.closeEarly(handedOff, enqueued, job, payload.teamId, {
+          kind: "failed",
+          message,
+        });
+        return { status: "failed", message, retry: false };
       }
+      await this.closeEarly(handedOff, enqueued, job, payload.teamId, {
+        kind: "skipped",
+        reason: "credential_invalid",
+      });
       return { status: "skipped", reason: "credential_invalid" };
     }
 
     // Continuar o trace do dashboard em vez de abrir um novo: abrir aqui
     // partiria a cadeia causal (enfileirar → executar) em dois pedaços soltos.
-    const trace = job.traceId
-      ? new TraceHandle(this.deps.store, job.traceId)
-      : await this.deps.tracer.startTrace({
-          rootTrigger: "manual",
-          triggerSource: "worker:scan_companies",
-          correlationKey: `team:${payload.teamId}:toconline`,
-        });
+    const trace =
+      handedOff ??
+      (await this.deps.tracer.startTrace({
+        rootTrigger: "manual",
+        triggerSource: "worker:scan_companies",
+        correlationKey: `team:${payload.teamId}:toconline`,
+      }));
 
-    const enqueued = job.triggeringEventId
-      ? new EventHandle(this.deps.store, job.triggeringEventId, trace.id)
-      : null;
-
-    const startedInput: EventInput = {
-      type: "job.started",
-      source: "worker",
-      payload: { jobId: job.id, teamId: payload.teamId, attempt: job.attempts },
-    };
-    const started = enqueued ? await enqueued.child(startedInput) : await trace.event(startedInput);
+    const started = await this.openStarted(trace, enqueued, job, payload.teamId);
 
     let session: AuthenticatedTocSession | null = null;
     try {
@@ -223,12 +168,16 @@ export class CompanyScanRunner {
       await syncEvent.log.info("empresas reconciliadas", { ...report });
       await syncEvent.succeed();
 
-      const result: ScanResult = {
+      const result: ScanJobResult = {
         ...report,
         scanned: read.rows.length,
-        persisted: scan.companies.length - plan.summary.skip,
+        // Só conta o que a persistência tocou: `skip` (demo) e `conflict` não
+        // escrevem nada, e incluí-los faria o resumo prometer escritas que não
+        // aconteceram.
+        persisted:
+          plan.summary.create + plan.summary.link + plan.summary.update + plan.summary.unchanged,
         rejected: scan.rejected.length,
-        demo: plan.summary.skip,
+        skipped: plan.summary.skip,
         host: opened.session.host,
         via: read.via,
       };
@@ -255,6 +204,57 @@ export class CompanyScanRunner {
       // memória e, pior, deixa cookies do gabinete vivos.
       if (session) await this.safely(() => session!.close());
     }
+  }
+
+  /**
+   * Abre o `job.started` — sempre pendurado no evento de enfileiramento quando
+   * ele existe, para a cadeia enfileirar → executar ficar de uma peça só.
+   */
+  private openStarted(
+    trace: TraceHandle,
+    enqueued: EventHandle | null,
+    job: ClaimedJob,
+    teamId: string | null,
+  ): Promise<EventHandle> {
+    const input: EventInput = {
+      type: "job.started",
+      source: "worker",
+      payload: { jobId: job.id, teamId, attempt: job.attempts },
+    };
+    return enqueued ? enqueued.child(input) : trace.event(input);
+  }
+
+  /**
+   * Encerra o trace entregue pelo dashboard numa saída antecipada, com o mesmo
+   * `job.started` do caminho normal para o desfecho ser legível no mesmo sítio.
+   *
+   * O evento de enfileiramento **não** é reescrito: enfileirar sucedeu mesmo, e
+   * marcá-lo agora como falhado ou ignorado seria mentir sobre o que o
+   * dashboard fez. Quem carrega o desfecho da execução é o `job.started`.
+   */
+  private async closeEarly(
+    trace: TraceHandle | null,
+    enqueued: EventHandle | null,
+    job: ClaimedJob,
+    teamId: string | null,
+    outcome: { kind: "failed"; message: string } | { kind: "skipped"; reason: string },
+  ): Promise<void> {
+    // Sem trace na fila não há nada a fechar — e inventar um aqui só criaria
+    // um trace órfão sem a equipa que o correlaciona.
+    if (!trace) return;
+
+    await this.safely(async () => {
+      const started = await this.openStarted(trace, enqueued, job, teamId);
+      if (outcome.kind === "failed") {
+        await started.fail({ message: outcome.message });
+        await trace.fail({ message: outcome.message });
+      } else {
+        await started.skip(outcome.reason);
+        // Ignorar de propósito não é falhar: o trabalho terminou, e o trace
+        // fecha concluído.
+        await trace.complete();
+      }
+    });
   }
 
   /** Instrumentação e limpeza são fail-open: não podem derrubar o desfecho do job. */

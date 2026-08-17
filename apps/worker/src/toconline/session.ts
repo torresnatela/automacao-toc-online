@@ -6,7 +6,7 @@ import type {
   OpenedSession,
   TocOnlineCredentials,
   TocSessionFactory,
-} from "../runner/company-scan-runner";
+} from "../runner/ports";
 import { TOCONLINE } from "./selectors";
 import type { StorageStateStore } from "./storage-state";
 
@@ -47,7 +47,30 @@ export function assertTocHost(url: string, pattern: RegExp = TOCONLINE.hostPatte
   return host;
 }
 
-const DEFAULT_TIMEOUT = 45_000;
+/**
+ * Substantivos que a página de login usa **por natureza**: são rótulos do
+ * próprio formulário ("Palavra-passe", "Credenciais de acesso"), não prova de
+ * recusa. Sozinhos não classificam nada.
+ */
+const CREDENCIAL =
+  "credenciai\\w*|credentials|palavra-passe|password|utilizador|username|e-?mail|login|dados de acesso";
+/** Adjetivos/verbos que afirmam a recusa. Sem um destes, não houve recusa. */
+const RECUSA =
+  "inv[aá]lid\\w*|invalid|incorret\\w*|incorrect|errad\\w*|wrong|n[aã]o (?:confere\\w*|coincide\\w*|corresponde\\w*)|failed|falhou";
+
+/**
+ * Só se afirma "rejeitada" quando a página junta um substantivo de credencial a
+ * uma afirmação de recusa, na mesma frase (sem `.` a separar).
+ *
+ * A versão anterior procurava os substantivos isolados e classificava como
+ * recusa qualquer timeout com o formulário à vista — marcando inválida uma
+ * credencial boa e fazendo todos os jobs seguintes serem ignorados. Um timeout
+ * sem indício visível é erro retentável, e é esse o lado seguro de errar.
+ */
+const REJECTION_NOTICE = new RegExp(
+  `(?:(?:${CREDENCIAL})[^.]{0,40}?(?:${RECUSA}))|(?:(?:${RECUSA})[^.]{0,40}?(?:${CREDENCIAL}))`,
+  "i",
+);
 
 export class PlaywrightTocSessions implements TocSessionFactory {
   constructor(
@@ -56,7 +79,7 @@ export class PlaywrightTocSessions implements TocSessionFactory {
   ) {}
 
   private get timeout(): number {
-    return this.options.timeoutMs ?? DEFAULT_TIMEOUT;
+    return this.options.timeoutMs ?? TOCONLINE.defaultTimeoutMs;
   }
 
   private get companiesPath(): string {
@@ -162,7 +185,7 @@ export class PlaywrightTocSessions implements TocSessionFactory {
    */
   private async looksRejected(page: Page): Promise<boolean> {
     try {
-      const aviso = page.getByText(/inválid|incorret|credenciais|palavra-passe|password/i);
+      const aviso = page.getByText(REJECTION_NOTICE);
       return (await aviso.count()) > 0;
     } catch {
       return false;

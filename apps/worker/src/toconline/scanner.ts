@@ -1,4 +1,4 @@
-import type { AuthenticatedTocSession, CompanyScanner } from "../runner/company-scan-runner";
+import type { AuthenticatedTocSession, CompanyScanner } from "../runner/ports";
 import { readCompaniesGrid, type GridReadOptions } from "./companies-grid";
 import type { GridProjection } from "./project-grid";
 

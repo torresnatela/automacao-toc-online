@@ -117,6 +117,33 @@ describe.skipIf(skip)("readCompaniesGrid (browser + fixture local)", () => {
     await context.close();
   }, 30_000);
 
+  // O pior desfecho do módulo é a lista truncada aceite em silêncio. Se o
+  // stream nunca parar dentro do tempo, desistir e projetar o que está lá
+  // persiste meia carteira como se fosse a carteira toda — e o `size` acompanha
+  // os dados, portanto a guarda de truncagem não apanha. Tem de falhar alto.
+  it("grid que nunca estabiliza → StructuralError, nunca uma lista parcial", async () => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await page.setContent(`
+      <vaadin-grid id="g"></vaadin-grid>
+      <script>
+        const g = document.getElementById('g');
+        g.items = [{ id: 1, tax_number: "501442600", name: "Empresa 1" }];
+        g.size = 1;
+        // Tranche nova a cada 100ms, para sempre: o total nunca repete.
+        setInterval(() => {
+          g.items = [...g.items, { id: g.items.length + 1, tax_number: "501442600", name: "Empresa" }];
+          g.size = g.items.length;
+        }, 100);
+      </script>
+    `);
+
+    await expect(
+      readCompaniesGrid(page, { timeoutMs: 2000, quietMs: 200 }),
+    ).rejects.toThrow(StructuralError);
+    await context.close();
+  }, 30_000);
+
   it("grid presente mas que nunca enche → StructuralError", async () => {
     const context = await browser.newContext();
     const page = await context.newPage();

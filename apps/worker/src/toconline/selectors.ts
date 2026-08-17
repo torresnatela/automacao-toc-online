@@ -36,4 +36,11 @@ export const TOCONLINE = {
    * garantir uma quebra silenciosa quando a conta migrasse.
    */
   hostPattern: /^app\d*\.toconline\.pt$/,
+
+  /**
+   * Quanto se espera pelo portal — no login e no encher do grid. Um número só:
+   * são a mesma paciência contra o mesmo servidor de terceiro, e mantê-los
+   * separados fazia-os divergir sem ninguém decidir nada.
+   */
+  defaultTimeoutMs: 45_000,
 } as const;

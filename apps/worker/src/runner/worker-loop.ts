@@ -1,3 +1,4 @@
+import { sleep } from "../support/sleep";
 import type { ClaimedJob, JobQueue } from "./job-queue";
 
 /**
@@ -27,8 +28,6 @@ export interface WorkerLoopDeps {
   betweenJobsMs?: number;
   log?: (message: string, data?: Record<string, unknown>) => void;
 }
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export class WorkerLoop {
   constructor(private readonly deps: WorkerLoopDeps) {}

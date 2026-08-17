@@ -8,6 +8,7 @@
  */
 import { createDb } from "@toc/db";
 import { createTracer, DbStore } from "@toc/core";
+import { SCAN_JOB_TYPE } from "@toc/core/domain";
 import { loadEnv, MissingEnvError } from "./config/env";
 import { PlaywrightBrowser } from "./browser/browser";
 import { JobQueue } from "./runner/job-queue";
@@ -18,9 +19,6 @@ import { DbCredentialSource } from "./sinks/credential-source";
 import { PlaywrightTocSessions } from "./toconline/session";
 import { TocCompanyScanner } from "./toconline/scanner";
 import { FileStorageStateStore } from "./toconline/storage-state";
-
-/** Tipo do job de varredura. Tem de bater com o que o dashboard enfileira. */
-const SCAN_JOB_TYPE = "rpa.scan_companies";
 
 function log(message: string, data: Record<string, unknown> = {}) {
   // Linha JSON estruturada, como o Logger do @toc/core. Nunca inclui segredos.
@@ -76,11 +74,9 @@ async function main() {
   process.on("SIGINT", () => void shutdown("SIGINT"));
   process.on("SIGTERM", () => void shutdown("SIGTERM"));
 
-  log("worker no ar", {
-    headless: env.headless,
-    concurrency: env.rpaConcurrency,
-    handles: [SCAN_JOB_TYPE],
-  });
+  // `concurrency` não entra aqui de propósito: o WorkerLoop é estritamente
+  // serial, e anunciar um número que não se cumpre faz o log mentir.
+  log("worker no ar", { headless: env.headless, handles: [SCAN_JOB_TYPE] });
 
   await loop.start(controller.signal);
   await browser.close().catch(() => undefined);

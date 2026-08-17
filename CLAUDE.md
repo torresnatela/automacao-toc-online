@@ -45,6 +45,9 @@ Supabase = Postgres (fonte da verdade) + Auth + Storage (PDFs). Ambos os apps fa
 - **RLS ligado** em todas as tabelas: o worker usa a service role (bypass); o dashboard respeita `profiles.role`.
 - **Segredos**: só em `.env` (nunca commitado). Há `.env.example` como referência.
 - **Testes de DB** exigem o Supabase local; no CI são pulados com `SKIP_DB_TESTS=1`.
+- **Testes de browser** (`*.browser.test.ts` no worker) sobem um Chromium real contra fixtures
+  em `localhost` — zero rede externa. Correm no CI (que instala o chromium). Localmente,
+  `SKIP_BROWSER_TESTS=1` pula-os quando não há browser instalado.
 
 ## Convenções técnicas
 

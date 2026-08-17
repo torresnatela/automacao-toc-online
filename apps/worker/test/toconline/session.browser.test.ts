@@ -11,6 +11,12 @@ const skip = process.env.SKIP_BROWSER_TESTS === "1";
 
 const UTILIZADOR = "gabinete@example.pt";
 const SENHA = "senha-do-gabinete-1971";
+/**
+ * Senha que faz o servidor devolver a página de login **sem qualquer indício de
+ * erro** — a avaria transitória do portal (sessão perdida, WAF, 5xx mascarado).
+ * É o caso que separa "não concluiu" de "foi recusado".
+ */
+const SENHA_AVARIA = "avaria-transitoria-do-portal";
 
 let browser: Browser;
 let server: Server;
@@ -25,12 +31,22 @@ const visitas = { login: 0, companies: 0 };
  */
 let cookieValido = "1";
 
+/**
+ * Fiel ao portal real nos **rótulos**: o formulário do TOConline escreve
+ * "Palavra-passe" e "Credenciais de acesso" na própria página, sem erro nenhum.
+ * É por isso que procurar só o substantivo classifica um formulário em branco
+ * como recusa — e é isso que este fixture tem de conseguir provar.
+ */
 const PAGINA_LOGIN = (erro = false) => `<!doctype html><html lang="pt"><body>
+  <h1>Credenciais de acesso</h1>
   <form method="POST" action="/login">
-    <input type="email" name="email" />
-    <input type="password" name="password" />
+    <label for="email">Utilizador</label>
+    <input id="email" type="email" name="email" />
+    <label for="password">Palavra-passe</label>
+    <input id="password" type="password" name="password" />
     <button type="button" onclick="this.form.submit()">Entrar</button>
   </form>
+  <a href="/recuperar">Esqueceu-se da palavra-passe?</a>
   ${erro ? "<p>Credenciais inválidas.</p>" : ""}
 </body></html>`;
 
@@ -57,7 +73,8 @@ function startServer(): Promise<string> {
         req.on("data", (c) => (corpo += c));
         req.on("end", () => {
           const params = new URLSearchParams(corpo);
-          const ok = params.get("email") === UTILIZADOR && params.get("password") === SENHA;
+          const senha = params.get("password");
+          const ok = params.get("email") === UTILIZADOR && senha === SENHA;
           if (ok) {
             res.writeHead(302, {
               location: "/companies",
@@ -65,8 +82,9 @@ function startServer(): Promise<string> {
             });
             res.end();
           } else {
-            res.writeHead(200, { "content-type": "text/html" });
-            res.end(PAGINA_LOGIN(true));
+            res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+            // Avaria: devolve o formulário limpo, sem dizer que recusou.
+            res.end(PAGINA_LOGIN(senha !== SENHA_AVARIA));
           }
         });
         return;
@@ -74,7 +92,7 @@ function startServer(): Promise<string> {
 
       if (url.pathname === "/login") {
         visitas.login += 1;
-        res.writeHead(200, { "content-type": "text/html" });
+        res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
         res.end(PAGINA_LOGIN());
         return;
       }
@@ -86,7 +104,7 @@ function startServer(): Promise<string> {
           return;
         }
         visitas.companies += 1;
-        res.writeHead(200, { "content-type": "text/html" });
+        res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
         res.end(PAGINA_EMPRESAS);
         return;
       }
@@ -229,6 +247,25 @@ describe.skipIf(skip)("PlaywrightTocSessions (browser + servidor local)", () => 
     const superficie = `${String(erro)}\n${erro?.stack ?? ""}`;
     expect(superficie).not.toContain("errada");
     expect(superficie).not.toContain(SENHA);
+  }, 30_000);
+
+  it("timeout sem indício visível → erro retentável, NUNCA InvalidCredentialsError", async () => {
+    const { factory } = sessions();
+
+    const erro = await factory
+      .open({
+        credentialId: "cred-1",
+        credentials: { username: UTILIZADOR, password: SENHA_AVARIA },
+      })
+      .then(() => null)
+      .catch((e) => e as Error);
+
+    // O formulário diz "Palavra-passe" e "Credenciais de acesso" por natureza.
+    // Ler isso como recusa marcaria a credencial inválida e faria TODOS os jobs
+    // seguintes serem ignorados — o dano exato que a classificação evita.
+    expect(erro).toBeInstanceOf(Error);
+    expect(erro).not.toBeInstanceOf(InvalidCredentialsError);
+    expect(erro).not.toBeInstanceOf(StructuralError);
   }, 30_000);
 
   it("a senha nunca entra numa URL", async () => {

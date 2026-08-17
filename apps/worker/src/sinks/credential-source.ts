@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import type { Database } from "@toc/db";
 import { schema } from "@toc/db";
 import { decryptSecret } from "@toc/core/crypto";
-import type { CredentialLookup, CredentialSource } from "../runner/company-scan-runner";
+import type { CredentialLookup, CredentialSource } from "../runner/ports";
 
 /**
  * Resolve a credencial do TOConline a partir de `integration_credentials`.

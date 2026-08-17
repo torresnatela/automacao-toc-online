@@ -2,7 +2,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import type { Database } from "@toc/db";
 import { schema } from "@toc/db";
 import type { ExistingCompany, ReconcileAction, ReconcilePlan, ScannedCompany } from "@toc/core/domain";
-import type { CompanyDirectory, UpsertReport } from "../runner/company-scan-runner";
+import type { CompanyDirectory, UpsertReport } from "../runner/ports";
 
 /**
  * Executa um plano de reconciliação contra a tabela `companies`.
@@ -13,7 +13,13 @@ import type { CompanyDirectory, UpsertReport } from "../runner/company-scan-runn
  * ficheiro apenas o que exige base de dados.
  */
 
-/** Lotes: 182 statements individuais numa transação seriam desnecessariamente lentos. */
+/**
+ * Lotes para o que partilha valores (inserções, e os carimbos de
+ * `unchanged`/`missing`). Os `link`/`update` ficam de fora por natureza: cada um
+ * escreve colunas diferentes, e agrupá-los exigiria um `CASE` por coluna ou um
+ * `unnest` — mais máquina do que o problema justifica para a dezena de linhas
+ * que mudam numa varredura típica.
+ */
 const BATCH = 25;
 
 function chunk<T>(items: T[], size: number): T[][] {
@@ -118,7 +124,10 @@ export class DbCompanyDirectory implements CompanyDirectory {
           metadata: sql`${schema.companies.metadata} || ${JSON.stringify(tocMetadata(a.entry, now))}::jsonb`,
           updatedAt: now,
         })
-        .where(eq(schema.companies.id, a.companyId));
+        // O `teamId` é redundante — estes ids vieram do `list(teamId)` — mas o
+        // worker corre com a service role, sem RLS a segurá-lo. Uma escrita que
+        // saia da equipa não pode depender de o plano estar correto.
+        .where(and(eq(schema.companies.id, a.companyId), eq(schema.companies.teamId, teamId)));
 
       if (a.kind === "link") report.linked += 1;
       else report.updated += 1;
@@ -133,7 +142,7 @@ export class DbCompanyDirectory implements CompanyDirectory {
       await this.db
         .update(schema.companies)
         .set({ toconlineSyncedAt: now })
-        .where(inArray(schema.companies.id, batch));
+        .where(and(inArray(schema.companies.id, batch), eq(schema.companies.teamId, teamId)));
     }
     report.unchanged = unchangedIds.length;
 

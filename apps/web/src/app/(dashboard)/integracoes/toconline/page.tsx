@@ -4,6 +4,7 @@ import { Building2, ScrollText } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { listTeams } from "@/lib/teams/service";
 import { getTeamCredential, getLatestScanJob } from "@/lib/integrations/service";
+import { SCAN_COUNT_KEYS, type ScanCountKey } from "@toc/core/domain";
 import { PageHeader } from "@/components/patterns/page-header";
 import { AutoRefresh } from "@/components/patterns/auto-refresh";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,15 +34,24 @@ const JOB_TONES: Record<string, BadgeProps["tone"]> = {
   cancelled: "neutral",
 };
 
-const RESULT_LABELS: [key: string, label: string][] = [
-  ["create", "Criadas"],
-  ["link", "Associadas"],
-  ["update", "Atualizadas"],
-  ["unchanged", "Sem alteração"],
-  ["skip", "Ignoradas"],
-  ["conflict", "Conflitos"],
-  ["missing", "Sumiram do TOConline"],
-];
+/**
+ * Rótulo por contagem. É um `Record` sobre `ScanCountKey` de propósito: se o
+ * worker acrescentar ou renomear uma contagem, isto deixa de compilar — que é a
+ * única forma de o `jsonb` de `jobs.result` não voltar a divergir em silêncio.
+ * A ordem de apresentação vem de `SCAN_COUNT_KEYS`.
+ */
+const RESULT_LABELS: Record<ScanCountKey, string> = {
+  scanned: "Lidas do TOConline",
+  created: "Criadas",
+  linked: "Associadas",
+  updated: "Atualizadas",
+  unchanged: "Sem alteração",
+  skipped: "Ignoradas (demo)",
+  conflicts: "Conflitos",
+  missing: "Sumiram do TOConline",
+  rejected: "Descartadas",
+  persisted: "Gravadas",
+};
 
 interface PageProps {
   searchParams: Promise<{ team?: string }>;
@@ -131,14 +141,12 @@ export default async function TocOnlinePage({ searchParams }: PageProps) {
 
                   {job.status === "succeeded" && result && (
                     <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-3">
-                      {RESULT_LABELS.filter(([key]) => (result[key as keyof typeof result] ?? 0) > 0).map(
-                        ([key, label]) => (
-                          <div key={key} className="flex justify-between gap-2">
-                            <dt className="text-muted-foreground">{label}</dt>
-                            <dd className="font-medium">{result[key as keyof typeof result]}</dd>
-                          </div>
-                        ),
-                      )}
+                      {SCAN_COUNT_KEYS.filter((key) => (result[key] ?? 0) > 0).map((key) => (
+                        <div key={key} className="flex justify-between gap-2">
+                          <dt className="text-muted-foreground">{RESULT_LABELS[key]}</dt>
+                          <dd className="font-medium">{result[key]}</dd>
+                        </div>
+                      ))}
                     </dl>
                   )}
 
