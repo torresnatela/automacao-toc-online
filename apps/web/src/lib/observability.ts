@@ -19,6 +19,24 @@ export interface ActionMeta {
   type: string; // ex.: "company.create"
   createdBy: string; // id do usuário
   payload?: Record<string, unknown>;
+  /** Chave de negócio para correlacionar traces distintos (ex.: `team:<id>:toconline`). */
+  correlationKey?: string;
+}
+
+export interface StartedAction {
+  /** Correlation ID da cadeia inteira. Gravar em `jobs.trace_id` ao enfileirar. */
+  traceId: string;
+  /** Evento gatilho. Gravar em `jobs.triggering_event_id` — o worker pendura o seu nele. */
+  eventId: string;
+  success(): Promise<void>;
+  failure(message: string): Promise<void>;
+  /**
+   * Fecha o evento com sucesso mas **deixa o trace aberto**, para trabalho que
+   * continua noutro processo. Um job enfileirado e nunca consumido deve
+   * aparecer como trace por fechar — é esse o sinal correto. Quem fecha é quem
+   * termina o trabalho (o worker).
+   */
+  handOff(): Promise<void>;
 }
 
 /**
@@ -26,14 +44,17 @@ export interface ActionMeta {
  * CLAUDE.md). Retorna `success()`/`failure(msg)` para fechar o trace conforme o
  * desfecho. Uso: `const act = await startAction(meta); try { ...; await act.success() }`.
  */
-export async function startAction(meta: ActionMeta) {
+export async function startAction(meta: ActionMeta): Promise<StartedAction> {
   const trace = await getTracer().startTrace({
     rootTrigger: "manual",
     triggerSource: meta.triggerSource,
     createdBy: meta.createdBy,
+    correlationKey: meta.correlationKey,
   });
   const evt = await trace.event({ type: meta.type, source: "web", payload: meta.payload ?? {} });
   return {
+    traceId: trace.id,
+    eventId: evt.id,
     async success() {
       await evt.succeed();
       await trace.complete();
@@ -41,6 +62,9 @@ export async function startAction(meta: ActionMeta) {
     async failure(message: string) {
       await evt.fail({ message });
       await trace.fail({ message });
+    },
+    async handOff() {
+      await evt.succeed();
     },
   };
 }

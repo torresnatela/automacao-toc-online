@@ -7,6 +7,11 @@ export {
   type ChangePasswordGuardInput,
 } from "./guard";
 export {
+  resolveTeamScope,
+  type ActorScope,
+  type TeamScope,
+} from "./team-scope";
+export {
   APP_ROLES,
   ROLE_ORDER,
   uiRoleToDbRole,

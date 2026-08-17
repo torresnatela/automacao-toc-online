@@ -1,6 +1,7 @@
 import {
   Activity,
   Building2,
+  Link2,
   Plug,
   ScrollText,
   Users,
@@ -19,6 +20,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   // Tela inicial (vinda da main): integrações que a automação usa.
   { label: "Integrações", href: "/", icon: Plug },
+  { label: "TOConline", href: "/integracoes/toconline", icon: Link2 },
   { label: "Traces", href: "/traces", icon: Activity },
   // Módulo de logs (vindo do merge da main): eventos de usuário/sistema + drill-down.
   { label: "Logs", href: "/logs", icon: ScrollText },

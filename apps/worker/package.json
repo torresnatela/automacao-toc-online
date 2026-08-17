@@ -4,20 +4,25 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --watch src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
     "lint": "eslint src",
-    "test": "echo \"(worker: sem testes ainda)\" && exit 0"
+    "test": "vitest run"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.0",
+    "@toc/core": "workspace:*",
     "@toc/db": "workspace:*",
-    "@toc/core": "workspace:*"
+    "drizzle-orm": "^0.38.0",
+    "playwright": "^1.62.1"
   },
   "devDependencies": {
     "@toc/config": "workspace:*",
-    "@types/node": "^22.10.0",
+    "@types/node": "^22.20.0",
+    "eslint": "^9.17.0",
+    "tsx": "^4.23.12",
     "typescript": "^5.7.0",
-    "eslint": "^9.17.0"
+    "vitest": "^2.1.9"
   }
 }
