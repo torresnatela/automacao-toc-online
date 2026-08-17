@@ -137,5 +137,15 @@
   "135": "task-3-brief.md",
   "136": "task-4-brief.md",
   "137": "task-5-brief.md",
-  "138": "vitest.config.ts"
+  "138": "vitest.config.ts",
+  "139": "CompanyForm.tsx",
+  "140": "service.ts",
+  "141": "Database",
+  "142": "ClaimedJob",
+  "143": "ports.ts",
+  "144": ".run",
+  "145": "requireRole",
+  "146": "sidebar.tsx",
+  "147": "status-badge.tsx",
+  "148": "FileStorageStateStore"
 }

@@ -10,8 +10,8 @@
     "semantic_hash": "dfa1f5f6a7037bf39dc510f30b180002"
   },
   "apps/web/next-env.d.ts": {
-    "mtime": 1784675086.473699,
-    "ast_hash": "d0f8375ae1199dc7acd3977fc33b78b8",
+    "mtime": 1786928777.3340857,
+    "ast_hash": "2a74d3909800ca5467fa83b0ab4a4890",
     "semantic_hash": ""
   },
   "apps/web/next.config.ts": {
@@ -80,8 +80,8 @@
     "semantic_hash": ""
   },
   "apps/worker/src/index.ts": {
-    "mtime": 1786922735.2287917,
-    "ast_hash": "827426c5fb1055d9a1185fb13a36b4c4",
+    "mtime": 1786928381.56852,
+    "ast_hash": "f385556898c2f7ae247b88436f2a30e2",
     "semantic_hash": ""
   },
   "apps/worker/tsconfig.json": {
@@ -300,8 +300,8 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1784724081.514448,
-    "ast_hash": "50e05a813a576129c0f2da2c0ae77cdf",
+    "mtime": 1786928682.0004258,
+    "ast_hash": "25d425f9d6adda7ee7c3b540012ee45f",
     "semantic_hash": ""
   },
   "README.md": {
@@ -430,8 +430,8 @@
     "semantic_hash": ""
   },
   "packages/core/src/auth/index.ts": {
-    "mtime": 1784668728.7042704,
-    "ast_hash": "57a4b2805400d7578910fdc8e043875c",
+    "mtime": 1786928581.358412,
+    "ast_hash": "55cb5d0f8be359b29d48d7deda5575e6",
     "semantic_hash": ""
   },
   "packages/core/src/auth/password.ts": {
@@ -905,8 +905,8 @@
     "semantic_hash": ""
   },
   "apps/web/src/app/(dashboard)/integracoes/toconline/page.tsx": {
-    "mtime": 1786917992.015344,
-    "ast_hash": "f07427521fa80cc3c615e73bf2c48bbc",
+    "mtime": 1786928406.847954,
+    "ast_hash": "bdf35f57e5337a7210960ad9bf101835",
     "semantic_hash": ""
   },
   "apps/web/src/components/patterns/auto-refresh.tsx": {
@@ -915,8 +915,8 @@
     "semantic_hash": ""
   },
   "apps/web/src/lib/integrations/service.ts": {
-    "mtime": 1786917979.3143787,
-    "ast_hash": "5c05f33adbd5bea78c2364fe6eb640bf",
+    "mtime": 1786928633.9560573,
+    "ast_hash": "fddbd7c55092c85479e4eb3512e6cbab",
     "semantic_hash": ""
   },
   "apps/worker/src/browser/browser.ts": {
@@ -935,8 +935,8 @@
     "semantic_hash": ""
   },
   "apps/worker/src/runner/company-scan-runner.ts": {
-    "mtime": 1786922328.572321,
-    "ast_hash": "4e6efcc311f61fa99e6e320fdf70d980",
+    "mtime": 1786928452.118896,
+    "ast_hash": "bd39d630ad0c69053e512dfba96b3518",
     "semantic_hash": ""
   },
   "apps/worker/src/runner/job-queue.ts": {
@@ -945,23 +945,23 @@
     "semantic_hash": ""
   },
   "apps/worker/src/runner/worker-loop.ts": {
-    "mtime": 1786922681.2116473,
-    "ast_hash": "371448d5580f744403e0a62aa2c7c3eb",
+    "mtime": 1786928487.9677186,
+    "ast_hash": "58c57d90b13e36dde6b7af49cbc3a94b",
     "semantic_hash": ""
   },
   "apps/worker/src/sinks/company-directory.ts": {
-    "mtime": 1786922596.0521207,
-    "ast_hash": "cb4140435e4bcf166f7535035ed75e14",
+    "mtime": 1786928541.2055144,
+    "ast_hash": "da9d7cd09d63d7592c2e14db7d78b616",
     "semantic_hash": ""
   },
   "apps/worker/src/sinks/credential-source.ts": {
-    "mtime": 1786922611.6271377,
-    "ast_hash": "c58b3a909e4a80aeab3b780eaf009951",
+    "mtime": 1786928460.7478604,
+    "ast_hash": "7794bab362c5f09018f6760c3dbe69c4",
     "semantic_hash": ""
   },
   "apps/worker/src/toconline/companies-grid.ts": {
-    "mtime": 1786922217.9237072,
-    "ast_hash": "5a5c69487702bd89ffaa2b18f6722c19",
+    "mtime": 1786928487.9671838,
+    "ast_hash": "9e1f0befd22ba44a39062634ec87f83f",
     "semantic_hash": ""
   },
   "apps/worker/src/toconline/guards.ts": {
@@ -975,23 +975,23 @@
     "semantic_hash": ""
   },
   "apps/worker/src/toconline/scanner.ts": {
-    "mtime": 1786922716.5668004,
-    "ast_hash": "5e8b1bec9582694b405f876ff2077ab0",
+    "mtime": 1786928460.7489345,
+    "ast_hash": "dcb2895a80312a8d8eeee90d9eb74271",
     "semantic_hash": ""
   },
   "apps/worker/src/toconline/selectors.ts": {
-    "mtime": 1786922288.3764098,
-    "ast_hash": "c6c86693eae04316649a7ab17a140861",
+    "mtime": 1786928476.6924224,
+    "ast_hash": "8ffc43c2d1d3d4e86fd146aa44a1e82b",
     "semantic_hash": ""
   },
   "apps/worker/src/toconline/session.ts": {
-    "mtime": 1786922395.72191,
-    "ast_hash": "dad63bab943184883fd2c3c192685639",
+    "mtime": 1786928487.9660947,
+    "ast_hash": "8fef1e108e9968e035814dcb2a0f62aa",
     "semantic_hash": ""
   },
   "apps/worker/src/toconline/storage-state.ts": {
-    "mtime": 1786922380.5584335,
-    "ast_hash": "329d73b4af4d1140cbfa45b87abb1aab",
+    "mtime": 1786928500.2944279,
+    "ast_hash": "8c83a0665531b4e59be8d61f0ee20826",
     "semantic_hash": ""
   },
   "apps/worker/test/config/env.test.ts": {
@@ -1000,8 +1000,8 @@
     "semantic_hash": ""
   },
   "apps/worker/test/runner/company-scan-runner.test.ts": {
-    "mtime": 1786922334.166218,
-    "ast_hash": "85c56def9d464079493caf79e37b7b56",
+    "mtime": 1786928468.1693754,
+    "ast_hash": "3e756294789c4b43c1bacecbf0be7150",
     "semantic_hash": ""
   },
   "apps/worker/test/runner/job-queue.test.ts": {
@@ -1020,8 +1020,8 @@
     "semantic_hash": ""
   },
   "apps/worker/test/toconline/companies-grid.browser.test.ts": {
-    "mtime": 1786922241.232163,
-    "ast_hash": "2713c26af62b49fbd194831a16f02957",
+    "mtime": 1786928105.0650086,
+    "ast_hash": "1bc304ff96e7bc96431dc8cb400640ed",
     "semantic_hash": ""
   },
   "apps/worker/test/toconline/guards.test.ts": {
@@ -1035,13 +1035,13 @@
     "semantic_hash": ""
   },
   "apps/worker/test/toconline/session.browser.test.ts": {
-    "mtime": 1786922486.9984643,
-    "ast_hash": "ef0b1977fc4dd7296cf2cd867e055edc",
+    "mtime": 1786928069.2111492,
+    "ast_hash": "33113be59c0c14f44d6c5c5018ead3b5",
     "semantic_hash": ""
   },
   "apps/worker/test/toconline/storage-state.test.ts": {
-    "mtime": 1786922530.9843886,
-    "ast_hash": "467d18b472faa2094c5a6d829e71a31e",
+    "mtime": 1786928507.1327875,
+    "ast_hash": "626b8f68ad668b76da0330853135c90f",
     "semantic_hash": ""
   },
   "apps/worker/tsconfig.test.json": {
@@ -1090,8 +1090,8 @@
     "semantic_hash": ""
   },
   "packages/core/src/domain/toconline/types.ts": {
-    "mtime": 1786916636.6096828,
-    "ast_hash": "b4bc93f825a186957a408cdc093a09fa",
+    "mtime": 1786928306.4128816,
+    "ast_hash": "d1129708cb2f07caa25b1424fe39271c",
     "semantic_hash": ""
   },
   "packages/core/test/credential-service.test.ts": {
@@ -1187,6 +1187,31 @@
   "apps/worker/test/fixtures/toconline-companies.html": {
     "mtime": 1786922196.7233982,
     "ast_hash": "634bf38203713ee4d1b35da08a238e83",
+    "semantic_hash": ""
+  },
+  "apps/worker/eslint.config.js": {
+    "mtime": 1786928657.2288413,
+    "ast_hash": "9187e575fd9ed784bffd761006dd17fe",
+    "semantic_hash": ""
+  },
+  "apps/worker/src/runner/ports.ts": {
+    "mtime": 1786928431.1200833,
+    "ast_hash": "9b21a80700d1aee183d77547f22d5b95",
+    "semantic_hash": ""
+  },
+  "apps/worker/src/support/sleep.ts": {
+    "mtime": 1786928472.0777426,
+    "ast_hash": "115a0c914ae244bf6d49a7fdf021a858",
+    "semantic_hash": ""
+  },
+  "packages/core/src/auth/team-scope.ts": {
+    "mtime": 1786928567.179873,
+    "ast_hash": "26309e46f84ebcca969451483725ff7e",
+    "semantic_hash": ""
+  },
+  "packages/core/test/auth/team-scope.test.ts": {
+    "mtime": 1786928577.8646414,
+    "ast_hash": "064bb6b6f30590ba9713e5136ed37d24",
     "semantic_hash": ""
   }
 }
