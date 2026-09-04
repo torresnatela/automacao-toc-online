@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth";
 import { listCompanies } from "@/lib/companies/service";
 import { listTeams } from "@/lib/teams/service";
 import { CONTRIBUTOR_TYPE_LABELS, COMPANY_STATUS_LABELS, labelOf } from "@/lib/labels";
+import { formatDatePt } from "@/lib/documents/present";
 import { PageHeader } from "@/components/patterns/page-header";
 import { EmptyState } from "@/components/patterns/empty-state";
 import { StatusBadge } from "@/components/patterns/status-badge";
@@ -16,6 +17,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/patterns/data-table";
+import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { CompanyForm } from "./CompanyForm";
 import { createCompanyAction } from "./actions";
@@ -60,6 +62,7 @@ export default async function EmpresasPage() {
               <TableHead>NIF</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>TOConline</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -78,6 +81,22 @@ export default async function EmpresasPage() {
                     value={c.status}
                     label={labelOf(COMPANY_STATUS_LABELS, c.status)}
                   />
+                </TableCell>
+                <TableCell>
+                  {c.toconline_company_id !== null && c.toconline_cluster !== null ? (
+                    <Badge
+                      tone="success"
+                      title={
+                        c.toconline_synced_at
+                          ? `Sincronizada em ${formatDatePt(c.toconline_synced_at)}`
+                          : undefined
+                      }
+                    >
+                      Ligada
+                    </Badge>
+                  ) : (
+                    <Badge tone="neutral">Não ligada</Badge>
+                  )}
                 </TableCell>
                 <TableCell className="text-right">
                   <Link

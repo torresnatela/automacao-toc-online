@@ -29,10 +29,15 @@ export interface CompanyRow {
   city: string | null;
   country: string;
   notes: string | null;
+  // Ligação ao TOConline (rota A): preenchida só pela varredura do worker —
+  // nunca pelo formulário de cadastro/edição (ver toRow, mais abaixo).
+  toconline_company_id: number | null;
+  toconline_cluster: number | null;
+  toconline_synced_at: string | null;
 }
 
 const COLUMNS =
-  "id, team_id, niss, nif, name, type, status, email, phone, address_line1, address_line2, postal_code, city, country, notes";
+  "id, team_id, niss, nif, name, type, status, email, phone, address_line1, address_line2, postal_code, city, country, notes, toconline_company_id, toconline_cluster, toconline_synced_at";
 
 export type CompanyMutationResult =
   | { ok: true; id: string }
