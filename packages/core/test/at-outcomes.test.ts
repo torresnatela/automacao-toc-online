@@ -7,7 +7,7 @@ import {
   renderGuidance,
 } from "../src/domain/at/outcomes";
 import type { IvaOutcome, JobRowForOutcome } from "../src/domain/at/outcomes";
-import { parseIvaDocumentPayload } from "../src/domain/at/types";
+import { IVA_STAGES, parseIvaDocumentPayload } from "../src/domain/at/types";
 import type { IvaDocumentJobPayload } from "../src/domain/at/types";
 
 function job(over: Partial<JobRowForOutcome> = {}): JobRowForOutcome {
@@ -105,6 +105,7 @@ describe("renderGuidance", () => {
       dueDate: "2026-09-25",
       filingDeadline: "2026-09-21",
       attemptsLeft: 2,
+      attempts: 5,
       invalidReason: "login_rejeitado",
     };
     for (const code of IVA_OUTCOME_CODES) {
@@ -115,6 +116,22 @@ describe("renderGuidance", () => {
 
   it("um marcador sem valor vira travessão", () => {
     expect(renderGuidance("fetched", {})).toContain("—");
+  });
+
+  it("{n} do limite diário sai das tentativas de hoje", () => {
+    expect(renderGuidance("daily_cap_reached", { attempts: 5 })).toContain("5 vezes");
+  });
+});
+
+describe("IVA_STAGES", () => {
+  it("é a lista de onde sai o tipo IvaStage — readIvaOutcome reconhece todas", () => {
+    expect(IVA_STAGES.length).toBeGreaterThan(0);
+    for (const stage of IVA_STAGES) {
+      expect(
+        readIvaOutcome(job({ status: "succeeded", result: { outcome: "fetched", stage } })),
+        stage,
+      ).toMatchObject({ details: { stage } });
+    }
   });
 });
 
@@ -187,6 +204,27 @@ describe("readIvaOutcome", () => {
         job({ status: "pending", attempts: 1, last_error: { outcome: "at_unavailable" } }),
       ),
     ).toEqual({ kind: "in_flight", attempt: 2, lastOutcome: "at_unavailable" });
+  });
+
+  it("adiado pelo gate: volta a pending sem gastar tentativa, em pausa", () => {
+    // É assim que a fila guarda um job adiado: status de volta a `pending` e
+    // `last_error = { message, deferred: true }` — sem incrementar `attempts`.
+    expect(
+      readIvaOutcome(
+        job({ status: "pending", attempts: 1, last_error: { message: "gate", deferred: true } }),
+      ),
+    ).toEqual({ kind: "in_flight", attempt: 2, lastOutcome: "portal_paused" });
+  });
+
+  it("aceita também um status deferred literal", () => {
+    expect(readIvaOutcome(job({ status: "deferred", attempts: 0 }))).toEqual({
+      kind: "in_flight",
+      attempt: 1,
+      lastOutcome: "portal_paused",
+    });
+    expect(
+      readIvaOutcome(job({ status: "deferred", attempts: 2, last_error: { message: "gate" } })),
+    ).toEqual({ kind: "in_flight", attempt: 3, lastOutcome: "portal_paused" });
   });
 
   it("linha antiga sem código reconhecível cai em unknown_error", () => {

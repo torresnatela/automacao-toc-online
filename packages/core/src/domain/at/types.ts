@@ -38,15 +38,23 @@ export const AT_ACCESS_MODES = ["toconline_direct_access", "at_direct_login"] as
 /** Regime de IVA da empresa. Subconjunto de `OBLIGATION_FREQUENCIES`. */
 export type IvaFrequency = "monthly" | "quarterly";
 
-/** Etapa do fluxo onde o desfecho aconteceu — diagnóstico, não regra de negócio. */
-export type IvaStage =
-  | "precondition"
-  | "toconline"
-  | "direct_access"
-  | "at_login"
-  | "at_declaration"
-  | "at_document"
-  | "persist";
+/**
+ * Etapa do fluxo onde o desfecho aconteceu — diagnóstico, não regra de negócio.
+ *
+ * A lista é a fonte e o tipo deriva dela (como `AT_ACCESS_MODES`) porque quem
+ * lê o jsonb tem de filtrar pelos valores em tempo de execução: com uma união
+ * solta, uma etapa nova entrava no tipo e o filtro deitava-a fora em silêncio.
+ */
+export const IVA_STAGES = [
+  "precondition",
+  "toconline",
+  "direct_access",
+  "at_login",
+  "at_declaration",
+  "at_document",
+  "persist",
+] as const;
+export type IvaStage = (typeof IVA_STAGES)[number];
 
 /** O que o dashboard escreve em `jobs.payload`. */
 export interface IvaDocumentJobPayload {
@@ -122,6 +130,13 @@ export interface IvaOutcomeDetails {
   filingDeadline?: string;
   /** Tentativas que a AT diz faltarem antes de bloquear a senha. */
   attemptsLeft?: number;
+  /**
+   * Tentativas já feitas hoje para esta empresa — o contador do limite diário,
+   * que preenche o `{n}` de `daily_cap_reached`. Nada tem que ver com
+   * `jobs.attempts` (as tentativas deste job) nem com `attemptsLeft` (as que a
+   * AT ainda concede à senha).
+   */
+  attempts?: number;
   stage?: IvaStage;
   /** Chave de `INVALID_REASON_LABELS`. */
   invalidReason?: string;

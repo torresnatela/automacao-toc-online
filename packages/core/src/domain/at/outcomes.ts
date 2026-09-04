@@ -1,6 +1,6 @@
 import type { ObligationPeriodStatus } from "../types";
 import { formatPeriodPt } from "./period";
-import { AT_ACCESS_MODES } from "./types";
+import { AT_ACCESS_MODES, IVA_STAGES } from "./types";
 import type { AtAccessMode, IvaFrequency, IvaOutcomeDetails, IvaStage } from "./types";
 
 /**
@@ -558,9 +558,10 @@ function resolvePlaceholder(name: string, details: IvaOutcomeDetails): string {
     case "invalidReason":
       if (details.invalidReason === undefined) return MISSING;
       return INVALID_REASON_LABELS[details.invalidReason] ?? details.invalidReason;
+    case "n":
+      // Limite diário: quantas vezes já se tentou hoje para esta empresa.
+      return details.attempts === undefined ? MISSING : String(details.attempts);
     default:
-      // `{n}` (limite diário) ainda não tem campo em IvaOutcomeDetails: sai como
-      // travessão até a fase do worker decidir de onde vem o número.
       return MISSING;
   }
 }
@@ -597,16 +598,6 @@ function toOutcome(value: unknown): IvaOutcome | null {
   return (IVA_OUTCOME_CODES as readonly string[]).includes(value) ? (value as IvaOutcome) : null;
 }
 
-const IVA_STAGES: readonly IvaStage[] = [
-  "precondition",
-  "toconline",
-  "direct_access",
-  "at_login",
-  "at_declaration",
-  "at_document",
-  "persist",
-];
-
 /** Recolhe do jsonb só os campos que reconhece e com o tipo certo. */
 function readDetails(source: unknown): IvaOutcomeDetails {
   const details: IvaOutcomeDetails = {};
@@ -629,6 +620,10 @@ function readDetails(source: unknown): IvaOutcomeDetails {
   if (typeof attemptsLeft === "number" && Number.isFinite(attemptsLeft)) {
     details.attemptsLeft = attemptsLeft;
   }
+  const attempts = fieldOf(source, "attempts");
+  if (typeof attempts === "number" && Number.isFinite(attempts)) {
+    details.attempts = attempts;
+  }
   const stage = text("stage");
   if (stage !== undefined && (IVA_STAGES as readonly string[]).includes(stage)) {
     details.stage = stage as IvaStage;
@@ -647,22 +642,40 @@ function readDetails(source: unknown): IvaOutcomeDetails {
 }
 
 /**
- * O único sítio que conhece as três formas em que um desfecho fica gravado.
+ * Um job adiado pelo gate de indisponibilidade continua em curso.
+ *
+ * `portal_paused` não é um estado final: a fila devolve o job a `pending` sem
+ * gastar tentativa e marca-o com `last_error = { message, deferred: true }`.
+ * Sem esta leitura a linha caía no ramo final e aparecia como `unknown_error`
+ * — um "erro inesperado" a dizer ao operador para chamar o suporte quando o
+ * sistema está apenas a esperar. Aceita-se também um `status` literal
+ * `deferred`, caso a fila venha a persistir o estado em vez do marcador.
+ */
+function isDeferred(job: JobRowForOutcome): boolean {
+  if (job?.status === "deferred") return true;
+  return job?.status === "pending" && fieldOf(job.last_error, "deferred") === true;
+}
+
+/**
+ * O único sítio que conhece as formas em que um desfecho fica gravado.
  *
  * `succeeded` põe-no em `result.outcome`, `skipped` em `result.reason` e
  * `failed` em `last_error.outcome` — três formas porque três caminhos de
- * escrita diferentes as produzem. Uma linha antiga, sem código reconhecível,
- * lê-se como `unknown_error` em vez de rebentar a lista. **Nunca lança.**
+ * escrita diferentes as produzem; o adiamento é a quarta, e vem em
+ * `last_error.deferred`. Uma linha antiga, sem código reconhecível, lê-se como
+ * `unknown_error` em vez de rebentar a lista. **Nunca lança.**
  */
 export function readIvaOutcome(job: JobRowForOutcome): IvaOutcomeRead {
   const attempts =
     typeof job?.attempts === "number" && Number.isFinite(job.attempts) ? job.attempts : 0;
 
-  if (job?.status === "pending" || job?.status === "running") {
+  const deferred = isDeferred(job);
+  if (deferred || job?.status === "pending" || job?.status === "running") {
     // A fila incrementa `attempts` ao reclamar o job: em `running` é a tentativa
-    // a decorrer, em `pending` é a que está para começar.
+    // a decorrer, em `pending` (e no adiado, que não gastou nenhuma) é a que
+    // está para começar.
     const attempt = job.status === "running" ? Math.max(1, attempts) : attempts + 1;
-    const lastOutcome = toOutcome(fieldOf(job.last_error, "outcome"));
+    const lastOutcome = deferred ? "portal_paused" : toOutcome(fieldOf(job.last_error, "outcome"));
     return lastOutcome === null
       ? { kind: "in_flight", attempt }
       : { kind: "in_flight", attempt, lastOutcome };
