@@ -1,6 +1,6 @@
 import { describe, it, expect, afterAll } from "vitest";
 import { randomUUID } from "node:crypto";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { createDb, schema } from "@toc/db";
 import { encryptSecret, generateEncryptionKey } from "@toc/core/crypto";
 import { planCompanyReconciliation, type ScannedCompany } from "@toc/core/domain";
@@ -15,8 +15,19 @@ const db = createDb(url);
 const pool = db.$client as unknown as { end: () => Promise<void> };
 const KEY = generateEncryptionKey();
 
+/** Tudo o que o ficheiro cria pendura numa equipa; apagá-la cascateia o resto. */
+const equipasCriadas: string[] = [];
+
 afterAll(async () => {
-  await pool.end();
+  // O `finally` garante que uma limpeza falhada não deixa o pool aberto (a
+  // suite ficaria pendurada em vez de falhar).
+  try {
+    if (equipasCriadas.length > 0) {
+      await db.delete(schema.teams).where(inArray(schema.teams.id, equipasCriadas));
+    }
+  } finally {
+    await pool.end();
+  }
 });
 
 async function makeTeam() {
@@ -24,6 +35,7 @@ async function makeTeam() {
     .insert(schema.teams)
     .values({ name: `Gab worker ${randomUUID()}` })
     .returning();
+  equipasCriadas.push(team!.id);
   return team!.id;
 }
 

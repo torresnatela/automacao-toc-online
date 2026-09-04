@@ -428,7 +428,11 @@ describe.skipIf(SKIP_DB)("DbCredentialSource — extensão do Módulo 1", () => 
 
     await source.markExpired(cred.id, "senha_expirada");
 
-    expect(await source.load(cred.id)).toEqual({ ok: false, reason: "expired" });
+    expect(await source.load(cred.id)).toEqual({
+      ok: false,
+      reason: "expired",
+      invalidReason: "senha_expirada",
+    });
     const [row] = await db
       .select()
       .from(schema.integrationCredentials)
