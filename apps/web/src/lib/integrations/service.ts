@@ -1,9 +1,8 @@
 import "server-only";
-import { getSessionUser, type SessionUser } from "@/lib/auth";
+import { requireWriterOn } from "@/lib/auth";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { startAction } from "@/lib/observability";
-import { resolveTeamScope } from "@toc/core/auth";
 import { encryptSecret } from "@toc/core/crypto";
 import {
   saveCredential,
@@ -130,39 +129,48 @@ export async function getLatestScanJob(teamId: string): Promise<ScanJobRow | nul
 
 type Admin = ReturnType<typeof getSupabaseAdminClient>;
 
-/**
- * Sessão + equipa numa passagem. A **decisão** (papel suficiente? que equipa?)
- * está em `@toc/core/auth`, testada sem Next nem Supabase; aqui fica só a leitura
- * da sessão.
- */
-async function requireWriterOn(
-  requestedTeamId: string,
-): Promise<
-  { ok: true; actor: SessionUser; teamId: string } | { ok: false; status: number; error: string }
-> {
-  const actor = await getSessionUser();
-  const scope = resolveTeamScope(actor, requestedTeamId);
-  if (!scope.ok) return scope;
-  // Inalcançável — sem sessão o `scope` acima já teria devolvido 401. Está aqui
-  // para estreitar o tipo sem um `as`.
-  if (!actor) return { ok: false, status: 401, error: "Não autenticado." };
-  return { ok: true, actor, teamId: scope.teamId };
-}
-
 const cipher: SecretCipher = { encrypt: (plaintext) => encryptSecret(plaintext) };
 
+/**
+ * Marcadores que o worker escreve em `metadata` ao invalidar uma credencial.
+ * Guardar senha nova apaga-os; tudo o resto que lá esteja fica.
+ */
+const INVALID_MARKERS = ["invalidReason", "invalidAt", "attemptsLeft"] as const;
+
+function withoutInvalidMarkers(metadata: Record<string, unknown>): Record<string, unknown> {
+  const clean = { ...metadata };
+  for (const key of INVALID_MARKERS) delete clean[key];
+  return clean;
+}
+
 function credentialRepo(admin: Admin): CredentialRepo {
+  // O que a última leitura viu. O port do domínio só transporta `id`/`hasSecret`
+  // (é tudo o que a regra de negócio precisa de saber), mas o adaptador precisa
+  // do `metadata` atual para o **filtrar** em vez de o deitar fora — só ele sabe
+  // que a coluna existe. Cada `saveCredentialFromInput` cria um repo novo, por
+  // isso não há estado a atravessar pedidos.
+  let current: { status: string; metadata: Record<string, unknown> } | null = null;
+
   return {
     async findByTeamProvider(teamId, provider) {
       const { data } = await admin
         .from("integration_credentials")
-        .select("id, secret_encrypted")
+        .select("id, secret_encrypted, status, metadata")
         .eq("team_id", teamId)
         .eq("provider", provider)
         .is("company_id", null)
         .maybeSingle();
-      if (!data) return null;
-      const row = data as { id: string; secret_encrypted: string | null };
+      if (!data) {
+        current = null;
+        return null;
+      }
+      const row = data as {
+        id: string;
+        secret_encrypted: string | null;
+        status: string;
+        metadata: Record<string, unknown> | null;
+      };
+      current = { status: row.status, metadata: row.metadata ?? {} };
       return { id: row.id, hasSecret: row.secret_encrypted !== null };
     },
     async insert(record) {
@@ -176,10 +184,27 @@ function credentialRepo(admin: Admin): CredentialRepo {
     },
     async update(id, record) {
       const patch = toRow(record);
-      // `null` significa "não toques no segredo" — o formulário não reexibe a
-      // palavra-passe, logo não a pode reenviar. Omitir a coluna é o que
-      // preserva o valor guardado.
-      if (record.secretEncrypted === null) delete patch.secret_encrypted;
+      if (record.secretEncrypted === null) {
+        // `null` significa "não toques no segredo" — o formulário não reexibe a
+        // palavra-passe, logo não a pode reenviar. Omitir a coluna é o que
+        // preserva o valor guardado. E sem segredo novo também não se toca no
+        // estado: uma credencial que o worker marcou inválida continua inválida
+        // por corrigir só o utilizador.
+        delete patch.secret_encrypted;
+        delete patch.status;
+        delete patch.metadata;
+      } else {
+        // Guardar senha nova é a forma de reativar uma credencial marcada
+        // inválida/expirada pelo worker — não há outro botão para isso. Repõe-se
+        // `active` e apagam-se os marcadores da invalidação, preservando o resto
+        // do `metadata` (que é do worker, não nosso).
+        if (current !== null && current.status === "active") delete patch.status;
+        else patch.status = "active";
+        patch.metadata = withoutInvalidMarkers({
+          ...(current?.metadata ?? {}),
+          ...record.metadata,
+        });
+      }
 
       const { data, error } = await admin
         .from("integration_credentials")
@@ -216,7 +241,7 @@ export async function saveCredentialFromInput(
     // O payload leva equipe e provider — nunca o utilizador (é PII de terceiro)
     // e muito menos a palavra-passe.
     act = await startAction({
-      triggerSource: "integrations.toconline.credential",
+      triggerSource: `integrations.${input.provider}.credential`,
       type: "integration.credential_saved",
       createdBy: actor.id,
       payload: { teamId, provider: input.provider },
@@ -264,7 +289,7 @@ export async function deleteCredentialFor(
   let act: Awaited<ReturnType<typeof startAction>> | undefined;
   try {
     act = await startAction({
-      triggerSource: "integrations.toconline.credential",
+      triggerSource: `integrations.${provider}.credential`,
       type: "integration.credential_removed",
       createdBy: actor.id,
       payload: { teamId, provider },

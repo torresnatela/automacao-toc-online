@@ -37,6 +37,15 @@ export interface StartedAction {
    * termina o trabalho (o worker).
    */
   handOff(): Promise<void>;
+  /**
+   * Fecha evento e trace como **saltados**: trabalho que não vai acontecer mas
+   * que não é falha — por exemplo, já existe um job em curso para a mesma
+   * empresa e devolve-se esse em vez de enfileirar outro.
+   *
+   * Distinto de `failure` (ninguém tem de investigar) e de `success` (não se fez
+   * nada), e é o que impede que um duplo-clique deixe um trace órfão por fechar.
+   */
+  skipped(reason: string): Promise<void>;
 }
 
 /**
@@ -65,6 +74,10 @@ export async function startAction(meta: ActionMeta): Promise<StartedAction> {
     },
     async handOff() {
       await evt.succeed();
+    },
+    async skipped(reason: string) {
+      await evt.skip(reason);
+      await trace.complete();
     },
   };
 }
