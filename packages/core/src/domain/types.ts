@@ -64,3 +64,35 @@ export interface TeamRecord {
   nif: string | null;
   status: TeamStatus;
 }
+
+// ---------------------------------------------------------------------------
+// Obrigações fiscais e documentos
+// ---------------------------------------------------------------------------
+// As listas abaixo espelham os pgEnum de packages/db/src/schema/enums.ts —
+// se um mudar, o outro muda junto.
+
+export const OBLIGATION_KINDS = [
+  "iva",
+  "irs_retencao",
+  "dmr",
+  "ss_contribuicoes",
+  "other",
+] as const;
+export type ObligationKind = (typeof OBLIGATION_KINDS)[number];
+
+export const OBLIGATION_FREQUENCIES = ["monthly", "quarterly", "annual", "other"] as const;
+export type ObligationFrequency = (typeof OBLIGATION_FREQUENCIES)[number];
+
+export const OBLIGATION_PERIOD_STATUSES = [
+  "pending",
+  "in_progress",
+  "delivered",
+  "paid",
+  "skipped_nonexistent",
+  "error",
+  "not_applicable",
+] as const;
+export type ObligationPeriodStatus = (typeof OBLIGATION_PERIOD_STATUSES)[number];
+
+export const DOCUMENT_STATUSES = ["extracted", "sent", "error"] as const;
+export type DocumentStatus = (typeof DOCUMENT_STATUSES)[number];
