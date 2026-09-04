@@ -109,13 +109,11 @@ file_size_limit = "50MiB"
 # [storage.image_transformation]
 # enabled = true
 
-# Bucket dos PDFs das guias (Módulo 1). Privado: a leitura é sempre por signed
-# URL mintada pelo servidor. Em produção o bucket nasce da migration
-# 20260904015903_iva_documents_rls.sql — aqui é só para o stack local.
-[storage.buckets.documents]
-public = false
-file_size_limit = "10MiB"
-allowed_mime_types = ["application/pdf"]
+# Os buckets NÃO são declarados aqui. O bucket `documents` (PDFs das guias do
+# Módulo 1) nasce da migration 20260904015903_iva_documents_rls.sql, que corre
+# tanto local como em produção — declarado nos dois sítios, o `supabase db reset`
+# pergunta se quer sobrescrever as propriedades, e uma pergunta interativa não
+# tem lugar num comando de automação.
 
 [auth]
 enabled = true

@@ -45,18 +45,23 @@ const createdUserIds: string[] = [];
 const createdStorageObjectIds: string[] = [];
 
 afterAll(async () => {
-  if (createdStorageObjectIds.length > 0) {
-    await pool.query("delete from storage.objects where id = any($1::uuid[])", [
-      createdStorageObjectIds,
-    ]);
+  // O `finally` é o que garante que uma limpeza falhada não deixa o pool aberto
+  // (a suite ficaria pendurada em vez de falhar).
+  try {
+    if (createdStorageObjectIds.length > 0) {
+      await pool.query("delete from storage.objects where id = any($1::uuid[])", [
+        createdStorageObjectIds,
+      ]);
+    }
+    if (createdUserIds.length > 0) {
+      await db.delete(profiles).where(inArray(profiles.id, createdUserIds));
+    }
+    if (createdTeamIds.length > 0) {
+      await db.delete(teams).where(inArray(teams.id, createdTeamIds));
+    }
+  } finally {
+    await pool.end();
   }
-  if (createdUserIds.length > 0) {
-    await db.delete(profiles).where(inArray(profiles.id, createdUserIds));
-  }
-  if (createdTeamIds.length > 0) {
-    await db.delete(teams).where(inArray(teams.id, createdTeamIds));
-  }
-  await pool.end();
 });
 
 // Impersona `authenticated` com auth.uid() = userId; rollback ao final.
@@ -336,7 +341,7 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("view iva_documents_overview"
 });
 
 describe.skipIf(process.env.SKIP_DB_TESTS === "1")("storage — bucket documents", () => {
-  it("existe, é privado e só aceita PDF", async () => {
+  it("existe, é privado, só aceita PDF e está limitado a 10 MiB", async () => {
     const { rows } = await pool.query<{
       public: boolean;
       allowed_mime_types: string[] | null;
@@ -347,6 +352,10 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("storage — bucket documents
     expect(rows).toHaveLength(1);
     expect(rows[0]!.public).toBe(false);
     expect(rows[0]!.allowed_mime_types).toEqual(["application/pdf"]);
+    // 10 MiB. É a propriedade que mais facilmente derivaria se o bucket voltasse
+    // a ser declarado em dois sítios (migration + config.toml); fica afirmada
+    // aqui para que a divergência apareça como um teste vermelho.
+    expect(Number(rows[0]!.file_size_limit)).toBe(10485760);
   });
 
   it("nenhum papel autenticado lista objetos do bucket (leitura só por signed URL)", async () => {
