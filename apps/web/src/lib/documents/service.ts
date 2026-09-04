@@ -14,19 +14,23 @@ import {
   type IvaNotReadyReason,
 } from "@toc/core/domain";
 import { getAtAccessMode } from "./access";
-import { deriveState, notReadyCopy, type IvaDocumentRow } from "./present";
+import { notReadyCopy, type IvaDocumentRow } from "./present";
 import {
-  buildBulkRows,
+  bulkRowsFromReads,
   credentialForReadiness,
+  enqueueStatus,
+  resolveJobInsert,
   tallyBulk,
   toCredentialCandidates,
   type BulkCompany,
   type CredentialRow,
   type EnqueueOutcome,
-  type LastFetch,
+  type IvaEnqueueResult,
+  type ReadResult,
+  type TraceClosure,
 } from "./bulk";
 
-export { IVA_DOCUMENT_JOB_TYPE };
+export type { IvaEnqueueResult, IvaEnqueueStatus } from "./bulk";
 
 /**
  * As colunas da view `iva_documents_overview`, 1:1 com `IvaDocumentRow`.
@@ -45,35 +49,33 @@ const ACCESS_PROVIDERS = ["at", "toconline"];
 const BATCH_CONCURRENCY = 8;
 
 /**
- * A listagem do Módulo 1, uma linha por empresa.
+ * A listagem do Módulo 1, uma linha por empresa, com o erro **por tratar**.
  *
  * Cliente de servidor (RLS) **com `team_id` explícito**: para um operador a RLS
  * já reduz a uma equipa, mas o admin é global e veria as empresas de todos os
  * gabinetes numa listagem que diz ser de um só. É a mesma armadilha de
  * `getTeamCredential` (integrations/service.ts:90-98).
+ *
+ * Os dois chamadores querem coisas diferentes de uma leitura falhada, e é por
+ * isso que há duas funções: a página mostra uma tabela vazia (visível, e o
+ * operador recarrega), o lote **tem** de falhar alto — sem os desfechos do mês,
+ * `onlyMissing` concluiria que nada foi buscado e mandaria 182 sessões de
+ * browser ao portal.
  */
-export async function listIvaDocuments(teamId: string): Promise<IvaDocumentRow[]> {
-  if (!teamId) return [];
+async function readIvaDocuments(teamId: string): Promise<ReadResult<IvaDocumentRow>> {
+  if (!teamId) return { data: [], error: null };
   const supabase = await getSupabaseServerClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("iva_documents_overview")
     .select(OVERVIEW_COLUMNS)
     .eq("team_id", teamId)
     .order("company_name");
-  return (data ?? []) as IvaDocumentRow[];
+  return { data: (data ?? null) as IvaDocumentRow[] | null, error };
 }
 
-const ENQUEUE_STATUSES = [400, 401, 403, 404, 500] as const;
-/** Os únicos códigos que este serviço devolve — nunca um 5xx do Postgres em bruto. */
-export type IvaEnqueueStatus = (typeof ENQUEUE_STATUSES)[number];
-
-export type IvaEnqueueResult =
-  | { ok: true; jobId: string; alreadyRunning: boolean }
-  | { ok: false; status: IvaEnqueueStatus; error: string };
-
-/** `requireWriterOn` devolve `number`; aqui o tipo volta a ser fechado, sem `as`. */
-function enqueueStatus(status: number): IvaEnqueueStatus {
-  return ENQUEUE_STATUSES.find((s) => s === status) ?? 500;
+export async function listIvaDocuments(teamId: string): Promise<IvaDocumentRow[]> {
+  const { data } = await readIvaDocuments(teamId);
+  return data ?? [];
 }
 
 export interface IvaBatchResult {
@@ -95,7 +97,7 @@ async function accessCredentials(
   admin: Admin,
   teamId: string,
   companyId: string | null,
-): Promise<CredentialRow[]> {
+): Promise<ReadResult<CredentialRow>> {
   let query = admin
     .from("integration_credentials")
     .select("id, provider, company_id, status, secret_encrypted, metadata")
@@ -104,8 +106,18 @@ async function accessCredentials(
   if (companyId !== null) {
     query = query.or(`company_id.is.null,company_id.eq.${companyId}`);
   }
-  const { data } = await query;
-  return (data ?? []) as CredentialRow[];
+  const { data, error } = await query;
+  return { data: (data ?? null) as CredentialRow[] | null, error };
+}
+
+/** Aplica ao trace o fecho que a decisão pura escolheu. */
+async function closeTrace(
+  act: Awaited<ReturnType<typeof startAction>>,
+  trace: TraceClosure,
+): Promise<void> {
+  if (trace.close === "handOff") return act.handOff();
+  if (trace.close === "skipped") return act.skipped(trace.reason);
+  return act.failure(trace.message);
 }
 
 /** O job de IVA por consumir desta empresa, se houver. */
@@ -157,7 +169,12 @@ export async function enqueueIvaFetch(
 
   const access = getAtAccessMode();
   const provider = providerForAccess(access);
-  const candidates = toCredentialCandidates(await accessCredentials(admin, teamId, companyId));
+  const credentials = await accessCredentials(admin, teamId, companyId);
+  // Sem esta guarda, uma leitura falhada daria `candidates = []`, a prontidão
+  // diria `credential_missing` e o operador iria configurar uma credencial que
+  // está lá — a mandar-se corrigir o que não está partido.
+  if (credentials.error !== null) return { ok: false, status: 500, error: "Erro interno." };
+  const candidates = toCredentialCandidates(credentials.data ?? []);
 
   // Um duplo-clique não pode lançar duas sessões de browser contra o portal.
   // Devolve-se o job em curso — e **sem abrir trace**, que ficaria órfão.
@@ -213,7 +230,7 @@ export async function enqueueIvaFetch(
       },
     });
 
-    const { data, error } = await admin
+    const inserted = await admin
       .from("jobs")
       .insert({
         team_id: teamId,
@@ -226,25 +243,15 @@ export async function enqueueIvaFetch(
       .select("id")
       .single();
 
-    if (error !== null) {
-      // `23505` = o índice parcial recusou o duplicado. Não é falha de ninguém:
-      // o trace fecha-se como saltado (não como erro, que mandaria alguém
-      // investigar) e devolve-se o job que já lá estava.
-      if (error.code === "23505") {
-        await act.skipped("already_running");
-        const raced = await inFlightJobId(admin, companyId);
-        if (raced !== null) return { ok: true, jobId: raced, alreadyRunning: true };
-        // O job terminou entre o conflito e a releitura. Raríssimo, e sem nada
-        // de útil para devolver — quem chamou volta a tentar.
-        return { ok: false, status: 500, error: "Erro interno." };
-      }
-      throw new Error(error.message);
-    }
-
-    // handOff e não success: o trace fica ABERTO até o worker terminar. Um job
-    // enfileirado e nunca consumido tem de aparecer como trace por fechar.
-    await act.handOff();
-    return { ok: true, jobId: (data as { id: string }).id, alreadyRunning: false };
+    // Que fecho de trace corresponde a que desfecho da inserção é decisão pura
+    // (e testada) — aqui só se executa. A releitura do job em curso entra por
+    // parâmetro porque é a única I/O desse caminho.
+    const { trace, result } = await resolveJobInsert(
+      { data: inserted.data as { id: string } | null, error: inserted.error },
+      () => inFlightJobId(admin, companyId),
+    );
+    await closeTrace(act, trace);
+    return result;
   } catch (e) {
     const message = e instanceof Error ? e.message : "erro desconhecido";
     await act?.failure(message);
@@ -263,6 +270,11 @@ export async function enqueueIvaFetch(
  * os restantes 181 pendurariam eventos num trace já fechado — cada job tem o
  * SEU trace, aberto por `enqueueIvaFetch`, e o `batchId` no payload é o que os
  * volta a juntar.
+ *
+ * Uma leitura falhada fecha esse mesmo trace com `failure()` e devolve 500. Um
+ * lote que não chegou a saber que empresas existem **não** é um lote de zero
+ * empresas, e a diferença é toda para o operador: «0 enfileiradas» a verde é
+ * algo que ele arruma como feito.
  */
 export async function enqueueIvaFetchAll(
   requestedTeamId = "",
@@ -276,69 +288,71 @@ export async function enqueueIvaFetchAll(
   const access = getAtAccessMode();
   const provider = providerForAccess(access);
 
-  const [{ data: companiesData }, credentialRows, { data: inFlightData }] = await Promise.all([
-    admin
-      .from("companies")
-      .select("id, status, nif, toconline_company_id, toconline_cluster")
-      .eq("team_id", teamId)
-      .order("name"),
-    // Sem `companyId`: o lote precisa também dos marcadores por empresa, que são
-    // o que impede uma senha já recusada de ser tentada 182 vezes.
-    accessCredentials(admin, teamId, null),
-    admin
-      .from("jobs")
-      .select("company_id")
-      .eq("team_id", teamId)
-      .eq("type", IVA_DOCUMENT_JOB_TYPE)
-      .in("status", ["pending", "running"]),
-  ]);
-
-  const companies = (companiesData ?? []) as BulkCompany[];
-  const inFlight = new Set(
-    ((inFlightData ?? []) as { company_id: string | null }[])
-      .map((j) => j.company_id)
-      .filter((id): id is string => id !== null),
-  );
-
-  // O último desfecho só interessa a `onlyMissing` — sem ele não vale uma
-  // leitura da listagem inteira.
-  const lastByCompany = new Map<string, LastFetch>();
-  if (opts.onlyMissing) {
-    for (const row of await listIvaDocuments(teamId)) {
-      lastByCompany.set(row.company_id, {
-        outcome: deriveState(row).outcome,
-        finishedAt: row.job_finished_at,
-      });
-    }
-  }
-
-  const rows = buildBulkRows({
-    access,
-    companies,
-    candidates: toCredentialCandidates(credentialRows),
-    inFlight,
-    lastByCompany,
-  });
-  const plan = planBulkFetch(rows, { onlyMissing: opts.onlyMissing, now: new Date() });
   const batchId = crypto.randomUUID();
+  /** O mesmo cabeçalho para o trace do lote, corra ele bem ou mal. */
+  const batchMeta = (payload: Record<string, unknown>) => ({
+    triggerSource: "documentos.iva.fetch_all",
+    type: "job.batch_enqueued",
+    createdBy: actor.id,
+    correlationKey: `team:${teamId}:iva`,
+    payload: { teamId, batchId, provider, ...payload },
+  });
 
   let batch: Awaited<ReturnType<typeof startAction>> | undefined;
   try {
-    batch = await startAction({
-      triggerSource: "documentos.iva.fetch_all",
-      type: "job.batch_enqueued",
-      createdBy: actor.id,
-      correlationKey: `team:${teamId}:iva`,
-      payload: {
-        teamId,
-        batchId,
-        provider,
+    const [companiesRead, credentialsRead, inFlightRead, listingRead] = await Promise.all([
+      admin
+        .from("companies")
+        .select("id, status, nif, toconline_company_id, toconline_cluster")
+        .eq("team_id", teamId)
+        .order("name"),
+      // Sem `companyId`: o lote precisa também dos marcadores por empresa, que
+      // são o que impede uma senha já recusada de ser tentada 182 vezes.
+      accessCredentials(admin, teamId, null),
+      admin
+        .from("jobs")
+        .select("company_id")
+        .eq("team_id", teamId)
+        .eq("type", IVA_DOCUMENT_JOB_TYPE)
+        .in("status", ["pending", "running"]),
+      // `null` e não uma leitura vazia quando `onlyMissing` é falso: aí o último
+      // desfecho não interessa a ninguém e a listagem inteira nem se lê.
+      opts.onlyMissing ? readIvaDocuments(teamId) : null,
+    ]);
+
+    const planned = bulkRowsFromReads({
+      access,
+      companies: {
+        data: (companiesRead.data ?? null) as BulkCompany[] | null,
+        error: companiesRead.error,
+      },
+      credentials: credentialsRead,
+      inFlight: {
+        data: (inFlightRead.data ?? null) as { company_id: string | null }[] | null,
+        error: inFlightRead.error,
+      },
+      listing: listingRead,
+    });
+
+    if (!planned.ok) {
+      // Falhar alto, e com trace. Seguir em frente daria um lote de zero
+      // empresas — «0 enfileiradas» a verde durante uma indisponibilidade, que o
+      // operador arruma como feito. O trace abre-se só para ser falhado: sem
+      // ele, o 500 que ele vê não teria explicação nenhuma em /logs.
+      batch = await startAction(batchMeta({ readFailed: true }));
+      await batch.failure(planned.error);
+      return { ok: false, status: 500, error: "Erro interno." };
+    }
+
+    const plan = planBulkFetch(planned.rows, { onlyMissing: opts.onlyMissing, now: new Date() });
+    batch = await startAction(
+      batchMeta({
         planned: plan.toEnqueue.length,
         skippedInFlight: plan.skipped.alreadyRunning.length,
         skippedNotReady: Object.values(plan.skipped.notReady).reduce((n, ids) => n + ids.length, 0),
         skippedFetched: plan.skipped.alreadyFetched.length,
-      },
-    });
+      }),
+    );
 
     // Em blocos e não todos de uma vez: 182 empresas dariam 182 inserções e 182
     // traces em simultâneo contra o mesmo pool de ligações.

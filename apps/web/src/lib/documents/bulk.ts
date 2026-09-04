@@ -11,15 +11,18 @@ import {
   type IvaNotReadyReason,
   type IvaOutcome,
 } from "@toc/core/domain";
+import { deriveState, type IvaDocumentRow } from "./present";
 
 /**
- * Adaptadores puros entre a base de dados e as decisões de domínio do «buscar».
+ * As decisões puras do «buscar» — tudo o que não é I/O.
  *
  * Vivem fora de `service.ts` por um motivo prático: o serviço importa
- * `server-only` e o cliente Supabase, e nada disso arranca sob o Vitest. Aqui
- * está o que vale a pena testar sem levantar a aplicação — a tradução das
- * linhas, a concordância entre prontidão e escolha de credencial, e a soma das
- * contagens de um lote. O serviço fica com o que é mesmo I/O.
+ * `server-only` e o cliente Supabase, e nada disso arranca sob o Vitest. O
+ * serviço fica a ser a casca que lê, escreve e fecha traces; aqui está **o que
+ * ele decide** — a tradução das linhas, a concordância entre prontidão e escolha
+ * de credencial, o que fazer com o resultado de uma inserção, e a soma das
+ * contagens de um lote. É a fronteira que torna estas regras testáveis sem
+ * levantar a aplicação.
  */
 
 /** Linha de `integration_credentials` tal como o cliente admin a devolve. */
@@ -200,5 +203,165 @@ export function tallyBulk(plan: BulkPlan, outcomes: readonly EnqueueOutcome[]): 
       alreadyFetched: plan.skipped.alreadyFetched.length,
     },
     notReadyReasons,
+  };
+}
+
+// --- Leituras: o que fazer quando uma delas falha -----------------------------
+
+/**
+ * O que uma leitura do PostgREST devolve, com o erro **por tratar**.
+ *
+ * O cliente Supabase nunca lança: devolve `{ data, error }` e cabe a quem chama
+ * olhar para o segundo. O tipo existe para que olhar seja obrigatório — um
+ * `data ?? []` solto transforma uma indisponibilidade da base numa lista vazia,
+ * e uma lista vazia é uma resposta perfeitamente plausível.
+ */
+export interface ReadResult<T> {
+  data: T[] | null;
+  error: { message?: string } | null;
+}
+
+export type BulkRowsResult = { ok: true; rows: BulkRow[] } | { ok: false; error: string };
+
+/** Devolve a primeira leitura falhada, já rotulada para o trace. */
+function firstReadError(reads: [string, ReadResult<unknown> | null][]): string | null {
+  for (const [label, read] of reads) {
+    if (read !== null && read.error !== null) {
+      return `leitura de ${label}: ${read.error.message ?? "erro desconhecido"}`;
+    }
+  }
+  return null;
+}
+
+/**
+ * As quatro leituras do «buscar todas» → as linhas que `planBulkFetch` reparte.
+ *
+ * **Qualquer erro falha o lote inteiro**, e essa é a decisão que este módulo
+ * existe para tornar testável. Um lote que não chegou a saber que empresas
+ * existem não é um lote de zero empresas: seguir em frente mostraria «0
+ * enfileiradas» a verde durante uma indisponibilidade, e o operador arrumaria o
+ * assunto como feito.
+ *
+ * A listagem merece nota à parte, porque a sua falha é a mais cara das quatro:
+ * é dela que sai o último desfecho de cada empresa, e sem ele `onlyMissing`
+ * conclui que nada foi buscado este mês — 182 sessões de browser contra o
+ * portal por causa de uma leitura falhada. `null` (e não uma leitura vazia)
+ * quando `onlyMissing` é falso: aí a listagem nem se lê.
+ */
+export function bulkRowsFromReads(input: {
+  access: AtAccessMode;
+  companies: ReadResult<BulkCompany>;
+  credentials: ReadResult<CredentialRow>;
+  inFlight: ReadResult<{ company_id: string | null }>;
+  listing: ReadResult<IvaDocumentRow> | null;
+}): BulkRowsResult {
+  const failed = firstReadError([
+    ["empresas", input.companies],
+    ["credenciais", input.credentials],
+    ["jobs em curso", input.inFlight],
+    ["listagem", input.listing],
+  ]);
+  if (failed !== null) return { ok: false, error: failed };
+
+  const inFlight = new Set(
+    (input.inFlight.data ?? [])
+      .map((job) => job.company_id)
+      .filter((id): id is string => id !== null),
+  );
+
+  const lastByCompany = new Map<string, LastFetch>();
+  for (const row of input.listing?.data ?? []) {
+    lastByCompany.set(row.company_id, {
+      outcome: deriveState(row).outcome,
+      finishedAt: row.job_finished_at,
+    });
+  }
+
+  return {
+    ok: true,
+    rows: buildBulkRows({
+      access: input.access,
+      companies: input.companies.data ?? [],
+      candidates: toCredentialCandidates(input.credentials.data ?? []),
+      inFlight,
+      lastByCompany,
+    }),
+  };
+}
+
+// --- Inserção do job: o resultado, o trace e o que o operador lê --------------
+
+const ENQUEUE_STATUSES = [400, 401, 403, 404, 500] as const;
+/** Os únicos códigos que o serviço devolve — nunca um 5xx do Postgres em bruto. */
+export type IvaEnqueueStatus = (typeof ENQUEUE_STATUSES)[number];
+
+export type IvaEnqueueResult =
+  | { ok: true; jobId: string; alreadyRunning: boolean }
+  | { ok: false; status: IvaEnqueueStatus; error: string };
+
+/** `requireWriterOn` devolve `number`; aqui o tipo volta a ser fechado, sem `as`. */
+export function enqueueStatus(status: number): IvaEnqueueStatus {
+  return ENQUEUE_STATUSES.find((s) => s === status) ?? 500;
+}
+
+/** Como se fecha o trace de um enfileiramento. */
+export type TraceClosure =
+  | { close: "handOff" }
+  | { close: "skipped"; reason: string }
+  | { close: "failure"; message: string };
+
+export interface EnqueueResolution {
+  trace: TraceClosure;
+  result: IvaEnqueueResult;
+}
+
+/** O 5xx que o operador lê. A mensagem do Postgres fica no trace, nunca no ecrã. */
+const INTERNAL: IvaEnqueueResult = { ok: false, status: 500, error: "Erro interno." };
+
+/**
+ * O que fazer depois de tentar inserir o job.
+ *
+ * Três desfechos, três fechos de trace diferentes, e é essa correspondência que
+ * importa acertar:
+ * - inserido → **`handOff`**: o trace fica aberto até o worker terminar, porque
+ *   um job enfileirado e nunca consumido tem de aparecer como trace por fechar.
+ * - `23505` (o índice parcial `jobs_company_inflight_uq` recusou o duplicado) →
+ *   **`skipped`**: não é falha de ninguém, e fechar como erro mandaria alguém
+ *   investigar um duplo-clique. Devolve-se o job que já lá estava.
+ * - qualquer outro erro → **`failure`**, com a mensagem crua no trace e uma
+ *   genérica para o ecrã.
+ *
+ * `inFlight` entra por parâmetro porque é a única I/O deste caminho — e é o que
+ * permite exercitar o ramo do `23505` sem uma base de dados a recusar chaves.
+ */
+export async function resolveJobInsert(
+  insert: { data: { id: string } | null; error: { code?: string; message?: string } | null },
+  inFlight: () => Promise<string | null>,
+): Promise<EnqueueResolution> {
+  if (insert.error !== null) {
+    if (insert.error.code !== "23505") {
+      return {
+        trace: { close: "failure", message: insert.error.message ?? "erro desconhecido" },
+        result: INTERNAL,
+      };
+    }
+    const raced = await inFlight();
+    return {
+      // Saltado mesmo quando a releitura vem vazia: o enfileiramento **foi**
+      // saltado por conflito; o que falhou a seguir foi só ter o que devolver
+      // (o job terminou entretanto — raríssimo, e quem chamou volta a tentar).
+      trace: { close: "skipped", reason: "already_running" },
+      result: raced === null ? INTERNAL : { ok: true, jobId: raced, alreadyRunning: true },
+    };
+  }
+
+  // Sem erro e sem linha não acontece com `.single()`, mas devolver `ok` a
+  // partir de um `id` que não existe seria pior do que uma falha honesta.
+  if (insert.data === null) {
+    return { trace: { close: "failure", message: "inserção sem linha" }, result: INTERNAL };
+  }
+  return {
+    trace: { close: "handOff" },
+    result: { ok: true, jobId: insert.data.id, alreadyRunning: false },
   };
 }

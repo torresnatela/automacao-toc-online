@@ -2,11 +2,14 @@ import { describe, it, expect } from "vitest";
 import { ivaFetchReadiness, selectAccessCredential, type AtAccessMode } from "@toc/core/domain";
 import {
   buildBulkRows,
+  bulkRowsFromReads,
   credentialForReadiness,
+  resolveJobInsert,
   tallyBulk,
   toCredentialCandidates,
   type CredentialRow,
 } from "@/lib/documents/bulk";
+import type { IvaDocumentRow } from "@/lib/documents/present";
 
 const TEAM_CRED = "aaaaaaaa-0000-0000-0000-000000000001";
 const COMPANY_CRED = "aaaaaaaa-0000-0000-0000-000000000002";
@@ -219,5 +222,132 @@ describe("tallyBulk", () => {
     const counts = tallyBulk(plan, ["enqueued", "enqueued", "enqueued"]);
     expect(counts.notReadyReasons).toEqual({ company_inactive: 1, nif_missing: 2 });
     expect(counts.enqueued).toBe(3);
+  });
+});
+
+describe("bulkRowsFromReads", () => {
+  const companies = [
+    {
+      id: LIGADA,
+      status: "active",
+      nif: "501234560",
+      toconline_company_id: 515814,
+      toconline_cluster: 5,
+    },
+  ];
+  const ok = <T>(data: T[]) => ({ data, error: null });
+  const boom = { data: null, error: { message: "boom" } };
+
+  /** Uma linha da view com o mínimo que o lote lhe vai buscar. */
+  function listagem(over: Partial<IvaDocumentRow> = {}): IvaDocumentRow {
+    return {
+      company_id: LIGADA,
+      job_status: "succeeded",
+      job_outcome: "fetched",
+      job_finished_at: "2026-09-02T10:00:00Z",
+      period: null,
+      due_date: null,
+      job_period: null,
+      ...over,
+    } as IvaDocumentRow;
+  }
+
+  const base = {
+    access: "at_direct_login" as const,
+    companies: ok(companies),
+    credentials: ok([credRow()]),
+    inFlight: ok<{ company_id: string | null }>([]),
+    listing: ok([listagem()]),
+  };
+
+  it("monta as linhas com o que em curso e o último desfecho dizem", () => {
+    const planned = bulkRowsFromReads({
+      ...base,
+      inFlight: ok<{ company_id: string | null }>([{ company_id: LIGADA }]),
+    });
+    expect(planned).toEqual({
+      ok: true,
+      rows: [
+        {
+          companyId: LIGADA,
+          readiness: { ready: false, reason: "in_flight" },
+          lastOutcome: "fetched",
+          lastFinishedAt: "2026-09-02T10:00:00Z",
+        },
+      ],
+    });
+  });
+
+  it("sem listagem (onlyMissing falso) não há desfecho anterior a considerar", () => {
+    const planned = bulkRowsFromReads({ ...base, listing: null });
+    expect(planned.ok && planned.rows[0]?.lastOutcome).toBe(null);
+  });
+
+  // O ponto de todas estas: uma leitura falhada não pode virar «0 enfileiradas»
+  // a verde. O lote que não sabe que empresas existe não é um lote de zero.
+  it.each([
+    ["empresas", { companies: boom }],
+    ["credenciais", { credentials: boom }],
+    ["jobs em curso", { inFlight: boom }],
+    ["listagem", { listing: boom }],
+  ])("falha alto quando a leitura de %s falha", (rotulo, override) => {
+    const planned = bulkRowsFromReads({ ...base, ...override });
+    expect(planned.ok).toBe(false);
+    // A mensagem diz QUAL leitura falhou — é ela que vai para o trace.
+    expect(planned.ok === false && planned.error).toContain("boom");
+    expect(planned.ok === false && planned.error).toContain(rotulo);
+  });
+});
+
+describe("resolveJobInsert", () => {
+  const JOB = "eeeeeeee-0000-0000-0000-000000000001";
+  const EM_CURSO = "eeeeeeee-0000-0000-0000-000000000002";
+  const nunca = async () => {
+    throw new Error("não devia reler o job em curso");
+  };
+
+  it("inserção limpa entrega o trace ao worker", async () => {
+    const resolution = await resolveJobInsert({ data: { id: JOB }, error: null }, nunca);
+    expect(resolution).toEqual({
+      trace: { close: "handOff" },
+      result: { ok: true, jobId: JOB, alreadyRunning: false },
+    });
+  });
+
+  // O ramo do índice parcial `jobs_company_inflight_uq`: não é falha de ninguém,
+  // e fechar o trace como erro mandaria alguém investigar um duplo-clique.
+  it("23505 fecha o trace como saltado e devolve o job que já lá estava", async () => {
+    const resolution = await resolveJobInsert(
+      { data: null, error: { code: "23505", message: 'duplicate key value violates "jobs_..."' } },
+      async () => EM_CURSO,
+    );
+    expect(resolution.trace).toEqual({ close: "skipped", reason: "already_running" });
+    expect(resolution.result).toEqual({ ok: true, jobId: EM_CURSO, alreadyRunning: true });
+  });
+
+  it("23505 sem job na releitura continua saltado, mas sem nada que devolver", async () => {
+    const resolution = await resolveJobInsert(
+      { data: null, error: { code: "23505", message: "duplicate key" } },
+      async () => null,
+    );
+    expect(resolution.trace).toEqual({ close: "skipped", reason: "already_running" });
+    expect(resolution.result).toEqual({ ok: false, status: 500, error: "Erro interno." });
+  });
+
+  it("outro erro falha o trace com a mensagem crua e devolve-a genérica", async () => {
+    const crua = 'null value in column "team_id" violates not-null constraint';
+    const resolution = await resolveJobInsert(
+      { data: null, error: { code: "23502", message: crua } },
+      nunca,
+    );
+    expect(resolution.trace).toEqual({ close: "failure", message: crua });
+    // A mensagem do Postgres fica no trace e NUNCA no que o operador lê.
+    expect(resolution.result).toEqual({ ok: false, status: 500, error: "Erro interno." });
+  });
+
+  it("inserção sem erro e sem linha é falha, não sucesso silencioso", async () => {
+    const resolution = await resolveJobInsert({ data: null, error: null }, nunca);
+    expect(resolution.trace.close).toBe("failure");
+    expect(resolution.result).toEqual({ ok: false, status: 500, error: "Erro interno." });
   });
 });

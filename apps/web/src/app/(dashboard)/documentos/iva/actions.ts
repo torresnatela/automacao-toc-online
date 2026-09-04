@@ -42,8 +42,10 @@ export async function fetchAllIvaDocumentsAction(
   formData: FormData,
 ): Promise<FetchAllState> {
   const result = await enqueueIvaFetchAll(String(formData.get("teamId") ?? ""), {
-    // A caixa só chega no `FormData` quando está marcada — é assim que o HTML
-    // envia um checkbox, e não um `false`.
+    // Hoje quem envia isto é um `<input type="hidden" value="on">` — na versão
+    // mínima o lote é sempre conservador. A comparação com `"on"` está escrita
+    // para o checkbox que a Task 14 vai pôr no lugar: um checkbox só chega ao
+    // `FormData` quando está marcado, e ausente tem de significar `false`.
     onlyMissing: formData.get("onlyMissing") === "on",
   });
   if (!result.ok) return { error: result.error };
