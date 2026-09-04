@@ -1,5 +1,6 @@
 import { chromium, type Browser, type BrowserContext } from "playwright";
 import type { StorageState } from "../toconline/storage-state";
+import { installKeepNamesShim } from "./keep-names-shim";
 
 /**
  * Um browser por processo, contextos por trabalho.
@@ -55,7 +56,7 @@ export class PlaywrightBrowser implements BrowserProvider {
     options: { storageState?: StorageState; acceptDownloads?: boolean } = {},
   ): Promise<BrowserContext> {
     const browser = await this.ensure();
-    return browser.newContext({
+    const context = await browser.newContext({
       storageState: options.storageState,
       acceptDownloads: options.acceptDownloads,
       // Viewport largo: a grelha do TOConline virtualiza por altura visível, e
@@ -63,6 +64,11 @@ export class PlaywrightBrowser implements BrowserProvider {
       viewport: { width: 1600, height: 1000 },
       locale: "pt-PT",
     });
+    // Sem isto, sob `tsx` (o modo `dev`) todo o `page.evaluate` deste worker
+    // rebenta — incluindo o `snapshotPage` de que a classificação de páginas da
+    // AT depende. Ver `keep-names-shim.ts`.
+    await installKeepNamesShim(context);
+    return context;
   }
 
   async close(): Promise<void> {
