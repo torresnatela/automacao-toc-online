@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useId, useState } from "react";
 import { DownloadCloud } from "lucide-react";
 import { fetchAllIvaDocumentsAction, type FetchAllState } from "./actions";
 import type { BulkPlanSummary } from "@/lib/documents/bulk";
@@ -56,6 +56,7 @@ export function FetchAllButton({ teamId, plan, peak }: FetchAllButtonProps) {
   // lote, e quem confirma tem de ver esse número mudar antes de clicar.
   const [onlyMissing, setOnlyMissing] = useState(true);
 
+  const motivoId = useId();
   const total = onlyMissing ? plan.ready : plan.ready + plan.alreadyFetched;
   const reasons = formatNotReadyReasons(plan.notReadyReasons);
   const nothingReady = plan.ready === 0;
@@ -76,20 +77,36 @@ export function FetchAllButton({ teamId, plan, peak }: FetchAllButtonProps) {
 
   return (
     <div className="flex flex-col items-end gap-2">
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(next) => {
+          // Reabrir devolve a opção conservadora. Sem isto, quem desmarcasse a
+          // checkbox e fechasse o diálogo voltaria a encontrá-la desmarcada —
+          // e o clique seguinte rebuscaria guias já obtidas sem o ter pedido.
+          if (next) setOnlyMissing(true);
+          setOpen(next);
+        }}
+      >
         <DialogTrigger asChild>
           <Button
             variant="accent"
             disabled={nothingReady}
             title={nothingReady ? "Nenhuma empresa pronta para buscar." : undefined}
+            aria-describedby={nothingReady ? motivoId : undefined}
           >
             <DownloadCloud aria-hidden /> Buscar todas
           </Button>
         </DialogTrigger>
 
         {/* O `title` não chega a quem usa leitor de ecrã nem a quem navega por
-            teclado sem rato — o motivo tem de estar no acessível também. */}
-        {nothingReady && <span className="sr-only">Nenhuma empresa pronta para buscar.</span>}
+            teclado sem rato — o motivo tem de estar no acessível também, e
+            ligado ao botão (`aria-describedby`), senão fica um texto solto que
+            ninguém sabe a que se refere. */}
+        {nothingReady && (
+          <span id={motivoId} className="sr-only">
+            Nenhuma empresa pronta para buscar.
+          </span>
+        )}
 
         <DialogContent>
           <DialogHeader>

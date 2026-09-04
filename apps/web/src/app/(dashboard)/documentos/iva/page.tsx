@@ -269,7 +269,11 @@ export default async function GuiasIvaPage({ searchParams }: PageProps) {
                           : {
                               job: {
                                 attempts: row.job_attempts ?? 0,
-                                finishedAt: formatDatePt(row.job_finished_at),
+                                // Só quando terminou: um job na fila não tem
+                                // data de fim, e o travessão fingiria que sim.
+                                ...(row.job_finished_at === null
+                                  ? {}
+                                  : { finishedAt: formatDatePt(row.job_finished_at) }),
                               },
                             })}
                         {...(row.document_id === null

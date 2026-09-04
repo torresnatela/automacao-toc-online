@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
+import { IVA_OUTCOME_CODES } from "@toc/core/domain";
 import {
+  CREDENTIAL_OUTCOME_TARGET,
   NOT_READY_BULK_COPY,
   NOT_READY_COPY,
   batchProgress,
@@ -419,6 +421,13 @@ describe("credentialLinkFor", () => {
     expect(credentialLinkFor("direct_access_not_configured", "at_direct_login")?.href).toBe(
       "/integracoes/toconline",
     );
+  });
+
+  // A rede do `Record` total é de compilação; esta é a de execução, para o caso
+  // de o código novo chegar a um build já compilado (a mesma disciplina de
+  // `outcomes.test.ts`).
+  it("decide sobre TODOS os desfechos do domínio — nenhum cai em silêncio", () => {
+    expect(Object.keys(CREDENTIAL_OUTCOME_TARGET).sort()).toEqual([...IVA_OUTCOME_CODES].sort());
   });
 
   it("um desfecho que não é de credencial não sugere ecrã nenhum", () => {

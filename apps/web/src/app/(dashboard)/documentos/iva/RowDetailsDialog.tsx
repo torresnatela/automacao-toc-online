@@ -32,8 +32,11 @@ export interface RowDetailsDialogProps {
    * está a quem já vê a empresa.
    */
   jobError?: string;
-  /** Ausente enquanto nunca houve job para esta empresa. */
-  job?: { attempts: number; finishedAt: string };
+  /**
+   * Ausente enquanto nunca houve job. `finishedAt` ausente enquanto o job ainda
+   * corre — "Concluído: —" seria uma resposta a uma pergunta que ninguém fez.
+   */
+  job?: { attempts: number; finishedAt?: string };
   /** Já formatados no servidor: o Intl do browser pode não ser o mesmo. */
   payment?: { entity: string; reference: string; amount: string; dueDate: string };
   traceHref?: string;
@@ -88,7 +91,8 @@ export function RowDetailsDialog(props: RowDetailsDialogProps) {
 
           {job && (
             <p className="text-muted-foreground text-xs">
-              Tentativas: {job.attempts} · Concluído: {job.finishedAt}
+              Tentativas: {job.attempts}
+              {job.finishedAt === undefined ? "" : ` · Concluído: ${job.finishedAt}`}
             </p>
           )}
 

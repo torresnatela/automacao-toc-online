@@ -411,26 +411,68 @@ export function credentialBanner(
 }
 
 /**
- * Desfechos cuja resolução é mexer numa credencial — e só esses.
+ * Onde se resolve cada desfecho, quando o que o resolve é uma credencial.
  *
- * Escrito como `Record<IvaOutcome, boolean>` e não como lista: um desfecho novo
- * no domínio obriga a decidir aqui se é (ou não) de credencial, em vez de cair
- * silenciosamente no "não é" e deixar o operador sem o link que lhe resolve o
- * problema.
+ * `Record` **total** (as 41 chaves, `null` nas que não são de credencial) e não
+ * um `Partial`: um desfecho novo no domínio tem de obrigar a decidir aqui, e um
+ * `Partial` deixá-lo-ia cair em silêncio no "não é de credencial" — o operador
+ * ficaria sem o link que lhe resolve o problema e nada falharia a avisar.
+ * `credential-links.test.ts` repete a verificação em execução.
+ *
+ * `"route"` = a senha da AT, que se corrige onde a rota a guarda (na rota A
+ * vive no TOConline); `"toconline"` = do TOConline em qualquer rota.
  */
-const CREDENTIAL_OUTCOME_TARGET: Partial<Record<IvaOutcome, "at" | "toconline" | "route">> = {
-  // A senha da AT: onde se corrige depende da rota (na rota A vive no TOConline).
+export const CREDENTIAL_OUTCOME_TARGET: Record<
+  IvaOutcome,
+  "at" | "toconline" | "route" | null
+> = {
+  // --- Sucesso e estados válidos ------------------------------------------
+  fetched: null,
+  fetched_without_fields: null,
+  already_fetched: null,
+  no_payment_document: null,
+  already_paid: null,
+  document_not_ready: null,
+  declaration_not_submitted: null,
+  declaration_not_found: null,
+  // --- Pré-condição --------------------------------------------------------
+  payload_invalid: null,
+  company_not_found: null,
+  company_inactive: null,
+  obligation_not_applicable: null,
+  company_not_linked: null,
+  company_nif_missing: null,
+  toconline_credential_missing: "toconline",
+  toconline_credential_invalid: "toconline",
   at_credential_missing: "route",
   at_credential_invalid: "route",
+  daily_cap_reached: null,
+  portal_paused: null,
+  // --- Sessão TOConline e Acesso Direto (rota A) ---------------------------
+  toconline_login_rejected: "toconline",
+  toconline_unavailable: null,
+  toconline_unexpected_page: null,
+  direct_access_extension_missing: null,
+  direct_access_not_configured: "toconline",
+  direct_access_failed: null,
+  // --- Autenticação na AT --------------------------------------------------
   at_login_rejected: "route",
   at_password_blocked: "route",
   at_password_expired: "route",
   at_2fa_required: "route",
-  // Estes são do TOConline em qualquer rota.
-  toconline_credential_missing: "toconline",
-  toconline_credential_invalid: "toconline",
-  toconline_login_rejected: "toconline",
-  direct_access_not_configured: "toconline",
+  at_authorization_missing: null,
+  at_session_mismatch: null,
+  at_unexpected_page: null,
+  at_unavailable: null,
+  // --- Captura do documento ------------------------------------------------
+  document_type_unexpected: null,
+  document_capture_failed: null,
+  document_fields_mismatch: null,
+  // --- Persistência e infraestrutura ---------------------------------------
+  persist_failed: null,
+  persist_rejected: null,
+  interrupted: null,
+  unknown_error: null,
 };
 
 /** O ecrã que resolve este desfecho, quando existe um. */
@@ -440,7 +482,7 @@ export function credentialLinkFor(
 ): { href: string; label: string } | null {
   if (outcome === null) return null;
   const target = CREDENTIAL_OUTCOME_TARGET[outcome];
-  if (target === undefined) return null;
+  if (target === null) return null;
   const { href, label } = ACCESS_TARGET[target === "route" ? providerForAccess(access) : target];
   return { href, label };
 }
