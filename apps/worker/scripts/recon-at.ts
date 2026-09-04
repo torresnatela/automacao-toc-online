@@ -11,9 +11,17 @@
  * a tabela de seletores e o go/no-go A vs B em
  * `docs/superpowers/specs/<data>-at-recon.md`.
  *
- * Uso:
- *   pnpm --filter @toc/worker exec tsx scripts/recon-at.ts --route b --nif 123456789
- *   pnpm --filter @toc/worker exec tsx scripts/recon-at.ts --route a --company 4321:5
+ * Cada etapa é fotografada **duas vezes**: `antes` (a página como o portal a
+ * entregou, antes de alguém lhe tocar) e `depois` (o que a ação produziu). É o
+ * `antes` que carrega os seletores a copiar — o formulário de login, a caixa do
+ * NIF, os campos de ano/período — e que se perderia se só se fotografasse
+ * depois de o humano já ter navegado para fora dele.
+ *
+ * Uso (nada carrega o `.env` por si — o preâmbulo é obrigatório):
+ *   set -a && . ./.env && set +a && \
+ *     pnpm --filter @toc/worker exec tsx scripts/recon-at.ts --route b --nif 123456789
+ *   set -a && . ./.env && set +a && \
+ *     pnpm --filter @toc/worker exec tsx scripts/recon-at.ts --route a --company 4321:5
  *
  * Credenciais **só por ambiente** (rota B: `AT_RECON_USER`/`AT_RECON_PASSWORD`;
  * rota A: `TOCONLINE_USER`/`TOCONLINE_PASSWORD`). Nunca por argv (fica no
@@ -31,8 +39,12 @@ import { TOCONLINE } from "../src/toconline/selectors";
 
 /** Vagar deliberado: dá para ver o que o portal faz, e não parece um robô. */
 const SLOW_MO_MS = 250;
-/** Perfil do Chrome quando a rota A precisa da extensão do TOConline carregada. */
-const PERFIL_CHROME_POR_OMISSAO = ".rpa/chrome-recon";
+/**
+ * Perfil do Chrome quando a rota A precisa da extensão do TOConline carregada.
+ * Resolvido a partir deste ficheiro (como a pasta dos artefactos): correr o
+ * script de outra pasta não pode espalhar perfis de sessão pelo disco.
+ */
+const PERFIL_CHROME_POR_OMISSAO = fileURLToPath(new URL("../.rpa/chrome-recon", import.meta.url));
 
 type Rota = "a" | "b";
 
@@ -43,10 +55,12 @@ interface Argumentos {
   tocCluster?: number;
 }
 
+const PREAMBULO = "set -a && . ./.env && set +a &&";
+
 const USO = `
-Uso:
-  tsx scripts/recon-at.ts --route b --nif <nif>
-  tsx scripts/recon-at.ts --route a --company <tocCompanyId>:<cluster>
+Uso (a partir da raiz do repo — nada carrega o .env por si):
+  ${PREAMBULO} pnpm --filter @toc/worker exec tsx scripts/recon-at.ts --route b --nif <nif>
+  ${PREAMBULO} pnpm --filter @toc/worker exec tsx scripts/recon-at.ts --route a --company <id>:<cluster>
 
 Credenciais (só por ambiente, nunca por argumento):
   rota b → AT_RECON_USER, AT_RECON_PASSWORD
@@ -102,7 +116,9 @@ function lerCredenciais(rota: Rota): { username: string; password: string } {
   if (emFalta.length > 0) {
     abortar(
       `Variáveis de ambiente em falta para a rota ${rota.toUpperCase()}: ${emFalta.join(", ")}.\n` +
-        "Defina-as no .env (que não é versionado) e volte a correr.",
+        "Defina-as no .env (que não é versionado) e corra com o .env CARREGADO —\n" +
+        "nem o pnpm nem o tsx o leem sozinhos:\n" +
+        `  ${PREAMBULO} pnpm --filter @toc/worker exec tsx scripts/recon-at.ts …`,
     );
   }
   return {
@@ -143,6 +159,8 @@ function hostDe(url: string): string {
  * O registador da sessão: escreve os artefactos e conta o que produziu, para o
  * resumo final dizer ao operador o que tem em mãos.
  */
+type Momento = "antes" | "depois";
+
 class Registo {
   private etapa = 0;
   readonly etapas: string[] = [];
@@ -166,12 +184,16 @@ class Registo {
   }
 
   /**
-   * Fotografa uma etapa: screenshot de página inteira, assinatura redigida e a
-   * forma dos formulários. **Nunca valores de campos** — a senha está lá.
+   * Fotografa um momento de uma etapa: screenshot de página inteira, assinatura
+   * redigida e a forma dos formulários. **Nunca valores de campos** — a senha
+   * está lá.
+   *
+   * `antes` numera a etapa; `depois` reaproveita o mesmo número, para os dois
+   * lados do mesmo passo ficarem lado a lado quando se ordena a pasta.
    */
-  async capturar(page: Page, nome: string): Promise<void> {
-    this.etapa += 1;
-    const prefixo = `${String(this.etapa).padStart(2, "0")}-${nome}`;
+  async capturar(page: Page, nome: string, momento: Momento): Promise<void> {
+    if (momento === "antes") this.etapa += 1;
+    const prefixo = `${String(this.etapa).padStart(2, "0")}-${nome}.${momento}`;
     this.etapas.push(prefixo);
 
     try {
@@ -364,84 +386,147 @@ async function pausa(page: Page, instrucao: string): Promise<void> {
   await page.pause();
 }
 
+/**
+ * Uma etapa completa: fotografa a página **antes** de alguém lhe tocar, deixa
+ * a pessoa conduzir, e fotografa o que ficou.
+ *
+ * O `antes` é o que interessa para os seletores. Fotografar só no fim daria,
+ * para a etapa `login`, uma imagem da página de destino — e o formulário de
+ * login, que é justamente o que os `TODO(recon)` de `selectors.ts` esperam,
+ * já não estaria lá para se ler.
+ *
+ * `agir` corre depois do `antes` e antes da pausa: é onde entram as ações do
+ * script (preencher campos, chamar a função de troca de empresa) que não podem
+ * contaminar a fotografia da página tal como o portal a entregou.
+ */
+async function etapa(
+  registo: Registo,
+  page: Page,
+  nome: string,
+  instrucao: string,
+  agir?: () => Promise<void>,
+): Promise<void> {
+  await registo.capturar(page, nome, "antes");
+  if (agir) await agir();
+  await pausa(page, instrucao);
+  await registo.capturar(page, nome, "depois");
+}
+
 async function rotaB(context: BrowserContext, registo: Registo, args: Argumentos): Promise<void> {
   const { username, password } = lerCredenciais("b");
   const page = await context.newPage();
 
-  await page.goto(AT.loginUrl, { waitUntil: "domcontentloaded" });
-  // Preenchido por conveniência; se os seletores estiverem errados (é o que se
-  // vem cá descobrir), preencha à mão — o script não desiste por isso.
-  await preencherSeExistir(page, AT.login.usernameInput, username);
-  await preencherSeExistir(page, AT.login.passwordInput, password);
-  await pausa(
+  await irPara(page, AT.loginUrl);
+  await etapa(
+    registo,
     page,
+    "login",
     "LOGIN: submeta e observe a redação de erro, 2FA e troca de senha. Retome no portal.",
+    async () => {
+      // Preenchido por conveniência, e SÓ depois da fotografia: se os seletores
+      // estiverem errados (é o que se vem cá descobrir), preencha à mão — o
+      // script não desiste por isso, e o `antes` continua a mostrar o campo.
+      await preencherSeExistir(page, AT.login.usernameInput, username);
+      await preencherSeExistir(page, AT.login.passwordInput, password);
+    },
   );
-  await registo.capturar(page, "login");
 
   await irPara(page, `${AT.portalOrigin}${AT.paths.cc.listaClientes}`);
-  await pausa(page, `SELEÇÃO DE CLIENTE: escolha o NIF ${args.nif ?? ""} e retome.`);
-  await registo.capturar(page, "client_select");
+  await etapa(
+    registo,
+    page,
+    "client_select",
+    `SELEÇÃO DE CLIENTE: escolha o NIF ${args.nif ?? ""} e retome.`,
+  );
 
   await irPara(page, `${AT.portalOrigin}${AT.paths.cc.consultarDeclaracao}`);
-  await pausa(
+  await etapa(
+    registo,
     page,
+    "consultar_declaracao",
     "CONSULTAR DECLARAÇÃO: observe colunas, formato do período, substituições e 'sem declarações'.",
   );
-  await registo.capturar(page, "consultar_declaracao");
 
   await irPara(page, `${AT.portalOrigin}${AT.paths.cc.obterDocumentoPagamento}`);
-  await pausa(
+  await etapa(
+    registo,
     page,
+    "obter_doc_pagamento",
     "OBTER DOC. PAGAMENTO: peça a guia e repare COMO ela chega (download / inline / popup).",
   );
-  await registo.capturar(page, "obter_doc_pagamento");
 }
 
 async function rotaA(context: BrowserContext, registo: Registo, args: Argumentos): Promise<void> {
   const { username, password } = lerCredenciais("a");
   const page = context.pages()[0] ?? (await context.newPage());
 
-  await page.goto(TOCONLINE.loginUrl, { waitUntil: "domcontentloaded" });
-  await preencherSeExistir(page, TOCONLINE.usernameInput, username);
-  await preencherSeExistir(page, TOCONLINE.passwordInput, password);
-  await pausa(page, "LOGIN TOCONLINE: submeta e retome já dentro da aplicação.");
-  await registo.capturar(page, "toconline_login");
+  await irPara(page, TOCONLINE.loginUrl);
+  await etapa(
+    registo,
+    page,
+    "toconline_login",
+    "LOGIN TOCONLINE: submeta e retome já dentro da aplicação.",
+    async () => {
+      await preencherSeExistir(page, TOCONLINE.usernameInput, username);
+      await preencherSeExistir(page, TOCONLINE.passwordInput, password);
+    },
+  );
 
-  // A troca de empresa ativa é uma função global da aplicação. Se ela mudou de
-  // nome (ou deixou de existir), é exatamente isso que se veio descobrir — daí
-  // o erro ser registado em vez de matar a sessão.
-  const chamada = `${TOC_DIRECT_ACCESS.switchEntityFn}(${args.tocCompanyId}, ${args.tocCluster})`;
-  try {
-    await page.evaluate(chamada);
-    console.log(`[recon] switch de empresa executado: ${chamada}`);
-  } catch (err) {
-    console.error(`[recon] switch de empresa FALHOU (${chamada}): ${mensagemDe(err)}`);
-    await registo.linha("pages.jsonl", {
-      ts: new Date().toISOString(),
-      event: "switch_entity_error",
-      call: chamada,
-      error: mensagemDe(err),
-    });
-  }
-  await pausa(page, "SWITCH DE EMPRESA: confirme que a empresa ativa mudou e retome.");
-  await registo.capturar(page, "switch_entity");
+  await etapa(
+    registo,
+    page,
+    "switch_entity",
+    "SWITCH DE EMPRESA: confirme que a empresa ativa mudou e retome.",
+    async () => {
+      // A troca de empresa ativa é uma função global da aplicação. Se ela mudou
+      // de nome (ou deixou de existir), é exatamente isso que se veio descobrir
+      // — daí o erro ser registado em vez de matar a sessão.
+      const chamada = `${TOC_DIRECT_ACCESS.switchEntityFn}(${args.tocCompanyId}, ${args.tocCluster})`;
+      try {
+        await page.evaluate(chamada);
+        console.log(`[recon] switch de empresa executado: ${chamada}`);
+      } catch (err) {
+        console.error(`[recon] switch de empresa FALHOU (${chamada}): ${mensagemDe(err)}`);
+        await registo.linha("pages.jsonl", {
+          ts: new Date().toISOString(),
+          event: "switch_entity_error",
+          call: chamada,
+          error: mensagemDe(err),
+        });
+      }
+    },
+  );
 
   await irPara(page, new URL(TOC_DIRECT_ACCESS.summaryPath, page.url()).toString());
-  await pausa(page, "SUMÁRIO: localize o menu 'Acesso Direto' e retome.");
-  await registo.capturar(page, "summary");
+  await etapa(registo, page, "summary", "SUMÁRIO: localize o menu 'Acesso Direto' e retome.");
 
-  await pausa(page, "ACESSO DIRETO: clique em 'Portal das Finanças' e retome (repare no popup).");
-  await registo.capturar(page, "direct_access");
+  await etapa(
+    registo,
+    page,
+    "direct_access",
+    "ACESSO DIRETO: clique em 'Portal das Finanças' e retome (repare no popup).",
+  );
 
-  await pausa(page, "ATERRAGEM NA AT: confirme o host e que a sessão é da empresa certa.");
-  await registo.capturar(page, "at_landing");
+  await etapa(
+    registo,
+    page,
+    "at_landing",
+    "ATERRAGEM NA AT: confirme o host e que a sessão é da empresa certa.",
+  );
 
-  await pausa(page, "CONSULTAR DECLARAÇÃO: mesma observação da rota B.");
-  await registo.capturar(page, "consultar_declaracao");
+  await etapa(
+    registo,
+    page,
+    "consultar_declaracao",
+    "CONSULTAR DECLARAÇÃO: mesma observação da rota B.",
+  );
 
-  await pausa(page, "OBTER DOC. PAGAMENTO: repare COMO a guia chega.");
-  await registo.capturar(page, "obter_doc_pagamento");
+  await etapa(
+    registo,
+    page,
+    "obter_doc_pagamento",
+    "OBTER DOC. PAGAMENTO: repare COMO a guia chega.",
+  );
 }
 
 /** Navega sem desistir: a página errada também é um achado a fotografar. */

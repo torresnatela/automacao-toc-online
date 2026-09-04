@@ -311,3 +311,50 @@ describe.skipIf(skip)("AtPaymentDocumentFetcher (browser + Portal das Finanças 
     expect(erro?.outcome).toBe("at_unexpected_page");
   }, 40_000);
 });
+/**
+ * A guarda do shim do `__name`.
+ *
+ * O `tsx` (esbuild) compila com `keepNames` e embrulha cada função nomeada em
+ * `__name(fn, "nome")`. O Playwright envia para o browser o CÓDIGO-FONTE da
+ * função dada a `page.evaluate`, e leva o `__name` com ela — que do lado de lá
+ * não existe. Sem o shim, todo o `page.evaluate` deste worker rebenta sob
+ * `tsx`, incluindo o `snapshotPage` de que a classificação de páginas da AT
+ * depende; e nada disso é visível a partir do Vitest, que não injeta o helper.
+ *
+ * Daí o teste ser sobre o **contrato** e não sobre o sintoma: afirma que
+ * `globalThis.__name` existe em qualquer página que o `PlaywrightBrowser`
+ * abra. Essa afirmação falha assim que alguém tirar o shim, corra o teste sob
+ * o que correr.
+ */
+describe.skipIf(skip)("PlaywrightBrowser — shim do __name", () => {
+  async function paginaNova() {
+    const real = new PlaywrightBrowser({ headless: true });
+    providersReais.push(real);
+    const contexto = await real.newContext();
+    const pagina = await contexto.newPage();
+    await pagina.goto("about:blank");
+    return pagina;
+  }
+
+  it("define globalThis.__name em qualquer página que abra", async () => {
+    const pagina = await paginaNova();
+
+    // Avaliado como STRING de propósito: uma função aqui seria transformada
+    // pelo mesmo compilador que causa o problema, e o teste passaria a provar
+    // o remédio em vez do contrato.
+    expect(await pagina.evaluate("typeof globalThis.__name")).toBe("function");
+  }, 30_000);
+
+  it("uma função nomeada dentro do evaluate sobrevive à serialização", async () => {
+    const pagina = await paginaNova();
+
+    // É esta a forma que rebenta sem o shim: o `const identidade = …` sai
+    // embrulhado em `__name(...)` quando compilado pelo `tsx`.
+    const resultado = await pagina.evaluate(() => {
+      const identidade = (x: number) => x;
+      return identidade(1);
+    });
+
+    expect(resultado).toBe(1);
+  }, 30_000);
+});

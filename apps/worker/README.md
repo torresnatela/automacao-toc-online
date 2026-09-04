@@ -52,20 +52,30 @@ Nenhum dos dois é automação: os dois abrem um browser **visível** e param
 (`page.pause()`) para uma pessoa conduzir. Credenciais **só por ambiente** — nunca por
 argumento, nunca da base de dados, nunca gravadas.
 
+Nem o `pnpm` nem o `tsx` leem o `.env` sozinhos: os comandos abaixo levam o mesmo
+preâmbulo do bloco "Correr o worker" e correm-se **a partir da raiz do repo**.
+
 - `scripts/recon-at.ts` — reconhecimento do portal, para substituir os `TODO(recon)` de
   `src/at/selectors.ts` e `src/at/wording.ts`.
 
   ```sh
-  pnpm --filter @toc/worker exec tsx scripts/recon-at.ts --route b --nif 123456789
-  pnpm --filter @toc/worker exec tsx scripts/recon-at.ts --route a --company 4321:5
+  set -a && . ./.env && set +a && \
+    pnpm --filter @toc/worker exec tsx scripts/recon-at.ts --route b --nif 123456789
+  set -a && . ./.env && set +a && \
+    pnpm --filter @toc/worker exec tsx scripts/recon-at.ts --route a --company 4321:5
   ```
 
-  Escreve em `apps/worker/recon/<yyyy-mm-dd-HHmm>/` (git-ignored): por etapa
-  `NN-<stage>.png` (página inteira), `NN-<stage>.fingerprint.json` (assinatura com
-  dígitos mascarados) e `NN-<stage>.forms.json` (nomes/tipos/ids dos campos, **nunca
-  valores**); ao longo da sessão `network.jsonl` (método, URL sem query, status,
-  `content-type`, `content-disposition`), `pages.jsonl` (popups) e `downloads.jsonl`
-  (nome sugerido e tamanho — o PDF em si não é guardado).
+  Escreve em `apps/worker/recon/<yyyy-mm-dd-HHmm>/` (git-ignored). Cada etapa é
+  fotografada **duas vezes**: `antes` (a página como o portal a entregou, antes de
+  alguém lhe tocar) e `depois` (o que a ação produziu) — é o `antes` que carrega os
+  seletores a copiar, e que se perderia se só se fotografasse com o humano já noutra
+  página. Por momento: `NN-<stage>.<antes|depois>.png` (página inteira),
+  `NN-<stage>.<antes|depois>.fingerprint.json` (assinatura com dígitos mascarados) e
+  `NN-<stage>.<antes|depois>.forms.json` (nomes/tipos/ids dos campos, **nunca
+  valores**); popups apanhados no momento ganham `.popupK.png`. Ao longo da sessão:
+  `network.jsonl` (método, URL sem query, status, `content-type`,
+  `content-disposition`), `pages.jsonl` (popups) e `downloads.jsonl` (nome sugerido e
+  tamanho — o PDF em si não é guardado).
 
   **Os screenshots contêm dados reais de contribuintes.** Partilhe-os só pelo canal
   seguro do gabinete; para o repo vão apenas as tabelas resumidas em
@@ -77,6 +87,8 @@ argumento, nunca da base de dados, nunca gravadas.
   0600).
 
   ```sh
-  pnpm --filter @toc/worker exec tsx scripts/seed-at-session.ts --team <teamId>
-  pnpm --filter @toc/worker exec tsx scripts/seed-at-session.ts --company <companyId>
+  set -a && . ./.env && set +a && \
+    pnpm --filter @toc/worker exec tsx scripts/seed-at-session.ts --team <teamId>
+  set -a && . ./.env && set +a && \
+    pnpm --filter @toc/worker exec tsx scripts/seed-at-session.ts --company <companyId>
   ```

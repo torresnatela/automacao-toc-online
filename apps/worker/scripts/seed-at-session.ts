@@ -10,9 +10,11 @@
  * sessão do gabinete na AT. Por isso vai para o mesmo diretório git-ignored do
  * resto (`RPA_STATE_DIR`, modo 0600) e nunca aparece em log nem em payload.
  *
- * Uso:
- *   pnpm --filter @toc/worker exec tsx scripts/seed-at-session.ts --team <teamId>
- *   pnpm --filter @toc/worker exec tsx scripts/seed-at-session.ts --company <companyId>
+ * Uso (nada carrega o `.env` por si — o preâmbulo é obrigatório):
+ *   set -a && . ./.env && set +a && \
+ *     pnpm --filter @toc/worker exec tsx scripts/seed-at-session.ts --team <teamId>
+ *   set -a && . ./.env && set +a && \
+ *     pnpm --filter @toc/worker exec tsx scripts/seed-at-session.ts --company <companyId>
  *
  * A chave segue a mesma regra do `AcessoGovAtSessions`: `at:team:<id>` quando a
  * credencial é do gabinete (um login serve os 182 clientes) e `at:company:<id>`
@@ -22,16 +24,27 @@
  */
 import { chromium } from "playwright";
 import { assertAtHost, AT } from "../src/at/selectors";
-import { loadEnv, MissingEnvError } from "../src/config/env";
+import { installKeepNamesShim } from "../src/browser/keep-names-shim";
 import { FileStorageStateStore } from "../src/toconline/storage-state";
 
-const USO = `
-Uso:
-  tsx scripts/seed-at-session.ts --team <teamId>
-  tsx scripts/seed-at-session.ts --company <companyId>
+/**
+ * O mesmo valor por omissão do `loadEnv`, lido diretamente. Este script não
+ * toca na base de dados nem no Supabase: exigir o `loadEnv` completo faria uma
+ * ferramenta de login assistido recusar-se a arrancar por falta de um
+ * `DATABASE_URL` de que não precisa.
+ */
+const DIRETORIO_DE_ESTADO = process.env.RPA_STATE_DIR || ".rpa";
 
-Opcional: AT_RECON_USER (só o utilizador é pré-preenchido; a senha e o 2FA
-são sempre escritos pela pessoa que está à frente do ecrã).
+const PREAMBULO = "set -a && . ./.env && set +a &&";
+
+const USO = `
+Uso (a partir da raiz do repo — nada carrega o .env por si):
+  ${PREAMBULO} pnpm --filter @toc/worker exec tsx scripts/seed-at-session.ts --team <teamId>
+  ${PREAMBULO} pnpm --filter @toc/worker exec tsx scripts/seed-at-session.ts --company <companyId>
+
+Opcional: RPA_STATE_DIR (omissão: .rpa) e AT_RECON_USER (só o utilizador é
+pré-preenchido; a senha e o 2FA são sempre escritos pela pessoa que está à
+frente do ecrã).
 `.trim();
 
 function abortar(mensagem: string): never {
@@ -65,20 +78,14 @@ function lerChave(argv: string[]): string {
 async function main(): Promise<void> {
   const chave = lerChave(process.argv.slice(2));
 
-  let env;
-  try {
-    env = loadEnv();
-  } catch (err) {
-    if (err instanceof MissingEnvError) abortar(err.message);
-    throw err;
-  }
-
   const browser = await chromium.launch({ headless: false, slowMo: 250 });
   const context = await browser.newContext({
     acceptDownloads: true,
     viewport: { width: 1600, height: 1000 },
     locale: "pt-PT",
   });
+  // Sob `tsx`, sem isto todo o `page.evaluate` rebenta. Ver `keep-names-shim.ts`.
+  await installKeepNamesShim(context);
   const page = await context.newPage();
 
   try {
@@ -104,7 +111,7 @@ async function main(): Promise<void> {
     const host = assertAtHost(page.url());
     const origin = new URL(page.url()).origin;
 
-    await new FileStorageStateStore(env.stateDir).save(chave, {
+    await new FileStorageStateStore(DIRETORIO_DE_ESTADO).save(chave, {
       host,
       origin,
       state: await context.storageState(),
@@ -113,7 +120,7 @@ async function main(): Promise<void> {
 
     // A chave e o host, nunca o conteúdo do estado.
     console.log(`\n[seed-at] sessão guardada: chave "${chave}", host ${host}`);
-    console.log(`[seed-at] diretório: ${env.stateDir} (modo 0600, git-ignored)`);
+    console.log(`[seed-at] diretório: ${DIRETORIO_DE_ESTADO} (modo 0600, git-ignored)`);
     console.log("[seed-at] O worker reutiliza-a enquanto a AT a aceitar (~12 h).\n");
   } finally {
     await context.close().catch(() => undefined);
