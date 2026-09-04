@@ -137,19 +137,40 @@ const cipher: SecretCipher = { encrypt: (plaintext) => encryptSecret(plaintext) 
  */
 const INVALID_MARKERS = ["invalidReason", "invalidAt", "attemptsLeft"] as const;
 
-function withoutInvalidMarkers(metadata: Record<string, unknown>): Record<string, unknown> {
+/** Exportada para teste: é aqui que se decide o que sobrevive à reativação. */
+export function withoutInvalidMarkers(
+  metadata: Record<string, unknown>,
+): Record<string, unknown> {
   const clean = { ...metadata };
   for (const key of INVALID_MARKERS) delete clean[key];
   return clean;
 }
 
-function credentialRepo(admin: Admin): CredentialRepo {
-  // O que a última leitura viu. O port do domínio só transporta `id`/`hasSecret`
-  // (é tudo o que a regra de negócio precisa de saber), mas o adaptador precisa
-  // do `metadata` atual para o **filtrar** em vez de o deitar fora — só ele sabe
-  // que a coluna existe. Cada `saveCredentialFromInput` cria um repo novo, por
-  // isso não há estado a atravessar pedidos.
-  let current: { status: string; metadata: Record<string, unknown> } | null = null;
+/** O estado que o adaptador precisa de conhecer da linha guardada. */
+type CredentialState = { status: string; metadata: Record<string, unknown> };
+
+export function credentialRepo(admin: Admin): CredentialRepo {
+  // Cache — nunca uma pré-condição. O port do domínio só transporta
+  // `id`/`hasSecret` (é tudo o que a regra de negócio precisa de saber), mas o
+  // adaptador precisa do `metadata` atual para o **filtrar** em vez de o deitar
+  // fora: só ele sabe que a coluna existe. Como `saveCredential` chama sempre
+  // `findByTeamProvider` antes do `update`, isto poupa a segunda query — mas o
+  // `update` relê a linha se ela faltar, porque um adaptador que se cala e
+  // apaga o `metadata` quando o chamam fora da ordem esperada é exatamente o
+  // tipo de bug que ninguém vê.
+  let current: CredentialState | null = null;
+
+  /** A linha tal como está guardada, pelo `id` que o `update` recebe. */
+  async function readState(id: string): Promise<CredentialState | null> {
+    const { data } = await admin
+      .from("integration_credentials")
+      .select("status, metadata")
+      .eq("id", id)
+      .maybeSingle();
+    if (!data) return null;
+    const row = data as { status: string; metadata: Record<string, unknown> | null };
+    return { status: row.status, metadata: row.metadata ?? {} };
+  }
 
   return {
     async findByTeamProvider(teamId, provider) {
@@ -197,11 +218,14 @@ function credentialRepo(admin: Admin): CredentialRepo {
         // Guardar senha nova é a forma de reativar uma credencial marcada
         // inválida/expirada pelo worker — não há outro botão para isso. Repõe-se
         // `active` e apagam-se os marcadores da invalidação, preservando o resto
-        // do `metadata` (que é do worker, não nosso).
-        if (current !== null && current.status === "active") delete patch.status;
+        // do `metadata` (que é do worker, não nosso). Sem a linha atual à mão,
+        // relê-se: escrever `{}` porque a cache estava vazia seria repor o
+        // apagão que esta mudança existe para eliminar.
+        const state = current ?? (await readState(id));
+        if (state !== null && state.status === "active") delete patch.status;
         else patch.status = "active";
         patch.metadata = withoutInvalidMarkers({
-          ...(current?.metadata ?? {}),
+          ...(state?.metadata ?? {}),
           ...record.metadata,
         });
       }

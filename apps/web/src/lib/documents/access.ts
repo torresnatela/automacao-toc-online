@@ -1,7 +1,13 @@
+import "server-only";
 import { AT_ACCESS_MODES, type AtAccessMode } from "@toc/core/domain";
 
 /**
  * Por que rota se chega ao Portal das Finanças.
+ *
+ * `server-only`: isto lê `process.env`, e num Client Component o bundler
+ * substituiria a leitura por `undefined` sem se queixar — a rota passaria a ser
+ * sempre o default, no ecrã, sem erro nenhum. O import quebra o build em vez
+ * disso.
  *
  * `AT_ACCESS_MODE` é **a mesma variável de ambiente que o worker lê** — as duas
  * pontas têm de concordar, porque o dashboard escolhe a credencial e escreve o
