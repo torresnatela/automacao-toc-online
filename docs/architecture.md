@@ -6,7 +6,7 @@ Monorepo com **dois deployables** e **um Supabase** como fonte da verdade.
 
 ```
 ┌─────────────────┐     ┌──────────────────┐
-│  apps/web        │     │  apps/worker      │  (scaffold nesta fase)
+│  apps/web        │     │  apps/worker      │
 │  Next.js (App    │     │  Node + Playwright│
 │  Router)         │     │  RPA + fila       │
 │  Dashboard+API+  │     │                   │

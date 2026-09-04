@@ -136,6 +136,14 @@ depois do reconhecimento revelar a redação do portal; até lá colapsa no cód
 | `portal_paused`                    | gate disparado por indisponibilidade recente                       | **deferred** (volta à fila sem gastar tentativa) | —       | —                                     | Portal em pausa                     | O sistema pausou o acesso à AT por indisponibilidade; retoma sozinho. |
 | _job já em curso_                  | unique parcial em `jobs`                                           | (não há job)                                     | —       | —                                     | —                                   | Dashboard devolve `alreadyRunning`.                                   |
 
+> **Como `portal_paused` chega à interface.** É o único desfecho que não deixa o job num estado
+> terminal: `defer` devolve-o a `pending` (sem gastar tentativa) e marca `last_error.deferred = true`.
+> A view achataria isso em "Na fila" como qualquer outro `pending`, e uma indisponibilidade da AT
+> apareceria como 182 empresas eternamente na fila. Por isso a view expõe **`job_deferred`**
+> (`coalesce((last_error->>'deferred')::boolean, false)`, migration `20260904163659`) e `deriveState`
+> separa as duas esperas. A linha continua "em curso" para efeitos do botão — a mesma execução
+> retoma daqui a 15 min.
+
 ### 5.3 Sessão TOConline e Acesso Direto (só rota A) — caso 2 do pedido, parte TOConline
 
 | `outcome`                         | Quando                                | Job     | Credencial                                                  | Rótulo                              | Orientação                                                                              | F0                                    |
@@ -235,8 +243,10 @@ Drizzle (`pnpm db:generate` → `<ts>_<gerado>.sql`):
   `has_file` e **nunca `storage_path`**; `job_outcome = coalesce(result->>'outcome', result->>'reason',
 last_error->>'outcome')`. O literal do tipo de job é o único drift SQL↔TS: smoke test insere um job com a
   constante importada e verifica que a view o devolve.
-- `supabase/config.toml`: `[storage.buckets.documents] public=false, file_size_limit="10MiB",
-allowed_mime_types=["application/pdf"]`.
+- `supabase/config.toml`: **não** declara o bucket. Ele é criado só pela migration acima — que é a
+  única peça que corre nos dois sítios (local e produção). Declará-lo também no `config.toml` daria
+  duas fontes para os mesmos limites, e a de produção nunca leria a outra; o `config.toml` fica com
+  um comentário a dizer onde o bucket nasce.
 - `supabase/seed.sql`: utilizador **operator** (`operator@local.test/operator123`, `team_id=DEMO_TEAM`),
   empresa ligada (`toconline_company_id`+`cluster`, NIF com checksum), empresa sem ligação, árvore
   `obligations→period→document` para a ligada, equipa "Gabinete Outro" (cross-team) e "Gabinete Vazio"
@@ -254,9 +264,10 @@ primeiro (permite policy por pasta no futuro). `jobId` vai em `documents.metadat
 `PortalCredentials` (alias de `TocOnlineCredentials`); `CredentialLookup` ganha `provider` e `scope
 {teamId, companyId|null}`; `AtCredentialSource extends CredentialSource { findFor({teamId, companyId,
 provider}); markExpired(id, reason) }`; `AtCompanyHandle { id, nif, tocCompanyId, tocCluster }`;
-`AtSessionFactory { route, credentialProvider: "at"|"toconline", precondition(company) (pura),
-open({company, credentialId, credentials, scope}) → { session: AuthenticatedAtSession {page, route, urls,
-host, close()}, reused } }`; `IvaDeclarationReader.readMostRecent(session, company) → {kind:"found", period,
+`AtSessionFactory { access, credentialProvider: "at"|"toconline", precondition(company) (pura),
+open({company, credentialId, credentials, scope}) → { session: AuthenticatedAtSession {page, access, urls,
+host, close()}, reused } }`; (`access` é o `AtAccessMode` — por que **rota** se chegou ao portal; o campo
+chama-se `access` em todo o código, e é o que vai para o desfecho e para o trace); `IvaDeclarationReader.readMostRecent(session, company) → {kind:"found", period,
 submittedAt, replacement} | {kind:"none"}`; `PaymentDocumentFetcher.fetch(session, {period, company}) →
 {kind:"document", pdf, fields: RawDocumentFields, via: "download"|"inline"|"popup"} | {kind:"no_document"} |
 {kind:"already_paid"} | {kind:"not_ready"}`; `DocumentStore.put({teamId, companyId, kind, period, pdf}) →

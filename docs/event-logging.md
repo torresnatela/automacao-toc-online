@@ -145,7 +145,3 @@ const tracer = createTracer(new DbStore(createDb(process.env.DATABASE_URL!)));
 (`test/user-events.test.ts`). O `SupabaseStore` é testado com um fake client
 (`test/supabase-store.test.ts`); o `DbStore` é exercido por testes de integração com Supabase local.
 No app web, o fluxo ponta a ponta (login → trace visível em `/logs`) é coberto por Playwright (`apps/web/e2e`).
-
-```
-
-```
