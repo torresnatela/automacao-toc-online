@@ -68,6 +68,7 @@ export const IVA_OUTCOME_CODES = [
   "document_fields_mismatch",
   // Persistência e infraestrutura
   "persist_failed",
+  "persist_rejected",
   "interrupted",
   "unknown_error",
 ] as const;
@@ -497,6 +498,24 @@ export const IVA_OUTCOMES: Record<IvaOutcome, IvaOutcomeSpec> = {
     phase0: false,
     label: "Falha ao guardar",
     guidance: "O sistema volta a tentar automaticamente.",
+  },
+  /**
+   * A escrita foi recusada, não falhou por acaso: um 4xx do Storage, um bucket
+   * que não existe, uma linha de outra equipa. Repetir não a faz passar — é o
+   * par estrutural de `persist_failed`, e é o que a regra única do worker
+   * (`retry = !(err instanceof StructuralError)`) exige que exista para nunca
+   * haver um desfecho não retentável a apontar para um código retentável.
+   */
+  persist_rejected: {
+    jobStatus: "failed",
+    retry: false,
+    severity: "support",
+    periodStatus: "error",
+    credential: null,
+    phase0: false,
+    label: "Gravação recusada",
+    guidance:
+      "O armazenamento ou a base de dados recusaram a gravação (configuração ou dados inconsistentes). Nada foi guardado. Contacte o suporte técnico.",
   },
   interrupted: {
     jobStatus: "failed",

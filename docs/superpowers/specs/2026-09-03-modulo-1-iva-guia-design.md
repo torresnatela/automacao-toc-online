@@ -170,11 +170,12 @@ depois do reconhecimento revelar a redação do portal; até lá colapsa no cód
 
 ### 5.6 Persistência e infraestrutura
 
-| `outcome`        | Quando                                                                      | Job    | Período               | Rótulo                | Orientação                                      |
-| ---------------- | --------------------------------------------------------------------------- | ------ | --------------------- | --------------------- | ----------------------------------------------- |
-| `persist_failed` | Storage/BD indisponível (upload idempotente por caminho → repetir é seguro) | fail·R | `error*`              | Falha ao guardar      | O sistema volta a tentar automaticamente.       |
-| `interrupted`    | job `running` órfão (worker morreu) — escrito pelo _reaper_                 | fail·R | `error*` se conhecido | Execução interrompida | Volte a pedir a guia.                           |
-| `unknown_error`  | qualquer outro                                                              | fail·R | `error*` se conhecido | Erro inesperado       | Veja o trace; se persistir, contacte o suporte. |
+| `outcome`          | Quando                                                                                               | Job     | Período               | Rótulo                | Orientação                                                                                                                                     |
+| ------------------ | ---------------------------------------------------------------------------------------------------- | ------- | --------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `persist_failed`   | Storage/BD indisponível (upload idempotente por caminho → repetir é seguro)                          | fail·R  | `error*`              | Falha ao guardar      | O sistema volta a tentar automaticamente.                                                                                                      |
+| `persist_rejected` | Storage/BD recusaram a escrita (4xx, cross-team, dados inválidos) — erro estrutural, não transitório | fail·NR | `error*`              | Gravação recusada     | O armazenamento ou a base de dados recusaram a gravação (configuração ou dados inconsistentes). Nada foi guardado. Contacte o suporte técnico. |
+| `interrupted`      | job `running` órfão (worker morreu) — escrito pelo _reaper_                                          | fail·R  | `error*` se conhecido | Execução interrompida | Volte a pedir a guia.                                                                                                                          |
+| `unknown_error`    | qualquer outro                                                                                       | fail·R  | `error*` se conhecido | Erro inesperado       | Veja o trace; se persistir, contacte o suporte.                                                                                                |
 
 Estados só de UI (não são `outcome`): `queued` "Na fila", `running` "A obter…", `never` "Nunca buscada",
 `failed_unknown` "Falhou" (linha antiga sem `outcome`).
