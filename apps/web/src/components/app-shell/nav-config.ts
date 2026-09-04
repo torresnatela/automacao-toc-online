@@ -2,6 +2,7 @@ import {
   Activity,
   Building2,
   FileText,
+  Landmark,
   Link2,
   Plug,
   ScrollText,
@@ -22,6 +23,9 @@ export const NAV_ITEMS: NavItem[] = [
   // Tela inicial (vinda da main): integrações que a automação usa.
   { label: "Integrações", href: "/", icon: Plug },
   { label: "TOConline", href: "/integracoes/toconline", icon: Link2 },
+  // Módulo 1: a outra credencial do gabinete — a do Portal das Finanças —, ao
+  // lado da do TOConline porque as duas são a mesma decisão para o operador.
+  { label: "Autoridade Tributária", href: "/integracoes/at", icon: Landmark },
   { label: "Traces", href: "/traces", icon: Activity },
   // Módulo de logs (vindo do merge da main): eventos de usuário/sistema + drill-down.
   { label: "Logs", href: "/logs", icon: ScrollText },
