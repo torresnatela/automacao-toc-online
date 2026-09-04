@@ -153,7 +153,10 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("DbCompanyDirectory", () => {
     );
 
     expect(report.missing).toBe(1);
-    const rows = await db.select().from(schema.companies).where(eq(schema.companies.teamId, teamId));
+    const rows = await db
+      .select()
+      .from(schema.companies)
+      .where(eq(schema.companies.teamId, teamId));
     expect(rows).toHaveLength(1);
     expect(rows[0]?.status).toBe("active"); // continua ativa: sumir não é desativar
     expect(JSON.stringify(rows[0]?.metadata)).toContain("missingSince");
@@ -202,7 +205,9 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("DbCompanyDirectory", () => {
 });
 
 describe.skipIf(process.env.SKIP_DB_TESTS === "1")("DbCredentialSource", () => {
-  async function makeCredential(over: { secret?: string | null; status?: "active" | "invalid" | "expired" } = {}) {
+  async function makeCredential(
+    over: { secret?: string | null; status?: "active" | "invalid" | "expired" } = {},
+  ) {
     const teamId = await makeTeam();
     const [row] = await db
       .insert(schema.integrationCredentials)
@@ -210,7 +215,8 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("DbCredentialSource", () => {
         teamId,
         provider: "toconline",
         username: "gabinete@example.pt",
-        secretEncrypted: over.secret === undefined ? encryptSecret("senha-secreta", KEY) : over.secret,
+        secretEncrypted:
+          over.secret === undefined ? encryptSecret("senha-secreta", KEY) : over.secret,
         status: over.status ?? "active",
       })
       .returning();
@@ -227,6 +233,57 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("DbCredentialSource", () => {
     if (!lookup.ok) return;
     expect(lookup.credentials.username).toBe("gabinete@example.pt");
     expect(lookup.credentials.password).toBe("senha-secreta");
+  });
+
+  // O runner do Módulo 1 recebe o `credentialId` já escolhido pelo dashboard e
+  // não sabe que rota está ligada: sem o `provider` no resultado, um job da
+  // rota B com a credencial do TOConline entrava no browser antes de alguém
+  // reparar. O `scope` diz se a credencial é da equipa ou de uma empresa.
+  it("load devolve o provider e o âmbito da credencial da equipa", async () => {
+    const teamId = await makeTeam();
+    const [row] = await db
+      .insert(schema.integrationCredentials)
+      .values({
+        teamId,
+        provider: "toconline",
+        username: "gabinete@example.pt",
+        secretEncrypted: encryptSecret("senha-secreta", KEY),
+      })
+      .returning();
+    const source = new DbCredentialSource(db, KEY);
+
+    const lookup = await source.load(row!.id);
+
+    expect(lookup.ok).toBe(true);
+    if (!lookup.ok) return;
+    expect(lookup.provider).toBe("toconline");
+    expect(lookup.scope).toEqual({ teamId, companyId: null });
+  });
+
+  it("load de uma credencial por empresa traz a empresa no âmbito", async () => {
+    const teamId = await makeTeam();
+    const [company] = await db
+      .insert(schema.companies)
+      .values({ teamId, name: "Empresa com senha da AT", nif: nextNif() })
+      .returning();
+    const [row] = await db
+      .insert(schema.integrationCredentials)
+      .values({
+        teamId,
+        companyId: company!.id,
+        provider: "at",
+        username: "500000000",
+        secretEncrypted: encryptSecret("senha-da-at", KEY),
+      })
+      .returning();
+    const source = new DbCredentialSource(db, KEY);
+
+    const lookup = await source.load(row!.id);
+
+    expect(lookup.ok).toBe(true);
+    if (!lookup.ok) return;
+    expect(lookup.provider).toBe("at");
+    expect(lookup.scope).toEqual({ teamId, companyId: company!.id });
   });
 
   it("credencial inexistente → not_found", async () => {

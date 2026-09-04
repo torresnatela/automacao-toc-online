@@ -32,6 +32,8 @@ function job(over: Partial<ClaimedJob> = {}): ClaimedJob {
   return {
     id: "job-1",
     type: "rpa.scan_companies",
+    // A varredura é da equipa toda: não tem empresa.
+    companyId: null,
     payload: { teamId: TEAM, credentialId: CREDENTIAL },
     attempts: 1,
     maxAttempts: 3,
@@ -64,6 +66,9 @@ class FakeCredentials implements CredentialSource {
     private readonly lookup: CredentialLookup = {
       ok: true,
       credentials: { username: "gabinete@example.pt", password: SENHA },
+      // A credencial do TOConline é do gabinete: âmbito de equipa, sem empresa.
+      provider: "toconline",
+      scope: { teamId: TEAM, companyId: null },
     },
   ) {}
 

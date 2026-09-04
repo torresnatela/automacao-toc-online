@@ -25,6 +25,12 @@ export class DbCredentialSource implements CredentialSource {
         username: schema.integrationCredentials.username,
         secret: schema.integrationCredentials.secretEncrypted,
         status: schema.integrationCredentials.status,
+        // O `provider` e o âmbito vêm com a credencial porque quem a pede tem
+        // só o `credentialId` do payload: é assim que o runner confirma que a
+        // credencial é a que a rota consome, e a quem ela pertence.
+        provider: schema.integrationCredentials.provider,
+        teamId: schema.integrationCredentials.teamId,
+        companyId: schema.integrationCredentials.companyId,
       })
       .from(schema.integrationCredentials)
       .where(eq(schema.integrationCredentials.id, credentialId))
@@ -36,7 +42,12 @@ export class DbCredentialSource implements CredentialSource {
 
     try {
       const password = decryptSecret(row.secret, this.encryptionKey);
-      return { ok: true, credentials: { username: row.username, password } };
+      return {
+        ok: true,
+        credentials: { username: row.username, password },
+        provider: row.provider,
+        scope: { teamId: row.teamId, companyId: row.companyId },
+      };
     } catch {
       // Chave trocada ou registo corrompido. Marca-se inválida para os jobs
       // seguintes nem chegarem ao browser, e o dashboard pedir reconfiguração.
