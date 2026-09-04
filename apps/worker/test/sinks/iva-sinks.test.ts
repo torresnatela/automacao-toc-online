@@ -492,6 +492,10 @@ describe.skipIf(SKIP_DB)("DbAttemptGuard", () => {
   });
 });
 
+// Estes três batem no storage-api por HTTP: o timeout é folgado de propósito,
+// para uma máquina ocupada não os transformar numa falha que não é do código.
+const STORAGE_TIMEOUT = 20_000;
+
 describe.skipIf(SKIP_STORAGE)("SupabaseDocumentStore", () => {
   const pdf = Buffer.from(`%PDF-1.4\n${"x".repeat(1200)}\n%%EOF`);
 
@@ -510,7 +514,7 @@ describe.skipIf(SKIP_STORAGE)("SupabaseDocumentStore", () => {
     expect(error).toBeNull();
     const bytes = Buffer.from(await data!.arrayBuffer());
     expect(bytes.equals(pdf)).toBe(true);
-  });
+  }, STORAGE_TIMEOUT);
 
   it("upsert: buscar a guia do mesmo período outra vez sobrescreve o ficheiro", async () => {
     const client = storageClient();
@@ -534,7 +538,7 @@ describe.skipIf(SKIP_STORAGE)("SupabaseDocumentStore", () => {
     const { data } = await client.storage.from("documents").download(caminho);
     const bytes = Buffer.from(await data!.arrayBuffer());
     expect(bytes.equals(segundoPdf)).toBe(true);
-  });
+  }, STORAGE_TIMEOUT);
 
   it("uma recusa 4xx do Storage é estrutural (não se retenta um bucket que não existe)", async () => {
     const store = new SupabaseDocumentStore(storageClient(), `inexistente-${randomUUID()}`);
@@ -548,7 +552,7 @@ describe.skipIf(SKIP_STORAGE)("SupabaseDocumentStore", () => {
         pdf,
       }),
     ).rejects.toBeInstanceOf(StructuralError);
-  });
+  }, STORAGE_TIMEOUT);
 });
 
 describe.skipIf(SKIP_DB)("view iva_documents_overview × constantes do domínio", () => {
