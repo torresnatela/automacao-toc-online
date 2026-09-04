@@ -20,12 +20,36 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await db.delete(schema.jobs).where(eq(schema.jobs.type, JOB_TYPE));
+  for (const teamId of equipasCriadas) {
+    await db.delete(schema.teams).where(eq(schema.teams.id, teamId));
+  }
   await (db.$client as { end: () => Promise<void> }).end();
 });
 
+/** Equipas criadas pelo ficheiro, para as apagar no fim (cascata leva as empresas). */
+const equipasCriadas: string[] = [];
+
+async function makeCompany() {
+  const [team] = await db
+    .insert(schema.teams)
+    .values({ name: `Gab fila ${randomUUID()}` })
+    .returning();
+  equipasCriadas.push(team!.id);
+  const [company] = await db
+    .insert(schema.companies)
+    .values({ teamId: team!.id, name: "Empresa da fila" })
+    .returning();
+  return { teamId: team!.id, companyId: company!.id };
+}
+
 async function enqueue(
   payload: unknown,
-  extra: { traceId?: string; triggeringEventId?: string } = {},
+  extra: {
+    traceId?: string;
+    triggeringEventId?: string;
+    teamId?: string;
+    companyId?: string;
+  } = {},
 ) {
   const [row] = await db
     .insert(schema.jobs)
@@ -167,5 +191,146 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("JobQueue", () => {
     const [row] = await db.select().from(schema.jobs).where(eq(schema.jobs.id, job!.id));
     expect(row!.status).toBe("failed");
     expect(row!.attempts).toBe(3);
+  });
+  // `jobs.company_id` é o que liga o job à empresa na view do dashboard e o que
+  // o cap diário conta — o runner do Módulo 1 precisa dele sem reler a linha.
+  it("claimNext devolve o companyId do job", async () => {
+    const { teamId, companyId } = await makeCompany();
+    await enqueue({ kind: "iva" }, { teamId, companyId });
+
+    const claimed = await queue.claimNext(JOB_TYPE);
+
+    expect(claimed!.companyId).toBe(companyId);
+  });
+
+  it("claimNext devolve companyId nulo num job sem empresa (a varredura)", async () => {
+    await enqueue({ kind: "scan" });
+    const claimed = await queue.claimNext(JOB_TYPE);
+    expect(claimed!.companyId).toBeNull();
+  });
+
+  it("skip guarda os detalhes ao lado da razão", async () => {
+    await enqueue({});
+    const claimed = await queue.claimNext(JOB_TYPE);
+
+    await queue.skip(claimed!.id, "already_fetched", { period: "2026-07", stage: "precondition" });
+
+    const [row] = await db.select().from(schema.jobs).where(eq(schema.jobs.id, claimed!.id));
+    expect(row!.result).toMatchObject({
+      reason: "already_fetched",
+      period: "2026-07",
+      stage: "precondition",
+    });
+  });
+
+  // `last_error` é jsonb e a view lê `last_error.outcome`: o objeto inteiro tem
+  // de lá chegar, não só a mensagem.
+  it("fail guarda o objeto de erro inteiro em last_error", async () => {
+    await enqueue({});
+    const claimed = await queue.claimNext(JOB_TYPE);
+
+    await queue.fail(
+      claimed!.id,
+      {
+        message: "O Portal das Finanças não respondeu.",
+        outcome: "at_unavailable",
+        stage: "at_login",
+      },
+      { retry: false },
+    );
+
+    const [row] = await db.select().from(schema.jobs).where(eq(schema.jobs.id, claimed!.id));
+    expect(row!.lastError).toMatchObject({
+      message: "O Portal das Finanças não respondeu.",
+      outcome: "at_unavailable",
+      stage: "at_login",
+    });
+  });
+
+  // Uma pausa do portal não é culpa do job: se gastasse tentativa, três pausas
+  // de 15 minutos matavam o job sem ele ter chegado a ser tentado.
+  it("defer devolve o job à fila sem gastar a tentativa", async () => {
+    await enqueue({});
+    const claimed = await queue.claimNext(JOB_TYPE);
+    expect(claimed!.attempts).toBe(1);
+    const until = new Date(Date.now() + 15 * 60_000);
+
+    await queue.defer(claimed!.id, "portal_paused", until);
+
+    const [row] = await db.select().from(schema.jobs).where(eq(schema.jobs.id, claimed!.id));
+    expect(row!.status).toBe("pending");
+    expect(row!.attempts).toBe(0);
+    expect(row!.startedAt).toBeNull();
+    expect(row!.scheduledFor.getTime()).toBe(until.getTime());
+    expect(row!.lastError).toMatchObject({ message: "portal_paused", deferred: true });
+  });
+
+  it("defer nunca deixa as tentativas abaixo de zero", async () => {
+    const job = await enqueue({});
+    await queue.defer(job!.id, "portal_paused", new Date(Date.now() + 1000));
+
+    const [row] = await db.select().from(schema.jobs).where(eq(schema.jobs.id, job!.id));
+    expect(row!.attempts).toBe(0);
+  });
+
+  // O worker pode morrer a meio (deploy, OOM): sem isto o job ficava `running`
+  // para sempre e o índice de idempotência bloqueava novos pedidos da empresa.
+  it("reapStale devolve à fila os running abandonados", async () => {
+    const [job] = await db
+      .insert(schema.jobs)
+      .values({
+        type: JOB_TYPE,
+        payload: {},
+        status: "running",
+        attempts: 1,
+        startedAt: new Date(Date.now() - 30 * 60_000),
+      })
+      .returning();
+
+    expect(await queue.reapStale()).toBeGreaterThanOrEqual(1);
+
+    const [row] = await db.select().from(schema.jobs).where(eq(schema.jobs.id, job!.id));
+    expect(row!.status).toBe("pending");
+    expect(row!.scheduledFor.getTime()).toBeLessThanOrEqual(Date.now() + 1000);
+    expect(row!.lastError).toMatchObject({ outcome: "interrupted", retry: true });
+  });
+
+  it("reapStale marca failed o running abandonado que já esgotou as tentativas", async () => {
+    const [job] = await db
+      .insert(schema.jobs)
+      .values({
+        type: JOB_TYPE,
+        payload: {},
+        status: "running",
+        attempts: 3,
+        maxAttempts: 3,
+        startedAt: new Date(Date.now() - 30 * 60_000),
+      })
+      .returning();
+
+    await queue.reapStale();
+
+    const [row] = await db.select().from(schema.jobs).where(eq(schema.jobs.id, job!.id));
+    expect(row!.status).toBe("failed");
+    expect(row!.finishedAt).not.toBeNull();
+    expect(row!.lastError).toMatchObject({ outcome: "interrupted", retry: false });
+  });
+
+  it("reapStale não toca num job a correr há pouco", async () => {
+    const [job] = await db
+      .insert(schema.jobs)
+      .values({
+        type: JOB_TYPE,
+        payload: {},
+        status: "running",
+        attempts: 1,
+        startedAt: new Date(),
+      })
+      .returning();
+
+    await queue.reapStale();
+
+    const [row] = await db.select().from(schema.jobs).where(eq(schema.jobs.id, job!.id));
+    expect(row!.status).toBe("running");
   });
 });

@@ -5,6 +5,8 @@ import { schema } from "@toc/db";
 export interface ClaimedJob {
   id: string;
   type: string;
+  /** `null` nos jobs sem empresa (a varredura é da equipa toda). */
+  companyId: string | null;
   payload: unknown;
   attempts: number;
   maxAttempts: number;
@@ -44,13 +46,14 @@ export class JobQueue {
           updated_at = now()
       from next_job
       where j.id = next_job.id
-      returning j.id, j.type, j.payload, j.attempts, j.max_attempts, j.trace_id, j.triggering_event_id
+      returning j.id, j.type, j.company_id, j.payload, j.attempts, j.max_attempts, j.trace_id, j.triggering_event_id
     `);
 
     const row = result.rows[0] as
       | {
           id: string;
           type: string;
+          company_id: string | null;
           payload: unknown;
           attempts: number;
           max_attempts: number;
@@ -63,6 +66,7 @@ export class JobQueue {
     return {
       id: row.id,
       type: row.type,
+      companyId: row.company_id,
       payload: row.payload,
       attempts: row.attempts,
       maxAttempts: row.max_attempts,
@@ -83,12 +87,17 @@ export class JobQueue {
       .where(eq(schema.jobs.id, id));
   }
 
-  async skip(id: string, reason: string): Promise<void> {
+  /**
+   * `details` fica ao lado da razão (não dentro dela) porque é assim que a
+   * interface lê o desfecho: `result.reason` é o código, o resto são os dados
+   * que a orientação usa (`period`, `attempts`, …).
+   */
+  async skip(id: string, reason: string, details?: Record<string, unknown>): Promise<void> {
     await this.db
       .update(schema.jobs)
       .set({
         status: "skipped",
-        result: { reason },
+        result: { reason, ...details },
         finishedAt: new Date(),
         updatedAt: new Date(),
       })
@@ -100,7 +109,13 @@ export class JobQueue {
    * repetir só multiplica o tráfego contra o portal do Estado sem hipótese de sucesso.
    * `retry: true` só para falhas transitórias (rede, timeout, 5xx).
    */
-  async fail(id: string, error: { message: string }, opts: { retry: boolean }): Promise<void> {
+  async fail(
+    id: string,
+    // O objeto inteiro vai para `last_error` (jsonb): a view do dashboard lê
+    // `last_error.outcome`, e o desfecho perde-se se só a mensagem for gravada.
+    error: { message: string; [k: string]: unknown },
+    opts: { retry: boolean },
+  ): Promise<void> {
     const [job] = await this.db.select().from(schema.jobs).where(eq(schema.jobs.id, id));
     if (!job) {
       throw new Error(`Job ${id} não encontrado`);
@@ -119,5 +134,59 @@ export class JobQueue {
         updatedAt: new Date(),
       })
       .where(eq(schema.jobs.id, id));
+  }
+
+  /**
+   * Devolve o job à fila **sem gastar a tentativa** que o claim consumiu.
+   *
+   * É o que distingue "adiado" de "falhado": uma pausa do portal (15 min após
+   * uma indisponibilidade) não é culpa do job, e se gastasse tentativa três
+   * pausas matavam-no sem ele ter chegado a ser tentado. O `deferred: true` em
+   * `last_error` é o que o dashboard lê para mostrar "em pausa" em vez de erro.
+   */
+  async defer(id: string, reason: string, until: Date): Promise<void> {
+    await this.db.execute(sql`
+      update jobs
+      set status = 'pending',
+          scheduled_for = ${until},
+          attempts = greatest(attempts - 1, 0),
+          started_at = null,
+          last_error = ${JSON.stringify({ message: reason, deferred: true })}::jsonb,
+          updated_at = now()
+      where id = ${id}
+    `);
+  }
+
+  /**
+   * Recolhe os jobs que ficaram `running` sem ninguém a trabalhá-los.
+   *
+   * O worker pode morrer a meio (deploy, OOM, cabo): sem isto o job ficava
+   * `running` para sempre — invisível para o claim e, pior, a segurar o índice
+   * de idempotência por empresa, que recusa qualquer novo pedido enquanto
+   * houver um pendente ou a correr. Devolve quantas linhas recolheu.
+   */
+  async reapStale(olderThanMs = 15 * 60_000): Promise<number> {
+    const cutoff = new Date(Date.now() - olderThanMs);
+    const interrompido = (retry: boolean) =>
+      JSON.stringify({ message: "Execução interrompida.", outcome: "interrupted", retry });
+
+    const result = await this.db.execute(sql`
+      update jobs
+      set status = case when attempts >= max_attempts then 'failed'::job_status else 'pending'::job_status end,
+          scheduled_for = case when attempts >= max_attempts then scheduled_for else now() end,
+          /* No que volta à fila limpa-se (não está a correr); no que falha
+             guarda-se, que é o rasto de quando a execução perdida começou. */
+          started_at = case when attempts >= max_attempts then started_at else null end,
+          finished_at = case when attempts >= max_attempts then now() else null end,
+          last_error = case when attempts >= max_attempts
+            then ${interrompido(false)}::jsonb
+            else ${interrompido(true)}::jsonb end,
+          updated_at = now()
+      where status = 'running'
+        and started_at < ${cutoff}
+      returning id
+    `);
+
+    return result.rows.length;
   }
 }
