@@ -1,18 +1,19 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull, or, sql } from "drizzle-orm";
 import type { Database } from "@toc/db";
 import { schema } from "@toc/db";
 import { decryptSecret } from "@toc/core/crypto";
-import type { CredentialLookup, CredentialSource } from "../runner/ports";
+import type { IntegrationProvider } from "@toc/core/domain";
+import type { AtCredentialSource, CredentialLookup } from "../runner/ports";
 
 /**
- * Resolve a credencial do TOConline a partir de `integration_credentials`.
+ * Resolve a credencial de um portal a partir de `integration_credentials`.
  *
  * É o único ponto do worker onde o segredo volta a ser texto claro — e ele
  * nunca sai daqui a não ser dentro do objeto de credenciais entregue à sessão.
  * Nenhum erro desta classe inclui o segredo: quando a decifra falha, o que se
  * devolve é um motivo, não um valor.
  */
-export class DbCredentialSource implements CredentialSource {
+export class DbCredentialSource implements AtCredentialSource {
   constructor(
     private readonly db: Database,
     /** Explícita para testar sem depender do ambiente. */
@@ -60,7 +61,15 @@ export class DbCredentialSource implements CredentialSource {
   async markVerified(credentialId: string): Promise<void> {
     await this.db
       .update(schema.integrationCredentials)
-      .set({ status: "active", lastVerifiedAt: new Date(), updatedAt: new Date() })
+      .set({
+        status: "active",
+        lastVerifiedAt: new Date(),
+        // A marca de inválida sai com a verificação. Sem isto, uma credencial
+        // corrigida ficaria `active` a exibir no dashboard o motivo pelo qual
+        // *deixou* de o ser — e o operador leria uma senha boa como partida.
+        metadata: sql`${schema.integrationCredentials.metadata} - 'invalidReason' - 'invalidAt' - 'attemptsLeft'`,
+        updatedAt: new Date(),
+      })
       .where(eq(schema.integrationCredentials.id, credentialId));
   }
 
@@ -74,5 +83,114 @@ export class DbCredentialSource implements CredentialSource {
         updatedAt: new Date(),
       })
       .where(eq(schema.integrationCredentials.id, credentialId));
+  }
+
+  /**
+   * A credencial que serve esta empresa, por precedência: a **dela** primeiro,
+   * a do gabinete a seguir.
+   *
+   * `order by company_id nulls last` faz a precedência em SQL em vez de duas
+   * consultas: em Postgres o `asc` põe os nulos no fim, logo a linha da empresa
+   * — se existir — é sempre a primeira.
+   */
+  async findFor(input: {
+    teamId: string;
+    companyId: string;
+    provider: IntegrationProvider;
+  }): Promise<{ credentialId: string } | null> {
+    const [row] = await this.db
+      .select({ id: schema.integrationCredentials.id })
+      .from(schema.integrationCredentials)
+      .where(
+        and(
+          // O `team_id` não é redundante aqui: é ele que impede a credencial de
+          // um gabinete de ser encontrada pelo id de uma empresa de outro.
+          eq(schema.integrationCredentials.teamId, input.teamId),
+          eq(schema.integrationCredentials.provider, input.provider),
+          or(
+            eq(schema.integrationCredentials.companyId, input.companyId),
+            isNull(schema.integrationCredentials.companyId),
+          ),
+        ),
+      )
+      .orderBy(sql`${schema.integrationCredentials.companyId} nulls last`)
+      .limit(1);
+
+    return row ? { credentialId: row.id } : null;
+  }
+
+  /**
+   * A senha caducou — não está errada.
+   *
+   * Estado próprio e não `invalid` porque o que o operador tem de fazer é
+   * diferente: renovar, não corrigir. O `||` mescla em vez de substituir, para
+   * o motivo não apagar o que o dashboard escreveu no metadata (o host
+   * shardado, por exemplo).
+   */
+  async markExpired(credentialId: string, reason: string): Promise<void> {
+    await this.db
+      .update(schema.integrationCredentials)
+      .set({
+        status: "expired",
+        // O motivo é um código nosso, nunca a mensagem crua do portal.
+        metadata: sql`${schema.integrationCredentials.metadata} || ${JSON.stringify({
+          invalidReason: reason,
+          invalidAt: new Date().toISOString(),
+        })}::jsonb`,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.integrationCredentials.id, credentialId));
+  }
+
+  /**
+   * Rota A (Acesso Direto): a AT recusou a senha da **empresa**, que vive no
+   * TOConline e não nesta tabela.
+   *
+   * O que se escreve é uma **linha-marcador** `at`/empresa — sem `username`,
+   * sem `secret_encrypted` — só para o dashboard poder dizer de quem é o
+   * problema. Marcar a credencial do TOConline seria o erro caro: ela está boa,
+   * e invalidá-la pararia as 182 empresas por causa de uma.
+   *
+   * `on conflict` sobre o unique parcial `credential_company_provider_uq`: a
+   * linha cria-se na primeira recusa e atualiza-se nas seguintes, sem um
+   * select-then-insert que dois jobs em paralelo duplicariam.
+   */
+  async markCompanyAtInvalid(input: {
+    teamId: string;
+    companyId: string;
+    reason: string;
+    attemptsLeft?: number;
+  }): Promise<void> {
+    const marca = {
+      // De onde veio a senha que a AT recusou — é o que distingue esta linha de
+      // uma credencial `at` que o gabinete tenha configurado à mão.
+      source: "toconline_direct_access",
+      invalidReason: input.reason,
+      invalidAt: new Date().toISOString(),
+      ...(input.attemptsLeft === undefined ? {} : { attemptsLeft: input.attemptsLeft }),
+    };
+
+    await this.db
+      .insert(schema.integrationCredentials)
+      .values({
+        teamId: input.teamId,
+        companyId: input.companyId,
+        provider: "at",
+        status: "invalid",
+        metadata: marca,
+      })
+      .onConflictDoUpdate({
+        target: [
+          schema.integrationCredentials.companyId,
+          schema.integrationCredentials.provider,
+        ],
+        // O índice é parcial; sem repetir o predicado o Postgres não o infere.
+        targetWhere: sql`${schema.integrationCredentials.companyId} is not null`,
+        set: {
+          status: "invalid",
+          metadata: sql`${schema.integrationCredentials.metadata} || excluded.metadata`,
+          updatedAt: sql`now()`,
+        },
+      });
   }
 }
