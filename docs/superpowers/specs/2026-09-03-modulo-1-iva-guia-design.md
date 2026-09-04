@@ -270,30 +270,38 @@ O adaptador **declara** que credencial consome (`credentialProvider`); o runner 
 
 Copiar `company-scan-runner.ts` e seguir esta ordem:
 
-1. Re-hidratar trace/evento (`:63-67`). 2. `parseIvaDocumentPayload` → `payload_invalid`. 3.
-   `gate.isPaused()` → `deferred`. 4. `ledger.getCompany` → `company_not_found` / `company_inactive`. 5.
-   `sessions.precondition(company)` → `company_not_linked` / `company_nif_missing`. 6. Idempotência
-   pré-browser (só com `payload.period` e `!force`). 7. `attempts.attemptsToday` → `daily_cap_reached`. 8.
-   Credencial: `payload.credentialId ?? findFor(...)`; `load` → `*_credential_missing/invalid`. 9. Trace
-   fallback (`correlationKey: company:<id>:iva`) + `job.started` `{jobId, teamId, companyId, attempt, access,
-batchId?}`.
-   Browser (`try`): 10. `rpa.at.session` → `sessions.open` → `markVerified`. 11. `rpa.at.iva_declaration` →
-   `none` → skip `declaration_not_found`; comparar com `nextDuePeriod` → `declaration_not_submitted`. 12.
-   Idempotência pós-leitura → `already_fetched`. 13. `ledger.beginPeriod(…, derivePaymentDueDate(period))`. 14.
-   `rpa.at.payment_document` → `no_document` → `markPeriod(skipped_nonexistent)` + skip; `document` →
-   `assertPdfIntegrity`, `assertDocumentBelongsTo(nif)` (compara **sem registar**), `normalizeDocumentFields`.
-15. `integration.document_stored` → `storage.put`. 16. `integration.obligation_recorded` →
-   `recordDocument`; `started.succeed()`, `trace.complete()`.
-   `catch`: `classifyFailure(err, stage)` → `{outcome, retry: !(err instanceof StructuralError), details}`;
-   `markByOutcome` (verify/invalidate/expire — na rota A os desfechos AT escrevem a **linha-marcador**
-   `integration_credentials {provider:'at', company_id, secret_encrypted:null, status:'invalid',
+1. Re-hidratar trace/evento (`:63-67`).
+2. `parseIvaDocumentPayload` → `payload_invalid`.
+3. `gate.isPaused()` → `deferred`.
+4. `ledger.getCompany` → `company_not_found` / `company_inactive`.
+5. `sessions.precondition(company)` → `company_not_linked` / `company_nif_missing`.
+6. Idempotência pré-browser (só com `payload.period` e `!force`).
+7. `attempts.attemptsToday` → `daily_cap_reached`.
+8. Credencial: `payload.credentialId ?? findFor(...)`; `load` → `*_credential_missing/invalid`.
+9. Trace fallback (`correlationKey: company:<id>:iva`) + `job.started` `{jobId, teamId, companyId, attempt, access, batchId?}`.
+
+Browser (`try`):
+
+10. `rpa.at.session` → `sessions.open` → `markVerified`.
+11. `rpa.at.iva_declaration` → `none` → skip `declaration_not_found`; comparar com `nextDuePeriod` → `declaration_not_submitted`.
+12. Idempotência pós-leitura → `already_fetched`.
+13. `ledger.beginPeriod(…, derivePaymentDueDate(period))`.
+14. `rpa.at.payment_document` → `no_document` → `markPeriod(skipped_nonexistent)` + skip; `document` → `assertPdfIntegrity`, `assertDocumentBelongsTo(nif)` (compara **sem registar**), `normalizeDocumentFields`.
+15. `integration.document_stored` → `storage.put`.
+16. `integration.obligation_recorded` → `recordDocument`; `started.succeed()`, `trace.complete()`.
+
+`catch`: `classifyFailure(err, stage)` → `{outcome, retry: !(err instanceof StructuralError), details}`;
+`markByOutcome` (verify/invalidate/expire — na rota A os desfechos AT escrevem a **linha-marcador**
+`integration_credentials {provider:'at', company_id, secret_encrypted:null, status:'invalid',
 metadata:{source:"toconline_direct_access", invalidReason}}`, nunca a credencial TOConline);
-   `markPeriod(error)` se período conhecido; `started.fail({message, outcome, retry, stage})`; **trace fica
-   aberto se `retry && attempts < maxAttempts`** (a próxima tentativa continua-o), senão `trace.fail`.
-   `finally`: `session.close()`.
-   `jobs.result` (ok) = `IvaDocumentJobResult`; skip → `result: {reason: outcome, ...details}`; fail →
-   `last_error: {message, outcome, retry, stage, ...details}` (mensagem sempre texto nosso, nunca HTML do
-   portal).
+`markPeriod(error)` se período conhecido; `started.fail({message, outcome, retry, stage})`; **trace fica
+aberto se `retry && attempts < maxAttempts`** (a próxima tentativa continua-o), senão `trace.fail`.
+
+`finally`: `session.close()`.
+
+`jobs.result` (ok) = `IvaDocumentJobResult`; skip → `result: {reason: outcome, ...details}`; fail →
+`last_error: {message, outcome, retry, stage, ...details}` (mensagem sempre texto nosso, nunca HTML do
+portal).
 
 ### 8.3 Fila/loop (`job-queue.ts`, `worker-loop.ts`) — pequenas extensões compatíveis
 
@@ -391,8 +399,7 @@ vez, estado guardado na chave certa) — é a saída operacional se o 2FA for ob
   explícito por causa da armadilha do admin `service.ts:91-98`).
 - `enqueueIvaFetch(companyId, requestedTeamId, {batchId?})`: `requireWriterOn` → empresa (admin client, 404
   se de outra equipa) → credencial do provider de `AT_ACCESS_MODE` → job em curso → `ivaFetchReadiness` (400
-  com cópia) → `startAction({triggerSource:"documentos.iva.fetch", type:"job.enqueued",
-correlationKey:\`company:${id}:iva\`, payload:{teamId, companyId, provider, jobType, batchId}})` → insert `jobs {team_id, company_id, type, trace_id, triggering_event_id, payload: IvaDocumentJobPayload}`; `23505` → `act.skipped("already_running")` + devolver o job em curso → `handOff()`.
+  com cópia) → ``startAction({triggerSource:"documentos.iva.fetch", type:"job.enqueued", correlationKey: `company:${id}:iva`, payload:{teamId, companyId, provider, jobType, batchId}})`` → insert `jobs {team_id, company_id, type, trace_id, triggering_event_id, payload: IvaDocumentJobPayload}`; `23505` → `act.skipped("already_running")` + devolver o job em curso → `handOff()`.
 - `enqueueIvaFetchAll(requestedTeamId, {onlyMissing})`: `planBulkFetch` (pura) → trace de lote
   `job.batch_enqueued` (`correlationKey: team:<id>:iva`, contagens) → `enqueueOne` por empresa com
   concorrência 8 → `act.success()` (lote termina ao enfileirar; cada job tem o **seu** trace — um trace
@@ -493,41 +500,35 @@ acompanhar**; nada é gravado fora da máquina.
    `parsePeriod` total, `derivePaymentDueDate` (fev; jun→set; 25/04/2026 sábado+feriado → 27/04; Corpo de
    Deus por computus), `normalizeDocumentFields` sem valores nas ressalvas.
 
-**F2 — Base de dados + Storage** 3. Smoke tests vermelhos em `packages/db/test/iva-documents.smoke.test.ts` (unique parcial de jobs, uniques,
-view só devolve a própria equipa, view devolve `job_outcome` de job inserido com a constante, bucket
-privado, `authenticated` não lê `storage.objects`). 4. Schema Drizzle → `pnpm db:generate` → `_iva_documents_rls.sql` → `config.toml` → `seed.sql` → `pnpm
-   db:reset` → verdes.
+**F2 — Base de dados + Storage**
 
-**F3 — Worker (tudo contra fixtures locais; nada depende da F0 até o passo 9)** 5. `errors.ts` + `classify-failure.ts` + ports + `job-queue`/`worker-loop` (`defer`, `code`, `pacingMs`,
-reaper) + `portal-gate.ts` — testes puros/DB. 6. `iva-document-runner.ts` com fakes: **um `it` por linha de §5** (desfecho, período escrito, marcação de
-credencial, sessão fechada, trace fechado/aberto), saídas antecipadas fecham o trace do dashboard,
-`IVA_RESULT_KEYS`, selo RGPD. 7. `at/{wording,classify-page,parse-declarations,parse-fields,guards}.ts` — puros. 8. Sinks (`document-store`, `obligation-ledger`, `credential-source` estendido, `attempt-guard`) — DB
-tests incl. "escrita cross-team é no-op" e upload/download no bucket local. 9. Rota B em browser: `test/at/fixture-server.ts` (login boa/errada+contador/2fa/expirada/avaria;
-`listaClientesToc` com NIF sem autorização; `consultar-declaracao` com 3 linhas incl. substituição e
-variante "sem declarações"; `obter-doc-pagamento?mode=attachment|inline|popup|none`; PDF gerado em
-`beforeAll` com `page.pdf()`), `session-acesso-gov`, `iva-declaration`,
-`payment-document`/`pdf-capture` (3 modos devolvem os mesmos bytes), `browser.ts` `acceptDownloads`. 10. `scripts/recon-at.ts` + `scripts/seed-at-session.ts`; `index.ts`/`env.ts` wiring.
+3. Smoke tests vermelhos em `packages/db/test/iva-documents.smoke.test.ts` (unique parcial de jobs, uniques, view só devolve a própria equipa, view devolve `job_outcome` de job inserido com a constante, bucket privado, `authenticated` não lê `storage.objects`).
+4. Schema Drizzle → `pnpm db:generate` → `_iva_documents_rls.sql` → `config.toml` → `seed.sql` → `pnpm db:reset` → verdes.
 
-**F4 — Web** 11. Refactors (`requireWriterOn`, `startAction.skipped`, reposição de `status` ao guardar credencial);
-`apps/web/vitest.config.ts` + `test:unit` (+ passo no `ci.yml`); testes de `present.ts`/`outcomes.ts`. 12. `lib/documents/service.ts` + `documentos/iva/{page,actions,FetchButton}` mínimos; e2e
-`documentos-iva.spec.ts` (3) por linha → "Na fila"; segundo clique → "Já existe uma busca em curso"
-(determinístico: sem worker no e2e, como `integracoes-toconline.spec.ts:60-63`). 13. Download route + e2e (401 / 302 com `Location` assinada para a própria equipa via `request` com
-`maxRedirects:0` / 404 cross-team como **operator** / 404 sem ficheiro; DOM nunca contém
-`/storage/v1/`, `token=` nem o prefixo do caminho). PDF de teste carregado em `beforeAll` com service
-role (skip se a chave faltar). 14. `CredentialForm` + `/integracoes/at` + nav + e2e (senha nunca volta ao DOM; spec do TOConline continua
-verde). 15. Listagem completa (`StatusBadge` kinds, `RowDetailsDialog`, `FetchAllButton` com Dialog e aviso 20–25,
-`BatchProgress`, banner de prontidão, `TeamSwitcher`, empty state) + e2e (vazio; listagem com seed;
-lote → contagens). 16. `/empresas` coluna TOConline.
+**F3 — Worker (tudo contra fixtures locais; nada depende da F0 até o passo 9)**
 
-**F5 — Fase 0 (reconhecimento) e fecho** 17. Correr `recon-at.ts` nas duas rotas com credenciais reais (headed, acompanhado); produzir
-`at-recon.md`; decidir rota; preencher `selectors.ts`/`wording.ts`; rerodar F3.7 e F3.9 com as
-redações reais. 18. Se a F0 escolher a rota A: `browser/persistent-chrome.ts` + `at/session-toc-direct-access.ts` (+ teste
-com `TocSessionFactory` falso e fixture que faz `window.open`) e smoke `AT_LIVE=1`. 19. Ensaio real assistido: 1 empresa → verificar `jobs`, `obligation_periods`, `documents`, objeto no
-bucket, PDF abre pelo dashboard, trace completo em `/logs`; depois lote pequeno (5) fora dos dias
-20–25. 20. Docs: `docs/database.md` (documentos/Storage/view/uniques + corrigir claims obsoletos: `niss` global,
-cifra "planejada", obligations "leitura ampla"), `docs/architecture.md` (download route, Storage, fluxo
-Módulo 1), `docs/event-logging.md` (novos tipos + 2 formas de `correlationKey`), `project-context.md`
-(prazos/regimes), `apps/worker/README.md`, `.env.example`; `graphify update .`.
+5. `errors.ts` + `classify-failure.ts` + ports + `job-queue`/`worker-loop` (`defer`, `code`, `pacingMs`, reaper) + `portal-gate.ts` — testes puros/DB.
+6. `iva-document-runner.ts` com fakes: **um `it` por linha de §5** (desfecho, período escrito, marcação de credencial, sessão fechada, trace fechado/aberto), saídas antecipadas fecham o trace do dashboard, `IVA_RESULT_KEYS`, selo RGPD.
+7. `at/{wording,classify-page,parse-declarations,parse-fields,guards}.ts` — puros.
+8. Sinks (`document-store`, `obligation-ledger`, `credential-source` estendido, `attempt-guard`) — DB tests incl. "escrita cross-team é no-op" e upload/download no bucket local.
+9. Rota B em browser: `test/at/fixture-server.ts` (login boa/errada+contador/2fa/expirada/avaria; `listaClientesToc` com NIF sem autorização; `consultar-declaracao` com 3 linhas incl. substituição e variante "sem declarações"; `obter-doc-pagamento?mode=attachment|inline|popup|none`; PDF gerado em `beforeAll` com `page.pdf()`), `session-acesso-gov`, `iva-declaration`, `payment-document`/`pdf-capture` (3 modos devolvem os mesmos bytes), `browser.ts` `acceptDownloads`.
+10. `scripts/recon-at.ts` + `scripts/seed-at-session.ts`; `index.ts`/`env.ts` wiring.
+
+**F4 — Web**
+
+11. Refactors (`requireWriterOn`, `startAction.skipped`, reposição de `status` ao guardar credencial); `apps/web/vitest.config.ts` + `test:unit` (+ passo no `ci.yml`); testes de `present.ts`/`outcomes.ts`.
+12. `lib/documents/service.ts` + `documentos/iva/{page,actions,FetchButton}` mínimos; e2e `documentos-iva.spec.ts` (3) por linha → "Na fila"; segundo clique → "Já existe uma busca em curso" (determinístico: sem worker no e2e, como `integracoes-toconline.spec.ts:60-63`).
+13. Download route + e2e (401 / 302 com `Location` assinada para a própria equipa via `request` com `maxRedirects:0` / 404 cross-team como **operator** / 404 sem ficheiro; DOM nunca contém `/storage/v1/`, `token=` nem o prefixo do caminho). PDF de teste carregado em `beforeAll` com service role (skip se a chave faltar).
+14. `CredentialForm` + `/integracoes/at` + nav + e2e (senha nunca volta ao DOM; spec do TOConline continua verde).
+15. Listagem completa (`StatusBadge` kinds, `RowDetailsDialog`, `FetchAllButton` com Dialog e aviso 20–25, `BatchProgress`, banner de prontidão, `TeamSwitcher`, empty state) + e2e (vazio; listagem com seed; lote → contagens).
+16. `/empresas` coluna TOConline.
+
+**F5 — Fase 0 (reconhecimento) e fecho**
+
+17. Correr `recon-at.ts` nas duas rotas com credenciais reais (headed, acompanhado); produzir `at-recon.md`; decidir rota; preencher `selectors.ts`/`wording.ts`; rerodar F3.7 e F3.9 com as redações reais.
+18. Se a F0 escolher a rota A: `browser/persistent-chrome.ts` + `at/session-toc-direct-access.ts` (+ teste com `TocSessionFactory` falso e fixture que faz `window.open`) e smoke `AT_LIVE=1`.
+19. Ensaio real assistido: 1 empresa → verificar `jobs`, `obligation_periods`, `documents`, objeto no bucket, PDF abre pelo dashboard, trace completo em `/logs`; depois lote pequeno (5) fora dos dias 20–25.
+20. Docs: `docs/database.md` (documentos/Storage/view/uniques + corrigir claims obsoletos: `niss` global, cifra "planejada", obligations "leitura ampla"), `docs/architecture.md` (download route, Storage, fluxo Módulo 1), `docs/event-logging.md` (novos tipos + 2 formas de `correlationKey`), `project-context.md` (prazos/regimes), `apps/worker/README.md`, `.env.example`; `graphify update .`.
 
 ---
 
