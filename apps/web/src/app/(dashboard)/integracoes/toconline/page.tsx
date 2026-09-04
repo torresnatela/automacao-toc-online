@@ -8,31 +8,13 @@ import { SCAN_COUNT_KEYS, type ScanCountKey } from "@toc/core/domain";
 import { PageHeader } from "@/components/patterns/page-header";
 import { AutoRefresh } from "@/components/patterns/auto-refresh";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/patterns/status-badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
 import { TocCredentialForm } from "./TocCredentialForm";
 import { ScanPanel } from "./ScanPanel";
 
 export const dynamic = "force-dynamic";
-
-const JOB_LABELS: Record<string, string> = {
-  pending: "Na fila",
-  running: "A executar",
-  succeeded: "Concluída",
-  failed: "Falhou",
-  skipped: "Ignorada",
-  cancelled: "Cancelada",
-};
-
-const JOB_TONES: Record<string, BadgeProps["tone"]> = {
-  pending: "warning",
-  running: "info",
-  succeeded: "success",
-  failed: "destructive",
-  skipped: "neutral",
-  cancelled: "neutral",
-};
 
 /**
  * Rótulo por contagem. É um `Record` sobre `ScanCountKey` de propósito: se o
@@ -123,9 +105,7 @@ export default async function TocOnlinePage({ searchParams }: PageProps) {
               ) : (
                 <>
                   <div className="flex items-center gap-3">
-                    <Badge tone={JOB_TONES[job.status] ?? "neutral"}>
-                      {JOB_LABELS[job.status] ?? job.status}
-                    </Badge>
+                    <StatusBadge kind="job" value={job.status} />
                     {inFlight && (
                       <span className="text-muted-foreground text-sm">
                         a atualizar automaticamente…
