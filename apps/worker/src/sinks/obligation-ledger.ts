@@ -125,14 +125,8 @@ export class DbObligationLedger implements ObligationLedger {
         .onConflictDoUpdate({
           target: [schema.obligationPeriods.obligationId, schema.obligationPeriods.period],
           set: {
-            // Abrir o período outra vez não pode desfazer o que ele já é: uma
-            // guia guardada (`delivered`) ou paga (`paid`) sobrevive a uma nova
-            // passagem do worker.
-            status: sql`case
-              when ${schema.obligationPeriods.status} in ('delivered','paid')
-                then ${schema.obligationPeriods.status}
-              else 'in_progress'
-            end`,
+            // Abrir o período outra vez não pode desfazer o que ele já é.
+            status: semRegressao(sql`'in_progress'::obligation_period_status`),
             // `coalesce` e nesta ordem: um prazo derivado agora preenche o que
             // faltava, mas um `null` de agora não apaga o que já lá estava.
             dueDate: sql`coalesce(excluded.due_date, ${schema.obligationPeriods.dueDate})`,
@@ -213,7 +207,10 @@ export class DbObligationLedger implements ObligationLedger {
 
       await tx
         .update(schema.obligationPeriods)
-        .set({ status: "delivered", updatedAt: sql`now()` })
+        // `delivered` também não pode descer um período `paid`: com `force`, uma
+        // segunda captura de uma guia já paga voltaria a pô-la por pagar no
+        // dashboard. O documento é gravado na mesma — o que não regride é o estado.
+        .set({ status: semRegressao(sql`'delivered'::obligation_period_status`), updatedAt: sql`now()` })
         // Predicado de equipa outra vez, já dentro da transação que o verificou:
         // é a última barreira antes da escrita, e não custa nada.
         .where(and(eq(schema.obligationPeriods.id, periodId), daEquipa(teamId)));
@@ -230,21 +227,39 @@ export class DbObligationLedger implements ObligationLedger {
     await this.db
       .update(schema.obligationPeriods)
       .set({
-        // `error` NUNCA regride um período entregue ou pago. Uma falha a seguir
-        // a uma guia guardada (o browser a fechar mal, o trace a falhar) não
-        // pode apagar do dashboard o facto de a guia existir. O runner chama
-        // isto do `catch` sem saber em que ponto ficou — a regra vive aqui,
-        // onde o estado anterior é visível na própria instrução.
-        status: sql`case
-          when ${status}::text = 'error'
-            and ${schema.obligationPeriods.status} in ('delivered','paid')
-            then ${schema.obligationPeriods.status}
-          else ${status}::obligation_period_status
-        end`,
+        status: semRegressao(sql`${status}::obligation_period_status`),
         updatedAt: sql`now()`,
       })
       .where(and(eq(schema.obligationPeriods.id, periodId), daEquipa(teamId)));
   }
+}
+
+/**
+ * A escada do estado do período: uma escrita **nunca o baixa** abaixo de
+ * `delivered`/`paid`.
+ *
+ * A regra é uma só e vive no SQL — não em três `if` espalhados pelos chamadores
+ * — porque quem chama não sabe em que estado o período está. O runner marca
+ * `error` a partir do `catch` sem saber onde ficou; marca `pending` quando a
+ * declaração do período esperado ainda não foi entregue (e esse caminho nem
+ * precisa de `force`); e volta a gravar o documento quando o operador força.
+ * Qualquer um deles, sem esta escada, apagaria do dashboard o facto de a guia
+ * existir — que é a única coisa que o módulo inteiro serve para provar.
+ *
+ * Sobe-se, nunca se desce: `paid` é terminal; `delivered` só cede a `paid`;
+ * abaixo disso o estado é o que se mandar.
+ *
+ * O `novo` chega já com o cast para o enum: dentro de um `case` um parâmetro
+ * solto não tem tipo inferível, e os ramos têm todos de fechar no mesmo tipo.
+ */
+function semRegressao(novo: SQL): SQL {
+  return sql`case
+    when ${schema.obligationPeriods.status} = 'paid'
+      then 'paid'::obligation_period_status
+    when ${schema.obligationPeriods.status} = 'delivered' and ${novo} <> 'paid'
+      then 'delivered'::obligation_period_status
+    else ${novo}
+  end`;
 }
 
 /**

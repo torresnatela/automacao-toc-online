@@ -248,6 +248,58 @@ describe.skipIf(SKIP_DB)("DbObligationLedger", () => {
     expect(await statusDoPeriodo(emCurso.periodId)).toBe("skipped_nonexistent");
   });
 
+  it("nenhuma escrita faz o período descer abaixo de delivered/paid", async () => {
+    const teamId = await makeTeam();
+    const company = await makeCompany(teamId);
+    const ledger = new DbObligationLedger(db);
+
+    const entregue = await ledger.beginPeriod(teamId, company.id, "2026-07", null, "monthly");
+    await ledger.recordDocument(teamId, entregue.periodId, doc());
+    expect(await statusDoPeriodo(entregue.periodId)).toBe("delivered");
+
+    // `pending` é o que o runner marca quando a declaração do período esperado
+    // ainda não foi entregue — e chega lá SEM `force`. Não pode desfazer a guia.
+    await ledger.markPeriod(teamId, entregue.periodId, "pending");
+    expect(await statusDoPeriodo(entregue.periodId)).toBe("delivered");
+    await ledger.markPeriod(teamId, entregue.periodId, "skipped_nonexistent");
+    expect(await statusDoPeriodo(entregue.periodId)).toBe("delivered");
+
+    // `paid` é o único que sobe: o portal disse que já está pago.
+    await ledger.markPeriod(teamId, entregue.periodId, "paid");
+    expect(await statusDoPeriodo(entregue.periodId)).toBe("paid");
+
+    // E `paid` não volta atrás por nada — nem por um `delivered`.
+    await ledger.markPeriod(teamId, entregue.periodId, "error");
+    await ledger.markPeriod(teamId, entregue.periodId, "pending");
+    await ledger.beginPeriod(teamId, company.id, "2026-07", null, "monthly");
+    expect(await statusDoPeriodo(entregue.periodId)).toBe("paid");
+
+    // Abaixo de delivered, o estado é o que se manda.
+    const emCurso = await ledger.beginPeriod(teamId, company.id, "2026-08", null, "monthly");
+    await ledger.markPeriod(teamId, emCurso.periodId, "pending");
+    expect(await statusDoPeriodo(emCurso.periodId)).toBe("pending");
+  });
+
+  it("recordDocument sobre um período pago guarda o documento sem regredir o estado", async () => {
+    const teamId = await makeTeam();
+    const company = await makeCompany(teamId);
+    const ledger = new DbObligationLedger(db);
+
+    const { periodId } = await ledger.beginPeriod(teamId, company.id, "2026-07", null, "monthly");
+    await ledger.markPeriod(teamId, periodId, "paid");
+
+    // O documento é registado na mesma (a guia existe e vale a pena guardá-la);
+    // o que não muda é o estado — quem pagou não volta a "por pagar".
+    const { documentId } = await ledger.recordDocument(teamId, periodId, doc());
+
+    expect(await statusDoPeriodo(periodId)).toBe("paid");
+    const [row] = await db
+      .select()
+      .from(schema.documents)
+      .where(eq(schema.documents.id, documentId));
+    expect(row?.storagePath).toBe(doc().storagePath);
+  });
+
   it("escrita cross-team é no-op: o período da equipa A não muda pela equipa B", async () => {
     const teamA = await makeTeam();
     const teamB = await makeTeam();
@@ -410,6 +462,25 @@ describe.skipIf(SKIP_DB)("DbCredentialSource — extensão do Módulo 1", () => 
     // Linha-marcador: nunca guarda segredo nenhum.
     expect(linhas[0]?.secretEncrypted).toBeNull();
     expect(linhas[0]?.username).toBeNull();
+  });
+
+  it("markCompanyAtInvalid não escreve nada com um par (equipa, empresa) trocado", async () => {
+    const teamA = await makeTeam();
+    const teamB = await makeTeam();
+    const company = await makeCompany(teamA);
+    const source = new DbCredentialSource(db, KEY);
+
+    await source.markCompanyAtInvalid({
+      teamId: teamB,
+      companyId: company.id,
+      reason: "login_rejeitado",
+    });
+
+    const linhas = await db
+      .select()
+      .from(schema.integrationCredentials)
+      .where(eq(schema.integrationCredentials.companyId, company.id));
+    expect(linhas).toHaveLength(0);
   });
 
   it("markVerified limpa a marca de inválida", async () => {

@@ -170,27 +170,23 @@ export class DbCredentialSource implements AtCredentialSource {
       ...(input.attemptsLeft === undefined ? {} : { attemptsLeft: input.attemptsLeft }),
     };
 
-    await this.db
-      .insert(schema.integrationCredentials)
-      .values({
-        teamId: input.teamId,
-        companyId: input.companyId,
-        provider: "at",
-        status: "invalid",
-        metadata: marca,
-      })
-      .onConflictDoUpdate({
-        target: [
-          schema.integrationCredentials.companyId,
-          schema.integrationCredentials.provider,
-        ],
-        // O índice é parcial; sem repetir o predicado o Postgres não o infere.
-        targetWhere: sql`${schema.integrationCredentials.companyId} is not null`,
-        set: {
-          status: "invalid",
-          metadata: sql`${schema.integrationCredentials.metadata} || excluded.metadata`,
-          updatedAt: sql`now()`,
-        },
-      });
+    // `insert … select … from companies where c.id = $ and c.team_id = $` e não
+    // `values`: o par (equipa, empresa) vem do payload de um job, e o worker
+    // corre com a service role, sem RLS a segurá-lo (`company-directory.ts:127-130`).
+    // Com `values`, um par trocado escrevia uma linha-marcador no gabinete
+    // errado — a dizer que a senha de uma empresa que não é dele está inválida.
+    // Com o `select`, esse par simplesmente não produz linha nenhuma.
+    await this.db.execute(sql`
+      insert into ${schema.integrationCredentials} (team_id, company_id, provider, status, metadata)
+      select c.team_id, c.id, 'at', 'invalid', ${JSON.stringify(marca)}::jsonb
+      from ${schema.companies} c
+      where c.id = ${input.companyId} and c.team_id = ${input.teamId}
+      -- O índice é parcial; sem repetir o predicado o Postgres não o infere.
+      on conflict (company_id, provider) where company_id is not null
+      do update set
+        status = 'invalid',
+        metadata = ${schema.integrationCredentials.metadata} || excluded.metadata,
+        updated_at = now()
+    `);
   }
 }
