@@ -21,6 +21,7 @@ import {
 import { AtIntegrityError } from "../errors";
 import { sleep as dormirDeVerdade } from "../support/sleep";
 import { classifyFailure } from "./classify-failure";
+import { desfechoDoJob, markByOutcome } from "./iva-outcome-effects";
 import { assertDocumentBelongsTo, assertPdfIntegrity, assertPeriodMatches } from "./document-guards";
 import type { ClaimedJob } from "./job-queue";
 import type { JobHandler, JobOutcome } from "./worker-loop";
@@ -76,54 +77,12 @@ export interface IvaRunnerDeps {
   sleep?: (ms: number) => Promise<void>;
 }
 
-/**
- * Causa a registar na credencial, por desfecho.
- *
- * A chave é o desfecho, o valor é o que `INVALID_REASON_LABELS` sabe traduzir
- * ao operador. Só entram aqui os desfechos que o portal disse **sobre a
- * credencial** — é esta lista que decide se `markByOutcome` tem alguma coisa a
- * registar.
- */
-const RAZAO_POR_DESFECHO: Partial<Record<IvaOutcome, string>> = {
-  at_login_rejected: "login_rejeitado",
-  at_password_blocked: "senha_bloqueada",
-  at_password_expired: "senha_expirada",
-  at_2fa_required: "2fa_exigido",
-  direct_access_not_configured: "senha_nao_configurada",
-  toconline_login_rejected: "login_rejeitado",
-};
-
 /** O contexto do job que vai no `job.started` — uuids e códigos, nunca dados do cliente. */
 interface ContextoDoJob {
   teamId: string | null;
   companyId: string | null;
   access: AtAccessMode | null;
   batchId?: string;
-}
-
-/**
- * Traduz um desfecho no `JobOutcome` que a fila grava.
- *
- * A tradução vem de `IVA_OUTCOMES[outcome].jobStatus`, e não de um `if` por
- * caso, porque é essa tabela que o dashboard lê pelo avesso: `readIvaOutcome`
- * procura o código em `result.reason` quando o job é `skipped` e em
- * `last_error.outcome` quando é `failed`. Escrever o estado à mão abriria a
- * porta a um `failed` gravado num desfecho que a tabela diz ser `skipped` — o
- * dashboard procurava o código no sítio errado e mostrava "erro inesperado" a
- * quem só precisava de configurar uma senha.
- */
-function desfechoDoJob(
-  outcome: IvaOutcome,
-  details: IvaOutcomeDetails,
-  message: string,
-): JobOutcome {
-  const spec = IVA_OUTCOMES[outcome];
-  if (spec.jobStatus === "skipped") {
-    return { status: "skipped", reason: outcome, details: { ...details } };
-  }
-  // `succeeded` tem caminho próprio (leva o resultado completo) e `deferred`
-  // precisa do `untilMs` que só a trava sabe: nenhum dos dois passa por aqui.
-  return { status: "failed", message, retry: spec.retry, code: outcome, details: { ...details } };
 }
 
 export class IvaDocumentRunner implements JobHandler {
@@ -451,7 +410,7 @@ export class IvaDocumentRunner implements JobHandler {
       const { outcome, retry, details } = classifyFailure(err, stage);
       const periodoAberto = periodId;
 
-      await this.markByOutcome(outcome, details, payload);
+      await markByOutcome(this.deps.credentials, outcome, details, payload);
       if (periodoAberto !== null) {
         // É o ledger que garante que `error` não regride um `delivered`/`paid`.
         await this.safely(() =>
@@ -542,49 +501,6 @@ export class IvaDocumentRunner implements JobHandler {
     }
     await this.deps.ledger.markPeriod(teamId, periodId, "pending");
     return "document_not_ready";
-  }
-
-  /**
-   * Marca a credencial pelo que o portal disse **sobre ela**, nunca pelo que
-   * disse sobre a empresa.
-   *
-   * Na rota A a senha da AT vive no TOConline, não em `integration_credentials`:
-   * quando a AT a recusa, o que se marca é uma linha-marcador da empresa. A
-   * credencial do TOConline está boa, e tocar-lhe bloquearia as 182 empresas
-   * por causa de uma. A exceção é o próprio TOConline recusar o login — aí foi
-   * mesmo a nossa credencial que ele viu.
-   */
-  private async markByOutcome(
-    outcome: IvaOutcome,
-    details: IvaOutcomeDetails,
-    payload: IvaDocumentJobPayload,
-  ): Promise<void> {
-    const spec = IVA_OUTCOMES[outcome];
-    if (spec.credential !== "invalidate" && spec.credential !== "expire") return;
-    const reason = RAZAO_POR_DESFECHO[outcome];
-    if (reason === undefined) return;
-
-    const { credentials } = this.deps;
-    if (outcome === "toconline_login_rejected") {
-      await this.safely(() => credentials.markInvalid(payload.credentialId, reason));
-      return;
-    }
-    if (payload.access === "at_direct_login") {
-      await this.safely(() =>
-        spec.credential === "expire"
-          ? credentials.markExpired(payload.credentialId, reason)
-          : credentials.markInvalid(payload.credentialId, reason),
-      );
-      return;
-    }
-    await this.safely(() =>
-      credentials.markCompanyAtInvalid({
-        teamId: payload.teamId,
-        companyId: payload.companyId,
-        reason,
-        ...(details.attemptsLeft === undefined ? {} : { attemptsLeft: details.attemptsLeft }),
-      }),
-    );
   }
 
   /**
