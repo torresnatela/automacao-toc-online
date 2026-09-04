@@ -282,7 +282,7 @@ batchId?}`.
    Idempotência pós-leitura → `already_fetched`. 13. `ledger.beginPeriod(…, derivePaymentDueDate(period))`. 14.
    `rpa.at.payment_document` → `no_document` → `markPeriod(skipped_nonexistent)` + skip; `document` →
    `assertPdfIntegrity`, `assertDocumentBelongsTo(nif)` (compara **sem registar**), `normalizeDocumentFields`.
-2. `integration.document_stored` → `storage.put`. 16. `integration.obligation_recorded` →
+15. `integration.document_stored` → `storage.put`. 16. `integration.obligation_recorded` →
    `recordDocument`; `started.succeed()`, `trace.complete()`.
    `catch`: `classifyFailure(err, stage)` → `{outcome, retry: !(err instanceof StructuralError), details}`;
    `markByOutcome` (verify/invalidate/expire — na rota A os desfechos AT escrevem a **linha-marcador**
@@ -392,7 +392,7 @@ vez, estado guardado na chave certa) — é a saída operacional se o 2FA for ob
 - `enqueueIvaFetch(companyId, requestedTeamId, {batchId?})`: `requireWriterOn` → empresa (admin client, 404
   se de outra equipa) → credencial do provider de `AT_ACCESS_MODE` → job em curso → `ivaFetchReadiness` (400
   com cópia) → `startAction({triggerSource:"documentos.iva.fetch", type:"job.enqueued",
-correlationKey:\`company:${id}:iva\`, payload:{teamId, companyId, provider, jobType, batchId}})`→ insert`jobs {team_id, company_id, type, trace_id, triggering_event_id, payload: IvaDocumentJobPayload}`; `23505`→`act.skipped("already_running")`+ devolver o job em curso →`handOff()`.
+correlationKey:\`company:${id}:iva\`, payload:{teamId, companyId, provider, jobType, batchId}})` → insert `jobs {team_id, company_id, type, trace_id, triggering_event_id, payload: IvaDocumentJobPayload}`; `23505` → `act.skipped("already_running")` + devolver o job em curso → `handOff()`.
 - `enqueueIvaFetchAll(requestedTeamId, {onlyMissing})`: `planBulkFetch` (pura) → trace de lote
   `job.batch_enqueued` (`correlationKey: team:<id>:iva`, contagens) → `enqueueOne` por empresa com
   concorrência 8 → `act.success()` (lote termina ao enfileirar; cada job tem o **seu** trace — um trace
