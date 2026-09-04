@@ -68,6 +68,11 @@ cria, entre outros: o admin (`admin@local.test` / `admin123`) e um operador de u
 listagem do Módulo 1 sem correr uma automação real (ver `docs/database.md` § "Seed local").
 **Nunca aplique este seed em produção** (`supabase migration up`, em produção, não o executa).
 
+> **Storage a responder 502 depois do reset?** O `db reset` reinicia o contentor do Storage e o
+> Kong (gateway local) pode ficar com o upstream antigo — uploads/downloads de PDF (e os e2e de
+> `documentos-download`) falham com `502 An invalid response was received from the upstream server`.
+> Reinicie só o gateway: `docker restart supabase_kong_automacao-toc-online`.
+
 ## 4. Subir o dashboard
 
 ```bash
