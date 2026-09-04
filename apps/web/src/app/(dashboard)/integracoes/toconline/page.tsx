@@ -11,7 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { StatusBadge } from "@/components/patterns/status-badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
-import { TocCredentialForm } from "./TocCredentialForm";
+import { CredentialForm } from "@/components/integrations/credential-form";
+import { saveTocCredentialAction, deleteTocCredentialAction } from "./actions";
 import { ScanPanel } from "./ScanPanel";
 
 export const dynamic = "force-dynamic";
@@ -74,11 +75,27 @@ export default async function TocOnlinePage({ searchParams }: PageProps) {
       <AutoRefresh active={inFlight} />
 
       <div className="grid gap-8">
-        <TocCredentialForm
+        <CredentialForm
+          provider="toconline"
           credential={credential}
           teams={teams}
           isAdmin={isAdmin}
           teamId={teamId}
+          saveAction={saveTocCredentialAction}
+          deleteAction={deleteTocCredentialAction}
+          teamHref="/integracoes/toconline"
+          copy={{
+            title: "Ligação ao TOConline",
+            description:
+              "As credenciais do gabinete são guardadas cifradas e usadas pelo worker para entrar no TOConline. A palavra-passe nunca é mostrada de volta.",
+            usernameLabel: "Utilizador TOConline",
+            usernameType: "email",
+            usernameAutoComplete: "username",
+            connectLabel: "Ligar ao TOConline",
+            savedMessage: "Ligação ao TOConline guardada.",
+            removeWarning:
+              "Remover a ligação apaga as credenciais guardadas. As empresas já importadas ficam como estão.",
+          }}
         />
 
         <Card className="max-w-xl">

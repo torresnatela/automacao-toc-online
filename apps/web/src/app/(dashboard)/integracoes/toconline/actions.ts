@@ -7,17 +7,11 @@ import {
   deleteCredentialFor,
   enqueueCompanyScan,
 } from "@/lib/integrations/service";
-import type { CredentialFieldErrors } from "@toc/core/domain";
+import type { CredentialFormState } from "@/lib/integrations/form-state";
 
 // ATENÇÃO: o FormData destas actions contém a palavra-passe do TOConline. O
 // objeto cru de `Object.fromEntries` só pode ir para `credentialInputFrom` —
 // nunca para um log, nunca para o payload de um trace.
-
-export interface CredentialFormState {
-  ok?: boolean;
-  error?: string;
-  fieldErrors?: CredentialFieldErrors;
-}
 
 export async function saveTocCredentialAction(
   _prev: CredentialFormState,

@@ -29,13 +29,21 @@ export interface CredentialSummaryRow {
   provider: string;
   username: string | null;
   status: string;
+  /**
+   * O que o worker anotou sobre esta credencial (`invalidReason`, `invalidAt`,
+   * `attemptsLeft`, …). É o que dá a **causa** por trás de um `status` que não
+   * é `active`: sem isto a interface só sabe dizer "inválida", e o operador não
+   * sabe se corrige a senha, se espera, ou se o portal pediu código por SMS.
+   * Nunca contém o segredo — essa coluna é outra, e a view não a tem.
+   */
+  metadata: Record<string, unknown> | null;
   has_secret: boolean;
   last_verified_at: string | null;
   updated_at: string;
 }
 
 const SAFE_COLUMNS =
-  "id, team_id, provider, username, status, has_secret, last_verified_at, updated_at";
+  "id, team_id, provider, username, status, metadata, has_secret, last_verified_at, updated_at";
 
 /**
  * `jobs.result` é `jsonb`, portanto uma linha antiga pode não trazer todas as

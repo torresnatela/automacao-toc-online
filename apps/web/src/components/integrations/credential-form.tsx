@@ -3,13 +3,10 @@
 import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound, Trash2 } from "lucide-react";
+import { INVALID_REASON_LABELS, type IntegrationProvider } from "@toc/core/domain";
 import type { CredentialSummaryRow } from "@/lib/integrations/service";
+import type { CredentialFormState } from "@/lib/integrations/form-state";
 import type { TeamRow } from "@/lib/teams/service";
-import {
-  saveTocCredentialAction,
-  deleteTocCredentialAction,
-  type CredentialFormState,
-} from "./actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "@/components/patterns/form-field";
 import { Input } from "@/components/ui/input";
@@ -24,13 +21,54 @@ import { Badge } from "@/components/ui/badge";
  */
 const MASK = "••••••••••••";
 
-export interface TocCredentialFormProps {
+/**
+ * `credential_status` por extenso, no feminino (é sempre "a credencial").
+ * Um estado que não conheçamos mostra-se tal como veio: melhor a palavra crua
+ * do que uma frase que finge saber o que se passou.
+ */
+const STATUS_LABELS: Record<string, string> = {
+  invalid: "inválida",
+  expired: "expirada",
+};
+
+/** Textos que mudam de provider para provider. Tudo o resto é igual. */
+export interface CredentialFormCopy {
+  title: string;
+  description: string;
+  usernameLabel: string;
+  /** `email` no TOConline; `text` onde o utilizador é um número (NIF na AT). */
+  usernameType?: "email" | "text";
+  usernameInputMode?: "numeric";
+  usernameAutoComplete?: string;
+  /** Rótulo do botão quando ainda não há credencial guardada. */
+  connectLabel: string;
+  savedMessage: string;
+  /** O que se perde ao remover — dito antes de confirmar, não depois. */
+  removeWarning: string;
+}
+
+export interface CredentialFormProps {
+  provider: IntegrationProvider;
   credential: CredentialSummaryRow | null;
   /** Preenchido só para admin (que não tem equipe fixa). */
   teams: TeamRow[];
   isAdmin: boolean;
   /** Equipe que a página está a mostrar. Para o admin, vem da query string. */
   teamId: string;
+  /**
+   * Server Actions do provider. Podem atravessar a fronteira porque o React as
+   * envia como referência, não como função — ao contrário de um callback nosso.
+   */
+  saveAction: (prev: CredentialFormState, fd: FormData) => Promise<CredentialFormState>;
+  deleteAction: (prev: CredentialFormState, fd: FormData) => Promise<CredentialFormState>;
+  /**
+   * Rota desta página, para onde navegar ao trocar de equipe (o `?team=` é
+   * acrescentado aqui). É uma string e não `(teamId) => string` porque quem
+   * monta o componente é um Server Component, e uma função comum não é
+   * serializável através dessa fronteira — rebentaria em runtime.
+   */
+  teamHref: string;
+  copy: CredentialFormCopy;
 }
 
 function formatDate(iso: string | null): string | null {
@@ -40,19 +78,49 @@ function formatDate(iso: string | null): string | null {
   );
 }
 
-export function TocCredentialForm({
+/**
+ * A causa da invalidação, por extenso, a partir de `metadata.invalidReason`.
+ *
+ * `metadata` é escrito pelo worker e pode trazer qualquer coisa, daí a
+ * verificação de tipo. Uma chave desconhecida mostra-se como veio; sem chave
+ * nenhuma devolve `null` e a frase sai sem o parêntesis — nunca com
+ * "(undefined)" no ecrã.
+ */
+function invalidReasonLabel(metadata: Record<string, unknown> | null): string | null {
+  const reason = metadata?.invalidReason;
+  if (typeof reason !== "string" || reason === "") return null;
+  return INVALID_REASON_LABELS[reason] ?? reason;
+}
+
+/**
+ * Formulário da credencial do gabinete, para qualquer provider.
+ *
+ * O que é igual em todos e por isso vive aqui: a senha nunca é reexibida (só há
+ * máscara de comprimento fixo e um botão "Alterar"), guardar sem senha nova
+ * mantém a que está, a remoção pede confirmação no próprio ecrã, e o admin
+ * troca de equipe navegando — para que o estado da página e o do formulário
+ * sejam sempre o mesmo. O que muda — provider, ações e textos — entra por
+ * props, e o `provider` que conta é o que o servidor força nas ações: este
+ * componente nunca o põe no `FormData`.
+ */
+export function CredentialForm({
+  provider,
   credential,
   teams,
   isAdmin,
   teamId,
-}: TocCredentialFormProps) {
+  saveAction,
+  deleteAction,
+  teamHref,
+  copy,
+}: CredentialFormProps) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState<CredentialFormState, FormData>(
-    saveTocCredentialAction,
+    saveAction,
     {},
   );
   const [removeState, removeAction, removing] = useActionState<CredentialFormState, FormData>(
-    deleteTocCredentialAction,
+    deleteAction,
     {},
   );
   const connected = credential?.has_secret ?? false;
@@ -65,37 +133,50 @@ export function TocCredentialForm({
   const invalid = (key: keyof typeof fe) => (fe[key] ? { "aria-invalid": true as const } : {});
   const verifiedAt = formatDate(credential?.last_verified_at ?? null);
 
+  // O worker marca a credencial quando o portal a recusa. Guardar senha nova é
+  // o único caminho de volta a `active` — e é isso que a frase tem de dizer,
+  // senão o operador fica à espera de um botão que não existe.
+  const blocked = credential !== null && credential.status !== "active" ? credential.status : null;
+  const blockedReason = blocked === null ? null : invalidReasonLabel(credential?.metadata ?? null);
+
   return (
     <Card className="max-w-xl">
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
-          <CardTitle>Ligação ao TOConline</CardTitle>
+          <CardTitle>{copy.title}</CardTitle>
           {connected ? (
             <Badge tone="success">Ligado</Badge>
           ) : (
             <Badge tone="neutral">Não configurado</Badge>
           )}
         </div>
-        <CardDescription>
-          As credenciais do gabinete são guardadas cifradas e usadas pelo worker para entrar no
-          TOConline. A palavra-passe nunca é mostrada de volta.
-        </CardDescription>
+        <CardDescription>{copy.description}</CardDescription>
       </CardHeader>
 
       <CardContent>
+        {blocked !== null && (
+          <Alert variant="destructive" className="mb-5">
+            <AlertDescription>
+              Credencial marcada como {STATUS_LABELS[blocked] ?? blocked} pelo worker
+              {blockedReason === null ? "" : ` (${blockedReason})`}. Guardar uma palavra-passe nova
+              reativa-a.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <form action={formAction} className="grid gap-5">
           {isAdmin && (
             <FormField
               label="Equipe"
-              htmlFor="c-team"
+              htmlFor={`${provider}-team`}
               error={fe.teamId}
               hint="Trocar de equipe recarrega a ligação correspondente."
             >
               <Select
-                id="c-team"
+                id={`${provider}-team`}
                 name="teamId"
                 value={teamId}
-                onChange={(e) => router.push(`/integracoes/toconline?team=${e.target.value}`)}
+                onChange={(e) => router.push(`${teamHref}?team=${e.target.value}`)}
               >
                 {teams.map((t) => (
                   <option key={t.id} value={t.id}>
@@ -106,12 +187,17 @@ export function TocCredentialForm({
             </FormField>
           )}
 
-          <FormField label="Utilizador TOConline" htmlFor="c-username" error={fe.username}>
+          <FormField
+            label={copy.usernameLabel}
+            htmlFor={`${provider}-username`}
+            error={fe.username}
+          >
             <Input
-              id="c-username"
+              id={`${provider}-username`}
               name="username"
-              type="email"
-              autoComplete="username"
+              type={copy.usernameType ?? "text"}
+              inputMode={copy.usernameInputMode}
+              autoComplete={copy.usernameAutoComplete}
               defaultValue={credential?.username ?? ""}
               required
               {...invalid("username")}
@@ -121,12 +207,12 @@ export function TocCredentialForm({
           {changing ? (
             <FormField
               label="Palavra-passe"
-              htmlFor="c-password"
+              htmlFor={`${provider}-password`}
               error={fe.password}
               hint={connected ? "Deixe em branco para manter a palavra-passe atual." : undefined}
             >
               <Input
-                id="c-password"
+                id={`${provider}-password`}
                 name="password"
                 type="password"
                 autoComplete="new-password"
@@ -146,7 +232,7 @@ export function TocCredentialForm({
 
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={pending}>
-              {pending ? "A guardar..." : connected ? "Guardar alterações" : "Ligar ao TOConline"}
+              {pending ? "A guardar..." : connected ? "Guardar alterações" : copy.connectLabel}
             </Button>
             {connected && !confirmingRemoval && (
               <Button
@@ -171,7 +257,7 @@ export function TocCredentialForm({
           )}
           {state.ok && (
             <Alert variant="success" role="status">
-              <AlertDescription>Ligação ao TOConline guardada.</AlertDescription>
+              <AlertDescription>{copy.savedMessage}</AlertDescription>
             </Alert>
           )}
         </form>
@@ -179,10 +265,7 @@ export function TocCredentialForm({
         {confirmingRemoval && (
           <Alert variant="destructive" className="mt-5">
             <AlertDescription>
-              <p className="mb-3">
-                Remover a ligação apaga as credenciais guardadas. As empresas já importadas ficam
-                como estão.
-              </p>
+              <p className="mb-3">{copy.removeWarning}</p>
               <form action={removeAction} className="flex items-center gap-3">
                 <input type="hidden" name="teamId" value={teamId} />
                 <Button type="submit" variant="destructive" size="sm" disabled={removing}>
