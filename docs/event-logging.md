@@ -48,7 +48,7 @@ Sempre nomeie eventos por namespace para manter os logs consultáveis:
 
 | Namespace       | Uso                                                         | `rootTrigger` típico     |
 | --------------- | ---------------------------------------------------------- | ------------------------ |
-| `user.*`        | `user.login`, `user.logout`, `user.change_password`        | `manual`                 |
+| `user.*`        | `user.login`, `user.logout`, `user.change_password`, `user.document_downloaded` | `manual` |
 | `integration.*` | passo de alto nível (`integration.fetch_company`)          | `schedule` / `system`    |
 | `http.*`        | chamada HTTP externa (`http.request`, `http.response`)     | herda do trace           |
 | `rpa.*`         | passos de crawler/Playwright (`rpa.navigate`, `rpa.extract`) | herda do trace         |
@@ -56,6 +56,12 @@ Sempre nomeie eventos por namespace para manter os logs consultáveis:
 | `webhook.*`     | recebimento de webhook (`webhook.received`)                | `webhook`                |
 
 `source` = componente emissor (`web`, `worker`).
+
+`user.document_downloaded` — payload `{ documentId }` — é emitido por
+`GET /api/documents/:id/download` **antes** do 302 para a signed URL. Existe por dever de
+prestação de contas do RGPD: o PDF é um documento de pagamento de um cliente e o acesso a
+dados fiscais de terceiros tem de deixar rasto de quem e quando. O payload leva só o uuid do
+documento — nunca o `storage_path` (é ele a chave do ficheiro no bucket) nem NIF/nome.
 
 ## Receitas
 

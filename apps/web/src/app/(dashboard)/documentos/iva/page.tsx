@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { FileText } from "lucide-react";
 import { providerForAccess } from "@toc/core/domain";
@@ -11,6 +12,7 @@ import { PageHeader } from "@/components/patterns/page-header";
 import { AutoRefresh } from "@/components/patterns/auto-refresh";
 import { EmptyState } from "@/components/patterns/empty-state";
 import { StatusBadge } from "@/components/patterns/status-badge";
+import { buttonVariants } from "@/components/ui/button";
 import {
   DataTable,
   TableHeader,
@@ -115,13 +117,28 @@ export default async function GuiasIvaPage({ searchParams }: PageProps) {
                   <p className="text-muted-foreground text-xs">{view.short}</p>
                 </TableCell>
                 <TableCell className="text-right">
-                  <FetchButton
-                    companyId={row.company_id}
-                    teamId={teamId}
-                    canFetch={view.canFetch}
-                    disabledReason={view.disabledReason}
-                    fetchLabel={view.fetchLabel}
-                  />
+                  <div className="flex items-start justify-end gap-2">
+                    {/* O href aponta para a rota, nunca para o storage: a signed
+                        URL só existe dentro do 302 e nunca chega ao HTML. Sem
+                        JavaScript pelo meio — é um link. */}
+                    {row.has_file && row.document_id && (
+                      <Link
+                        href={`/api/documents/${row.document_id}/download`}
+                        target="_blank"
+                        rel="noopener"
+                        className={buttonVariants({ variant: "ghost", size: "sm" })}
+                      >
+                        <FileText aria-hidden /> PDF
+                      </Link>
+                    )}
+                    <FetchButton
+                      companyId={row.company_id}
+                      teamId={teamId}
+                      canFetch={view.canFetch}
+                      disabledReason={view.disabledReason}
+                      fetchLabel={view.fetchLabel}
+                    />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
