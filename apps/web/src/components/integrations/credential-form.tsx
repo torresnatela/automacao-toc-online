@@ -3,7 +3,11 @@
 import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound, Trash2 } from "lucide-react";
-import { INVALID_REASON_LABELS, type IntegrationProvider } from "@toc/core/domain";
+import {
+  INVALID_REASON_LABELS,
+  credentialStatusLabel,
+  type IntegrationProvider,
+} from "@toc/core/domain";
 import type { CredentialSummaryRow } from "@/lib/integrations/service";
 import type { CredentialFormState } from "@/lib/integrations/form-state";
 import type { TeamRow } from "@/lib/teams/service";
@@ -20,16 +24,6 @@ import { Badge } from "@/components/ui/badge";
  * vazaria informação sobre o segredo sem nenhum ganho de interface.
  */
 const MASK = "••••••••••••";
-
-/**
- * `credential_status` por extenso, no feminino (é sempre "a credencial").
- * Um estado que não conheçamos mostra-se tal como veio: melhor a palavra crua
- * do que uma frase que finge saber o que se passou.
- */
-const STATUS_LABELS: Record<string, string> = {
-  invalid: "inválida",
-  expired: "expirada",
-};
 
 /** Textos que mudam de provider para provider. Tudo o resto é igual. */
 export interface CredentialFormCopy {
@@ -157,7 +151,7 @@ export function CredentialForm({
         {blocked !== null && (
           <Alert variant="destructive" className="mb-5">
             <AlertDescription>
-              Credencial marcada como {STATUS_LABELS[blocked] ?? blocked} pelo worker
+              Credencial marcada como {credentialStatusLabel(blocked)} pelo worker
               {blockedReason === null ? "" : ` (${blockedReason})`}. Guardar uma palavra-passe nova
               reativa-a.
             </AlertDescription>
