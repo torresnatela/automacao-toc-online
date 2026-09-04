@@ -53,8 +53,19 @@ export default async function IntegracoesPage({ searchParams }: PageProps) {
 
   // Sem equipa não há nada que se possa afirmar — e "Não configurado" seria uma
   // afirmação, além de falsa.
+  //
+  // Ter senha não é estar configurado: o worker marca a credencial `invalid`
+  // ou `expired` quando o portal a recusa, e essa é exatamente a linha que o
+  // operador precisa de ver daqui — dizer "Configurado" mandava-o procurar o
+  // problema em todo o lado menos onde ele está.
   const atStatus =
-    teamId === "" ? "—" : atCredential?.has_secret ? "Configurado" : "Não configurado";
+    teamId === ""
+      ? "—"
+      : !atCredential?.has_secret
+        ? "Não configurado"
+        : atCredential.status === "active"
+          ? "Configurado"
+          : "Inválida";
 
   return (
     <section>

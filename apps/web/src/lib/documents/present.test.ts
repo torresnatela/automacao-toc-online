@@ -12,6 +12,7 @@ import {
   formatEur,
   formatNotReadyReasons,
   isPeakDay,
+  jobErrorFor,
   notReadyCopy,
   presentIvaRow,
   type IvaDocumentRow,
@@ -49,6 +50,7 @@ function row(over: Partial<IvaDocumentRow> = {}): IvaDocumentRow {
     job_attempts: null,
     job_created_at: null,
     job_finished_at: null,
+    job_deferred: false,
     ...over,
   };
 }
@@ -119,6 +121,63 @@ describe("deriveState", () => {
       withJob({ job_status: "succeeded", job_outcome: "fetched", job_period: "2026-Q2" }),
     );
     expect(derived.details.period).toBe("2026-Q2");
+  });
+});
+
+describe("deriveState × adiamento", () => {
+  it("pending adiado é «Portal em pausa», não «Na fila»", () => {
+    // O adiamento devolve o job à fila sem gastar tentativa: sem esta coluna, uma
+    // indisponibilidade da AT aparecia como 182 empresas eternamente na fila.
+    const derived = deriveState(withJob({ job_status: "pending", job_deferred: true }));
+
+    expect(derived.state).toBe("portal_paused");
+    expect(derived.outcome).toBe("portal_paused");
+  });
+
+  it("pending sem adiamento continua «Na fila»", () => {
+    const derived = deriveState(withJob({ job_status: "pending", job_deferred: false }));
+
+    expect(derived.state).toBe("queued");
+    expect(derived.outcome).toBeNull();
+  });
+
+  it("um job adiado continua em curso — o botão não convida a um segundo pedido", () => {
+    const view = presentIvaRow(withJob({ job_status: "pending", job_deferred: true }), {
+      access: "at_direct_login",
+      credential: activeCredential,
+      now: NOW,
+    });
+
+    expect(view.inFlight).toBe(true);
+    expect(view.canFetch).toBe(false);
+    expect(view.label).toBe("Portal em pausa");
+    // A orientação vem do domínio, não de um texto inventado aqui.
+    expect(view.guidance).toBe(
+      "O sistema pausou o acesso à AT por indisponibilidade; retoma sozinho.",
+    );
+  });
+});
+
+describe("jobErrorFor", () => {
+  it("mostra o erro do job falhado", () => {
+    expect(
+      jobErrorFor(
+        withJob({ job_status: "failed", job_outcome: "at_unavailable", job_error: "Portal em baixo." }),
+      ),
+    ).toBe("Portal em baixo.");
+  });
+
+  it("cala o erro de uma tentativa anterior quando a linha já não é uma falha", () => {
+    // `last_error` fica na linha do job depois de um `defer`, e a fila não o
+    // limpava ao concluir: a guia aparecia com o selo verde e, por baixo, o
+    // erro da tentativa que não vingou.
+    for (const status of ["succeeded", "skipped", "pending", "running"]) {
+      expect(jobErrorFor(withJob({ job_status: status, job_error: "Portal em baixo." }))).toBeNull();
+    }
+  });
+
+  it("sem erro nenhum devolve null", () => {
+    expect(jobErrorFor(withJob({ job_status: "failed", job_error: null }))).toBeNull();
   });
 });
 

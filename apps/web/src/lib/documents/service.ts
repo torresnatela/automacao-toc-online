@@ -18,6 +18,7 @@ import { getAtAccessMode } from "./access";
 import { notReadyCopy, type IvaDocumentRow } from "./present";
 import {
   bulkRowsFromReads,
+  companyForEnqueue,
   credentialForReadiness,
   enqueueStatus,
   resolveJobInsert,
@@ -43,7 +44,7 @@ export type { IvaEnqueueResult, IvaEnqueueStatus } from "./bulk";
  * devia ir. É a mesma disciplina de `SAFE_COLUMNS` nas credenciais.
  */
 export const OVERVIEW_COLUMNS =
-  "company_id, team_id, company_name, nif, company_status, toconline_company_id, toconline_cluster, period_id, period, period_status, due_date, document_id, entity, reference, amount, valid_until, document_status, has_file, extracted_at, job_id, job_status, job_outcome, job_period, job_batch_id, job_error, job_trace_id, job_attempts, job_created_at, job_finished_at";
+  "company_id, team_id, company_name, nif, company_status, toconline_company_id, toconline_cluster, period_id, period, period_status, due_date, document_id, entity, reference, amount, valid_until, document_status, has_file, extracted_at, job_id, job_status, job_outcome, job_period, job_batch_id, job_error, job_trace_id, job_attempts, job_created_at, job_finished_at, job_deferred";
 
 /** Os providers que podem abrir a sessão do IVA, seja qual for a rota. */
 const ACCESS_PROVIDERS = ["at", "toconline"];
@@ -191,17 +192,19 @@ export async function enqueueIvaFetch(
 
   const admin = getSupabaseAdminClient();
 
-  const { data: companyData } = await admin
+  const { data: companyData, error: companyError } = await admin
     .from("companies")
     .select("id, team_id, status, nif, toconline_company_id, toconline_cluster")
     .eq("id", companyId)
     .maybeSingle();
-  const company = (companyData ?? null) as CompanyRow | null;
-  // Empresa de outra equipa responde 404, não 403: quem não a pode ver também
-  // não tem de saber que ela existe.
-  if (company === null || company.team_id !== teamId) {
-    return { ok: false, status: 404, error: "Empresa não encontrada." };
-  }
+  // A decisão (404 para o que não é desta equipa, 500 para o que não se
+  // conseguiu ler) vive numa função pura — ver `companyForEnqueue`.
+  const resolved = companyForEnqueue(
+    { data: (companyData ?? null) as CompanyRow | null, error: companyError },
+    teamId,
+  );
+  if (!resolved.ok) return { ok: false, status: resolved.status, error: resolved.error };
+  const company = resolved.company;
 
   const access = getAtAccessMode();
   const provider = providerForAccess(access);

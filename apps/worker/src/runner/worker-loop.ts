@@ -83,10 +83,18 @@ export class WorkerLoop {
         // job não pode desaparecer em silêncio. Mas a regra única vale aqui
         // como em todo o lado — um `AtAuthError` que escape seria retentado, e
         // cada tentativa gasta o contador da senha na AT até a bloquear.
+        //
+        // A mensagem é FIXA e não `err.message`: isto escreve em
+        // `jobs.last_error`, que a view do dashboard mostra ao operador, e um
+        // erro que escapou ao runner é por definição um que ninguém redigiu —
+        // um `TimeoutError` do Playwright traz o URL que estava a navegar, e
+        // esse URL leva o NIF na query string. A classe fica num campo à parte,
+        // que é o que serve para investigar.
         outcome = {
           status: "failed",
-          message: err instanceof Error ? err.message : "erro desconhecido",
+          message: "Falha inesperada fora do runner.",
           retry: !(err instanceof StructuralError),
+          details: { errorClass: err instanceof Error ? err.name : typeof err },
         };
       }
 

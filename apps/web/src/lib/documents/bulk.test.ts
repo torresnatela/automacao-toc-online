@@ -4,6 +4,7 @@ import {
   FORCE_FLAG,
   buildBulkRows,
   bulkRowsFromReads,
+  companyForEnqueue,
   credentialForReadiness,
   forceFromForm,
   onlyMissingFromForm,
@@ -449,5 +450,37 @@ describe("leitura das opções do formulário", () => {
     expect(onlyMissingFromForm("on")).toBe(true);
     expect(onlyMissingFromForm(null)).toBe(false);
     expect(onlyMissingFromForm("1")).toBe(false);
+  });
+});
+
+describe("companyForEnqueue", () => {
+  const TEAM = "22222222-2222-2222-2222-222222222222";
+  const empresa = { team_id: TEAM };
+
+  it("devolve a empresa da equipa do pedido", () => {
+    expect(companyForEnqueue({ data: empresa, error: null }, TEAM)).toEqual({
+      ok: true,
+      company: empresa,
+    });
+  });
+
+  it("404 para a empresa que não existe ou é de outra equipa", () => {
+    // 404 e não 403: quem não a pode ver também não tem de saber que existe.
+    expect(companyForEnqueue({ data: null, error: null }, TEAM)).toEqual({
+      ok: false,
+      status: 404,
+      error: "Empresa não encontrada.",
+    });
+    expect(companyForEnqueue({ data: { team_id: "outra" }, error: null }, TEAM)).toMatchObject({
+      status: 404,
+    });
+  });
+
+  it("500 quando a leitura falhou — não é uma empresa que não existe", () => {
+    // Com 404 aqui, uma indisponibilidade da base mandava o operador procurar
+    // uma empresa que está lá.
+    expect(
+      companyForEnqueue({ data: null, error: { message: "connection refused" } }, TEAM),
+    ).toEqual({ ok: false, status: 500, error: "Erro interno." });
   });
 });

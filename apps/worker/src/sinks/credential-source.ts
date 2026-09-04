@@ -13,6 +13,18 @@ import type { AtCredentialSource, CredentialLookup } from "../runner/ports";
  * Nenhum erro desta classe inclui o segredo: quando a decifra falha, o que se
  * devolve é um motivo, não um valor.
  */
+/**
+ * `metadata.invalidReason`, se lá estiver e for um código nosso.
+ *
+ * `metadata` é `jsonb` — qualquer coisa pode ter sido escrita nele. Só se
+ * aceita uma string, e o que sai daqui vai para um desfecho lido por humanos.
+ */
+function motivoDaMarca(metadata: unknown): string | null {
+  if (metadata === null || typeof metadata !== "object") return null;
+  const valor = (metadata as { invalidReason?: unknown }).invalidReason;
+  return typeof valor === "string" && valor !== "" ? valor : null;
+}
+
 export class DbCredentialSource implements AtCredentialSource {
   constructor(
     private readonly db: Database,
@@ -32,14 +44,22 @@ export class DbCredentialSource implements AtCredentialSource {
         provider: schema.integrationCredentials.provider,
         teamId: schema.integrationCredentials.teamId,
         companyId: schema.integrationCredentials.companyId,
+        // Quem marcou a credencial deixou aqui o porquê; é o que a orientação
+        // do dashboard precisa para dizer o que fazer a seguir.
+        metadata: schema.integrationCredentials.metadata,
       })
       .from(schema.integrationCredentials)
       .where(eq(schema.integrationCredentials.id, credentialId))
       .limit(1);
 
     if (!row || !row.username || !row.secret) return { ok: false, reason: "not_found" };
-    if (row.status === "invalid") return { ok: false, reason: "invalid" };
-    if (row.status === "expired") return { ok: false, reason: "expired" };
+    const motivo = motivoDaMarca(row.metadata);
+    if (row.status === "invalid") {
+      return { ok: false, reason: "invalid", ...(motivo === null ? {} : { invalidReason: motivo }) };
+    }
+    if (row.status === "expired") {
+      return { ok: false, reason: "expired", ...(motivo === null ? {} : { invalidReason: motivo }) };
+    }
 
     try {
       const password = decryptSecret(row.secret, this.encryptionKey);

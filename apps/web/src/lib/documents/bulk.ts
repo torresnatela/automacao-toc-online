@@ -299,6 +299,27 @@ export interface ReadResult<T> {
   error: { message?: string } | null;
 }
 
+/**
+ * A empresa do pedido, ou a recusa que a leitura justifica.
+ *
+ * Existe por causa da diferença entre as duas recusas. Uma empresa de outra
+ * equipa responde 404 e não 403 — quem não a pode ver também não tem de saber
+ * que ela existe. Mas uma leitura **falhada** não é uma empresa que não existe:
+ * dizer 404 quando o PostgREST está em baixo manda o operador procurar uma
+ * empresa que está lá, e a busca que ele tentou fazer fica por explicar. É a
+ * mesma regra das credenciais logo a seguir, e a mesma de `bulkRowsFromReads`.
+ */
+export function companyForEnqueue<T extends { team_id: string }>(
+  read: { data: T | null; error: { message?: string } | null },
+  teamId: string,
+): { ok: true; company: T } | { ok: false; status: 404 | 500; error: string } {
+  if (read.error !== null) return { ok: false, status: 500, error: "Erro interno." };
+  if (read.data === null || read.data.team_id !== teamId) {
+    return { ok: false, status: 404, error: "Empresa não encontrada." };
+  }
+  return { ok: true, company: read.data };
+}
+
 export type BulkRowsResult = { ok: true; rows: BulkRow[] } | { ok: false; error: string };
 
 /** Devolve a primeira leitura falhada, já rotulada para o trace. */

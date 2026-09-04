@@ -75,12 +75,19 @@ export class JobQueue {
     };
   }
 
+  /**
+   * `lastError: null` faz parte de concluir: `defer()` e uma `fail()` retentada
+   * escrevem em `last_error` da MESMA linha, e o campo sobrevive à transição.
+   * Sem o limpar, a view do dashboard (`job_error`) mostrava o erro da tentativa
+   * anterior por baixo do selo verde da guia que acabou de chegar.
+   */
   async complete(id: string, result: unknown): Promise<void> {
     await this.db
       .update(schema.jobs)
       .set({
         status: "succeeded",
         result: result as object,
+        lastError: null,
         finishedAt: new Date(),
         updatedAt: new Date(),
       })
@@ -91,6 +98,9 @@ export class JobQueue {
    * `details` fica ao lado da razão (não dentro dela) porque é assim que a
    * interface lê o desfecho: `result.reason` é o código, o resto são os dados
    * que a orientação usa (`period`, `attempts`, …).
+   *
+   * `lastError: null` pela mesma razão de `complete()`: ignorar de propósito é
+   * um desfecho válido, e não pode arrastar o erro de uma tentativa anterior.
    */
   async skip(id: string, reason: string, details?: Record<string, unknown>): Promise<void> {
     await this.db
@@ -98,6 +108,7 @@ export class JobQueue {
       .set({
         status: "skipped",
         result: { reason, ...details },
+        lastError: null,
         finishedAt: new Date(),
         updatedAt: new Date(),
       })

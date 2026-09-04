@@ -121,12 +121,22 @@ describe("WorkerLoop.tick", () => {
 
   // Um handler bem comportado não deixa escapar exceções — mas se escapar, o
   // job não pode desaparecer em silêncio.
-  it("exceção que escapa do handler vira falha retentável", async () => {
+  it("exceção que escapa do handler vira falha retentável, com mensagem nossa", async () => {
     const queue = new FakeQueue([job()]);
-    const loop = build(queue, handler(new Error("boom")));
+    // A mensagem crua de um erro que ninguém redigiu pode levar o URL que o
+    // browser navegava — e na AT esse URL leva o NIF. O que vai para
+    // `last_error` (e daí para o ecrã) é sempre texto nosso; a classe do erro
+    // fica num campo à parte, para quem investiga.
+    const loop = build(queue, handler(new Error("Timeout navigating to /pagamentos?nif=501442600")));
 
     await loop.tick();
-    expect(queue.failed).toEqual([{ id: "job-1", message: "boom", retry: true }]);
+    expect(queue.failed).toEqual([
+      { id: "job-1", message: "Falha inesperada fora do runner.", retry: true },
+    ]);
+    expect(queue.gravado).toEqual([
+      { message: "Falha inesperada fora do runner.", errorClass: "Error" },
+    ]);
+    expect(JSON.stringify(queue.gravado)).not.toContain("501442600");
   });
 
   // …mas "retentável" não é o mesmo que "sempre": a regra única vale também no
@@ -139,7 +149,10 @@ describe("WorkerLoop.tick", () => {
 
     await loop.tick();
     expect(queue.failed).toEqual([
-      { id: "job-1", message: "A Autoridade Tributária recusou a autenticação.", retry: false },
+      { id: "job-1", message: "Falha inesperada fora do runner.", retry: false },
+    ]);
+    expect(queue.gravado).toEqual([
+      { message: "Falha inesperada fora do runner.", errorClass: "AtAuthError" },
     ]);
   });
 

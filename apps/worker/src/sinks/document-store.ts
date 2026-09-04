@@ -71,13 +71,19 @@ function estado(error: unknown): number | undefined {
 /**
  * A única pergunta que interessa à fila: vale a pena tentar outra vez?
  *
- * Sem código, ou 5xx: o Storage esteve indisponível, e a próxima tentativa pode
- * correr bem. 4xx é o serviço a dizer "não" com razão (bucket inexistente,
+ * Sem código, `0`, ou 5xx: o Storage esteve indisponível, e a próxima tentativa
+ * pode correr bem. 4xx é o serviço a dizer "não" com razão (bucket inexistente,
  * policy, MIME ou tamanho recusados) — retentar só repetia o mesmo "não".
+ *
+ * O `0` está aqui de propósito: é o que o `fetch` do storage-js põe em `status`
+ * quando a resposta nunca chegou (DNS, socket cortado, CORS). Sem este ramo
+ * caía no `else` e a guia ficava marcada como recusada para sempre por uma
+ * falha de rede — o pior desfecho possível, porque o operador não tem nada
+ * para corrigir.
  */
 function classificar(error: unknown): Error {
   const codigo = estado(error);
-  if (codigo === undefined || codigo >= 500) {
+  if (codigo === undefined || codigo === 0 || codigo >= 500) {
     return new AtTransientError("persist_failed", "Storage indisponível.");
   }
   return new StructuralError(`Storage recusou o ficheiro: ${codigo}`);

@@ -50,7 +50,17 @@ export type CredentialLookup =
       provider: IntegrationProvider;
       scope: CredentialScope;
     }
-  | { ok: false; reason: "not_found" | "invalid" | "expired" };
+  | {
+      ok: false;
+      reason: "not_found" | "invalid" | "expired";
+      /**
+       * O código que marcou a credencial (`metadata.invalidReason`), quando há
+       * um. Sobe até `details.invalidReason` do desfecho porque é o que separa
+       * "guarde uma senha nova" de "espere que o bloqueio do portal caia" — sem
+       * ele o operador lê "credencial inválida" e não sabe o que fazer.
+       */
+      invalidReason?: string;
+    };
 
 export interface CredentialSource {
   load(credentialId: string): Promise<CredentialLookup>;

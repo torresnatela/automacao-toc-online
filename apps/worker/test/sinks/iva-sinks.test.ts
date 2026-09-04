@@ -9,7 +9,7 @@ import {
   IVA_DOCUMENT_TYPE,
   IVA_OBLIGATION_KIND,
 } from "@toc/core/domain";
-import { StructuralError } from "../../src/errors";
+import { AtTransientError, StructuralError } from "../../src/errors";
 import { DbAttemptGuard } from "../../src/sinks/attempt-guard";
 import { DbCredentialSource } from "../../src/sinks/credential-source";
 import { SupabaseDocumentStore } from "../../src/sinks/document-store";
@@ -624,6 +624,44 @@ describe.skipIf(SKIP_STORAGE)("SupabaseDocumentStore", () => {
       }),
     ).rejects.toBeInstanceOf(StructuralError);
   }, STORAGE_TIMEOUT);
+});
+
+/**
+ * Sem Supabase: só a classificação do erro, que é onde vive a decisão de
+ * retentar. Um cliente falso basta — o que se prova não tem nada que ver com a
+ * rede.
+ */
+describe("SupabaseDocumentStore × classificação do erro", () => {
+  function storeQueDevolve(error: unknown): SupabaseDocumentStore {
+    const client = {
+      storage: { from: () => ({ upload: async () => ({ error }) }) },
+    } as unknown as SupabaseClient;
+    return new SupabaseDocumentStore(client);
+  }
+
+  const put = (store: SupabaseDocumentStore) =>
+    store.put({
+      teamId: randomUUID(),
+      companyId: randomUUID(),
+      kind: "iva" as const,
+      period: "2026-07",
+      pdf: Buffer.from("%PDF-1.4\n"),
+    });
+
+  it("status 0 é transitório — foi a rede, não uma recusa do Storage", async () => {
+    // `status: 0` é o que o `fetch` do storage-js põe quando a resposta nunca
+    // chegou (DNS, socket cortado). Tratá-lo como 4xx marcaria a guia como
+    // recusada para sempre por uma falha de rede, e o operador não teria nada
+    // para corrigir.
+    await expect(put(storeQueDevolve({ status: 0, message: "Failed to fetch" }))).rejects.toBeInstanceOf(
+      AtTransientError,
+    );
+  });
+
+  it("um 5xx também é transitório e um 4xx continua estrutural", async () => {
+    await expect(put(storeQueDevolve({ status: 503 }))).rejects.toBeInstanceOf(AtTransientError);
+    await expect(put(storeQueDevolve({ status: 404 }))).rejects.toBeInstanceOf(StructuralError);
+  });
 });
 
 describe.skipIf(SKIP_DB)("view iva_documents_overview × constantes do domínio", () => {

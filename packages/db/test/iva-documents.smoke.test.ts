@@ -338,6 +338,50 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("view iva_documents_overview"
       job_outcome: "no_payment_document",
     });
   });
+
+  it("distingue o job adiado do job que só está na fila (`job_deferred`)", async () => {
+    const a = await makeTeamWithUser("operator");
+    const naFila = await makeCompany(a.teamId, "So na fila");
+    const adiada = await makeCompany(a.teamId, "Adiada pelo portal");
+
+    // O que `JobQueue.defer` escreve: volta a `pending` (sem gastar tentativa)
+    // e deixa a marca em `last_error`. Sem a coluna, as duas linhas eram
+    // indistinguíveis — e uma pausa do portal aparecia como "Na fila" para
+    // sempre.
+    await db.insert(jobs).values({
+      teamId: a.teamId,
+      companyId: naFila.id,
+      type: IVA_DOCUMENT_JOB_TYPE,
+      status: "pending",
+    });
+    await db.insert(jobs).values({
+      teamId: a.teamId,
+      companyId: adiada.id,
+      type: IVA_DOCUMENT_JOB_TYPE,
+      status: "pending",
+      lastError: { message: "portal_paused", deferred: true },
+    });
+
+    const rows = await asUser(
+      a.userId,
+      async (c) =>
+        (
+          await c.query(
+            "select company_id, job_status, job_deferred from public.iva_documents_overview where company_id = any($1::uuid[])",
+            [[naFila.id, adiada.id]],
+          )
+        ).rows as { company_id: string; job_status: string; job_deferred: boolean }[],
+    );
+
+    expect(rows.find((r) => r.company_id === naFila.id)).toMatchObject({
+      job_status: "pending",
+      job_deferred: false,
+    });
+    expect(rows.find((r) => r.company_id === adiada.id)).toMatchObject({
+      job_status: "pending",
+      job_deferred: true,
+    });
+  });
 });
 
 describe.skipIf(process.env.SKIP_DB_TESTS === "1")("storage — bucket documents", () => {

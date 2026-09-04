@@ -194,9 +194,28 @@ export class IvaDocumentRunner implements JobHandler {
     const provider = this.deps.sessions.credentialProvider;
     const lookup = await this.deps.credentials.load(payload.credentialId);
     if (!lookup.ok) {
-      return lookup.reason === "not_found"
-        ? sair(`${provider}_credential_missing`, { stage: "precondition" })
-        : sair(`${provider}_credential_invalid`, { stage: "precondition" });
+      if (lookup.reason === "not_found") {
+        return sair(`${provider}_credential_missing`, { stage: "precondition" });
+      }
+      // O motivo da marca sobe ao desfecho: é o que separa "guarde uma senha
+      // nova" de "espere que o bloqueio do portal caia".
+      return sair(`${provider}_credential_invalid`, {
+        stage: "precondition",
+        ...(lookup.invalidReason === undefined ? {} : { invalidReason: lookup.invalidReason }),
+      });
+    }
+    // A credencial tem de ser da equipa do pedido. O `credentialId` vem do
+    // payload de um job e o worker corre com a service role, sem RLS a
+    // segurá-lo: um id trocado abriria uma sessão no portal com a senha de
+    // OUTRO gabinete e guardaria a guia no nosso. Sai antes de tocar no browser
+    // e sem marcar nada — a credencial pode estar boa, o pedido é que não é
+    // dela, e marcá-la partiria o gabinete a que pertence.
+    if (lookup.scope.teamId !== payload.teamId) {
+      return sair(
+        "payload_invalid",
+        { stage: "precondition" },
+        "A credencial não pertence à equipa do pedido.",
+      );
     }
     if (lookup.provider !== provider) {
       // O adaptador declara que credencial consome; o runner confirma. Assim o
@@ -456,6 +475,15 @@ export class IvaDocumentRunner implements JobHandler {
           }),
         );
       }
+      // O fingerprint é a única pista de QUE página o portal mostrou, e morria
+      // dentro do erro: `last_error` guarda a etiqueta do desfecho, não o
+      // objeto. Vai para um log e não para a mensagem — ele já vem redigido de
+      // `classify-page.ts` (sem query string, sem dígitos), mas um log é o
+      // sítio de quem investiga, não o texto que o operador lê.
+      if (err instanceof AtIntegrityError && err.fingerprint) {
+        const fingerprint = err.fingerprint;
+        await this.safely(() => started.log.warn("página inesperada", { fingerprint }));
+      }
 
       await markByOutcome(this.deps.credentials, outcome, details, payload);
       if (periodoAberto !== null) {
@@ -616,9 +644,14 @@ export class IvaDocumentRunner implements JobHandler {
         await trace.fail({ message });
         return;
       }
-      // Ignorado de propósito ou adiado não é falhar: o trabalho desta passagem
-      // terminou, e o trace fecha concluído.
+      // Ignorado de propósito não é falhar: o trabalho terminou e o trace fecha
+      // concluído. O passo desta passagem fica legível na mesma.
       await started.skip(outcome);
+      // Um ADIAMENTO é a exceção: o job volta à fila sem gastar tentativa e a
+      // mesma execução continua daqui a 15 min, neste mesmo trace. Fechá-lo
+      // aqui dava ao dashboard um trabalho "concluído" que ainda não fez nada,
+      // e a passagem seguinte penduraria os seus eventos num trace encerrado.
+      if (outcome === "portal_paused") return;
       await trace.complete();
     });
   }

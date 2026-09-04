@@ -387,6 +387,28 @@ describe("IvaDocumentRunner", () => {
       expect(sessions.opened).toBe(0);
     });
 
+    it("`payload_invalid`: a credencial é de outra equipa", async () => {
+      // O `credentialId` vem do payload de um job, e o worker corre com a
+      // service role — sem RLS a segurá-lo. Um id trocado abriria uma sessão no
+      // portal com a senha de OUTRO gabinete e guardava a guia no nosso.
+      const credentials = new FakeCredentials({
+        ok: true,
+        credentials: { username: "gabinete@outra.pt", password: SENHA },
+        provider: "at",
+        scope: { teamId: "99999999-9999-9999-9999-999999999999", companyId: null },
+      });
+      const { runner, sessions } = build({ credentials });
+
+      const outcome = await runner.run(job());
+
+      expect(outcome).toMatchObject({ status: "failed", retry: false, code: "payload_invalid" });
+      expect(outcome).toMatchObject({ message: "A credencial não pertence à equipa do pedido." });
+      expect(sessions.opened).toBe(0);
+      // Nem marcar: a credencial pode estar perfeitamente boa — o pedido é que
+      // não é dela, e marcá-la partia o gabinete a que pertence.
+      expect(credentials.todasAsMarcas).toHaveLength(0);
+    });
+
     it("`company_not_found`: falha sem retry", async () => {
       const ledger = new FakeLedger({ company: null });
       const { runner, sessions } = build({ ledger });
@@ -474,6 +496,25 @@ describe("IvaDocumentRunner", () => {
       expect(sessions.opened).toBe(0);
       // Já está marcada: não se remarca.
       expect(credentials.todasAsMarcas).toHaveLength(0);
+    });
+
+    it("`at_credential_invalid`: a orientação diz o motivo que a fonte guardou", async () => {
+      const credentials = new FakeCredentials({
+        ok: false,
+        reason: "invalid",
+        invalidReason: "senha_bloqueada",
+      });
+      const { runner } = build({ credentials });
+
+      const outcome = await runner.run(job());
+
+      // Sem o motivo, o operador lê "credencial inválida" e não sabe se guarda
+      // uma senha nova ou se espera que o bloqueio do portal caia.
+      expect(outcome).toMatchObject({
+        status: "skipped",
+        reason: "at_credential_invalid",
+        details: { invalidReason: "senha_bloqueada" },
+      });
     });
 
     it("`toconline_credential_missing` na rota A", async () => {
@@ -816,6 +857,31 @@ describe("IvaDocumentRunner", () => {
       expect(ledger.begun).toHaveLength(0);
     });
 
+    it("o fingerprint da página inesperada fica registado num log", async () => {
+      // Sem isto o fingerprint — a única pista de que página o portal mostrou —
+      // morria dentro do erro, e quem investiga ficava com "página inesperada"
+      // e mais nada. Ele já vem redigido de `classify-page.ts`.
+      const declarations = new FakeDeclarations(
+        new AtIntegrityError("at_unexpected_page", "página inesperada", {
+          host: "sitfiscal.portaldasfinancas.pt",
+          headings: ["#"],
+        }),
+      );
+      const { runner } = build({ declarations });
+
+      await runner.run(job());
+
+      const registado = [...store.logs.values()].find(
+        (log) => log.data.fingerprint !== undefined,
+      );
+      expect(registado).toMatchObject({
+        level: "warn",
+        data: { fingerprint: { host: "sitfiscal.portaldasfinancas.pt", headings: ["#"] } },
+      });
+      // O fingerprint já vem redigido de `classify-page.ts` — o selo continua verde.
+      expect(JSON.stringify([...store.logs.values()])).not.toContain(NIF);
+    });
+
     it("`at_unavailable` é retentável e dispara a trava do portal", async () => {
       const declarations = new FakeDeclarations(new Error("Timeout 30000ms exceeded"));
       const gate = new FakeGate();
@@ -1094,14 +1160,19 @@ describe("IvaDocumentRunner", () => {
         expect(eventoJobStarted()?.status).toBe("skipped");
       });
 
-      it("portal em pausa encerra o trace concluído — é uma espera, não um erro", async () => {
+      it("portal em pausa deixa o trace ABERTO — a mesma execução continua daqui a 15 min", async () => {
+        // Adiar não é terminar: o job volta à fila sem gastar tentativa e a
+        // próxima passagem continua ESTE trace. Fechá-lo aqui dava ao dashboard
+        // um trabalho "concluído" que ainda não fez nada, e a passagem seguinte
+        // penduraria os seus eventos num trace já encerrado.
         const ligacao = await traceDoDashboard();
         const { runner } = build({ gate: new FakeGate(1_800_000) });
 
         const outcome = await runner.run(job(ligacao));
 
         expect(outcome.status).toBe("deferred");
-        expect(estadoDoTrace()).toBe("completed");
+        expect(estadoDoTrace()).toBe("open");
+        // O passo desta passagem fica legível na mesma: ignorado por pausa.
         expect(eventoJobStarted()?.status).toBe("skipped");
       });
 

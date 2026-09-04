@@ -13,6 +13,7 @@ import {
   formatDatePt,
   formatEur,
   isPeakDay,
+  jobErrorFor,
   presentIvaRow,
 } from "@/lib/documents/present";
 import { PageHeader } from "@/components/patterns/page-header";
@@ -197,6 +198,10 @@ export default async function GuiasIvaPage({ searchParams }: PageProps) {
               // ainda não têm período nenhum (a primeira busca é que o cria).
               const period = row.period ?? row.job_period;
               const periodLabel = period === null ? TRAVESSAO : formatPeriodPt(period);
+              // Só o erro que a linha está mesmo a dizer: `last_error` fica na
+              // linha do job depois de um adiamento, e mostrá-lo por baixo de um
+              // selo verde é pior do que não mostrar nada.
+              const jobError = jobErrorFor(row);
               const fetchProps = {
                 companyId: row.company_id,
                 teamId,
@@ -263,7 +268,7 @@ export default async function GuiasIvaPage({ searchParams }: PageProps) {
                         state={view.state}
                         stateLabel={view.label}
                         guidance={view.guidance}
-                        {...(row.job_error === null ? {} : { jobError: row.job_error })}
+                        {...(jobError === null ? {} : { jobError })}
                         {...(row.job_id === null
                           ? {}
                           : {

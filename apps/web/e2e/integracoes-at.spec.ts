@@ -172,6 +172,14 @@ test("credencial marcada pelo worker diz o motivo, e uma senha nova reativa-a", 
     body: JSON.stringify({ status: "invalid", metadata: { invalidReason: "senha_bloqueada" } }),
   });
 
+  // A tela inicial tem de contar a MESMA história: ter senha guardada não é
+  // estar configurado, e "Configurado" aqui mandava o operador procurar o
+  // problema em todo o lado menos onde ele está.
+  await page.goto(`/?team=${DEMO_TEAM}`);
+  await expect(
+    page.getByRole("row").filter({ hasText: "Autoridade Tributária (AT)" }),
+  ).toContainText("Inválida");
+
   await page.goto(`/integracoes/at?team=${DEMO_TEAM}`);
   const aviso = page.getByRole("alert").filter({ hasText: "Credencial marcada como" });
   await expect(aviso).toContainText(

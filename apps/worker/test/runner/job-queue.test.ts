@@ -357,6 +357,28 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("JobQueue", () => {
     expect(row!.lastError).toMatchObject({ outcome: "interrupted", retry: false });
   });
 
+  it("complete e skip limpam o last_error de uma tentativa anterior", async () => {
+    // Um adiamento deixa `last_error` na linha (é o que a UI lê para dizer
+    // "portal em pausa"); a passagem seguinte, se correr bem, tem de o levar —
+    // senão a guia chega com o selo verde e o erro antigo por baixo.
+    for (const encerrar of [
+      (id: string) => queue.complete(id, { outcome: "fetched" }),
+      (id: string) => queue.skip(id, "already_fetched"),
+    ]) {
+      const job = await enqueue({ kind: "iva" });
+      await queue.claimNext(JOB_TYPE);
+      await queue.defer(job!.id, "portal_paused", new Date(Date.now() + 900_000));
+      const [adiado] = await db.select().from(schema.jobs).where(eq(schema.jobs.id, job!.id));
+      expect(adiado!.lastError).toMatchObject({ deferred: true });
+
+      await encerrar(job!.id);
+
+      const [row] = await db.select().from(schema.jobs).where(eq(schema.jobs.id, job!.id));
+      expect(row!.lastError).toBeNull();
+      await db.delete(schema.jobs).where(eq(schema.jobs.id, job!.id));
+    }
+  });
+
   it("reapStale não toca num job a correr há pouco", async () => {
     const [job] = await db
       .insert(schema.jobs)

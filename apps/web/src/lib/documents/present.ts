@@ -68,6 +68,11 @@ export interface IvaDocumentRow {
   job_attempts: number | null;
   job_created_at: string | null;
   job_finished_at: string | null;
+  /**
+   * O job está `pending` porque o SISTEMA o adiou (pausa do portal), e não
+   * porque ninguém lhe pegou ainda. `coalesce` na view: nunca `null`.
+   */
+  job_deferred: boolean;
 }
 
 export interface IvaRowView {
@@ -104,12 +109,19 @@ function toOutcome(value: string | null): IvaOutcome | null {
 /**
  * O estado da linha a partir do último job.
  *
- * A view achata `jobs.result` / `jobs.last_error` num único `job_outcome`
- * (`coalesce(result->>'outcome', result->>'reason', last_error->>'outcome')`),
- * por isso aqui não é preciso repetir a leitura das três formas que
- * `readIvaOutcome` conhece — basta reconhecer o código. O que a view **não**
- * traz reconstrói-se do que traz: o período do job, ou o do período da
- * obrigação, e o prazo de pagamento.
+ * **Porque não `readIvaOutcome`**: o leitor canónico do domínio recebe a LINHA
+ * do job (`result`, `last_error`, `status`) e é ele que sabe ler as três formas
+ * em que um desfecho pode estar escrito. Aqui não há linha de job — há uma
+ * linha da view, que já achatou essas três formas num único `job_outcome`
+ * (`coalesce(result->>'outcome', result->>'reason', last_error->>'outcome')`) e
+ * deliberadamente NÃO expõe os jsonb crus ao browser. Chamar `readIvaOutcome`
+ * obrigaria a view a devolver `result` e `last_error` inteiros — e com eles
+ * tudo o que lá caia, incluindo o que ninguém decidiu mandar para o cliente.
+ * Então a web reconstrói o desfecho das colunas que a view escolheu dar, e o
+ * leitor canónico continua a servir o worker, que tem a linha toda.
+ *
+ * O que a view **não** traz reconstrói-se do que traz: o período do job, ou o
+ * do período da obrigação, e o prazo de pagamento.
  *
  * Um código que este build não conhece (linha antiga, worker mais recente) cai
  * em `failed_unknown` com `outcome: null`: sem desfecho não há orientação de
@@ -126,12 +138,33 @@ export function deriveState(row: IvaDocumentRow): {
   if (row.due_date !== null) details.dueDate = row.due_date;
 
   if (row.job_status === null) return { state: "never", outcome: null, details };
-  if (row.job_status === "pending") return { state: "queued", outcome: null, details };
+  if (row.job_status === "pending") {
+    // Duas esperas diferentes com o mesmo `pending`: "ninguém lhe pegou ainda"
+    // e "o sistema pausou o acesso ao portal e retoma sozinho". Sem as separar,
+    // uma indisponibilidade da AT aparecia como 182 empresas eternamente na
+    // fila — e ninguém saberia que não há nada a fazer senão esperar.
+    return row.job_deferred
+      ? { state: "portal_paused", outcome: "portal_paused", details }
+      : { state: "queued", outcome: null, details };
+  }
   if (row.job_status === "running") return { state: "running", outcome: null, details };
 
   const outcome = toOutcome(row.job_outcome);
   if (outcome === null) return { state: "failed_unknown", outcome: null, details };
   return { state: outcome, outcome, details };
+}
+
+/**
+ * O `last_error` do último job, mas só quando ele é o que a linha está a dizer.
+ *
+ * `jobs.last_error` sobrevive à linha: o `defer` escreve-o e o `complete`/`skip`
+ * seguintes trabalham na MESMA linha. A fila já o limpa (`job-queue.ts`), e isto
+ * é o cinto por cima dos suspensórios — uma linha antiga na base, ou um worker
+ * mais velho a escrever, não pode pôr «Portal em baixo» debaixo de um selo
+ * verde. `null` quando não há falha a comentar.
+ */
+export function jobErrorFor(row: IvaDocumentRow): string | null {
+  return row.job_status === "failed" ? row.job_error : null;
 }
 
 /**
@@ -173,7 +206,12 @@ export function presentIvaRow(
   },
 ): IvaRowView {
   const { state, outcome, details } = deriveState(row);
-  const inFlight = state === "queued" || state === "running";
+  // Lido do estado do JOB e não do estado derivado: um job adiado continua na
+  // fila (`pending`, sem tentativa gasta) e a mesma execução retoma daqui a 15
+  // minutos, por isso «Portal em pausa» é uma busca em curso — não uma
+  // terminada. Derivá-lo do estado poria o botão a convidar a um segundo
+  // pedido que o índice de idempotência recusaria de imediato.
+  const inFlight = isInFlight(row.job_status);
   const meta = rowStateMeta(state);
 
   const readiness = ivaFetchReadiness({
