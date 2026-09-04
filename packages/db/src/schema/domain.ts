@@ -85,17 +85,27 @@ export const companies = pgTable(
   ],
 );
 
-export const obligations = pgTable("obligations", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  companyId: uuid("company_id")
-    .notNull()
-    .references(() => companies.id, { onDelete: "cascade" }),
-  kind: obligationKind("kind").notNull(),
-  frequency: obligationFrequency("frequency").notNull().default("monthly"),
-  metadata: jsonb("metadata").notNull().default({}),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const obligations = pgTable(
+  "obligations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    kind: obligationKind("kind").notNull(),
+    frequency: obligationFrequency("frequency").notNull().default("monthly"),
+    metadata: jsonb("metadata").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // Uma empresa tem UMA obrigação de cada tipo (um IVA, uma DMR...). É o que
+    // torna o upsert do worker exprimível — `on conflict (company_id, kind) do
+    // update` — em vez de um select-then-insert que corre em paralelo consigo
+    // mesmo e duplica a obrigação em dois jobs simultâneos.
+    unique("obligation_company_kind_uq").on(t.companyId, t.kind),
+  ],
+);
 
 export const obligationPeriods = pgTable(
   "obligation_periods",
@@ -113,24 +123,33 @@ export const obligationPeriods = pgTable(
   (t) => [unique("obligation_period_uq").on(t.obligationId, t.period)],
 );
 
-export const documents = pgTable("documents", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  obligationPeriodId: uuid("obligation_period_id")
-    .notNull()
-    .references(() => obligationPeriods.id, { onDelete: "cascade" }),
-  type: text("type").notNull(),
-  entity: text("entity"),
-  reference: text("reference"),
-  amount: numeric("amount", { precision: 12, scale: 2 }),
-  validUntil: date("valid_until"),
-  storagePath: text("storage_path"),
-  status: documentStatus("status").notNull().default("extracted"),
-  extractedAt: timestamp("extracted_at", { withTimezone: true }),
-  sentAt: timestamp("sent_at", { withTimezone: true }),
-  metadata: jsonb("metadata").notNull().default({}),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const documents = pgTable(
+  "documents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    obligationPeriodId: uuid("obligation_period_id")
+      .notNull()
+      .references(() => obligationPeriods.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    entity: text("entity"),
+    reference: text("reference"),
+    amount: numeric("amount", { precision: 12, scale: 2 }),
+    validUntil: date("valid_until"),
+    storagePath: text("storage_path"),
+    status: documentStatus("status").notNull().default("extracted"),
+    extractedAt: timestamp("extracted_at", { withTimezone: true }),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    metadata: jsonb("metadata").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // Um documento de cada tipo por período: buscar a guia do IVA duas vezes
+    // atualiza a linha existente (`on conflict`), não acumula guias diferentes
+    // para o mesmo mês. O par (período, tipo) é a identidade natural do ficheiro.
+    unique("document_period_type_uq").on(t.obligationPeriodId, t.type),
+  ],
+);
 
 export const integrationCredentials = pgTable(
   "integration_credentials",
