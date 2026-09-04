@@ -1155,8 +1155,8 @@
     "semantic_hash": ""
   },
   ".superpowers/sdd/construa-um-plano-completo-vast-clock/progress.md": {
-    "mtime": 1788552095.1494763,
-    "ast_hash": "1d7dca579f89e799628336df3f7f61f7",
+    "mtime": 1788545005.9621716,
+    "ast_hash": "7b5392003d5c739e83b7ae3ddf21cb01",
     "semantic_hash": ""
   },
   ".superpowers/sdd/construa-um-plano-completo-vast-clock/task-1-brief.md": {
@@ -1737,11 +1737,6 @@
   "supabase/migrations/20260904163659_iva_view_deferred_rls.sql": {
     "mtime": 1788550642.4983714,
     "ast_hash": "ad65e0d7bbbdc915bc7512f5b725b8a9",
-    "semantic_hash": ""
-  },
-  ".superpowers/sdd/construa-um-plano-completo-vast-clock/final-fix-report.md": {
-    "mtime": 1788551470.2900844,
-    "ast_hash": "c63be312ad57c4ebf0c3508794e36361",
     "semantic_hash": ""
   }
 }
