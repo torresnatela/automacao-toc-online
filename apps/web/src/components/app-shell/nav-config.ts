@@ -1,6 +1,7 @@
 import {
   Activity,
   Building2,
+  FileText,
   Link2,
   Plug,
   ScrollText,
@@ -25,6 +26,9 @@ export const NAV_ITEMS: NavItem[] = [
   // Módulo de logs (vindo do merge da main): eventos de usuário/sistema + drill-down.
   { label: "Logs", href: "/logs", icon: ScrollText },
   { label: "Empresas", href: "/empresas", icon: Building2 },
+  // Módulo 1: a listagem operacional das guias de IVA, logo a seguir às empresas
+  // porque é sobre elas que se age.
+  { label: "Guias de IVA", href: "/documentos/iva", icon: FileText },
   { label: "Equipes", href: "/equipes", icon: UsersRound },
   { label: "Usuários", href: "/admin/users", icon: Users },
 ];
