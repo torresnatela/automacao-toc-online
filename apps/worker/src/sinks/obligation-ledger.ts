@@ -165,9 +165,7 @@ export class DbObligationLedger implements ObligationLedger {
           eq(schema.obligations.id, schema.obligationPeriods.obligationId),
         )
         .innerJoin(schema.companies, eq(schema.companies.id, schema.obligations.companyId))
-        .where(
-          and(eq(schema.obligationPeriods.id, periodId), eq(schema.companies.teamId, teamId)),
-        )
+        .where(and(eq(schema.obligationPeriods.id, periodId), eq(schema.companies.teamId, teamId)))
         .limit(1);
       if (!pertence) throw new StructuralError("Período não encontrado nesta equipa.");
 
@@ -210,7 +208,10 @@ export class DbObligationLedger implements ObligationLedger {
         // `delivered` também não pode descer um período `paid`: com `force`, uma
         // segunda captura de uma guia já paga voltaria a pô-la por pagar no
         // dashboard. O documento é gravado na mesma — o que não regride é o estado.
-        .set({ status: semRegressao(sql`'delivered'::obligation_period_status`), updatedAt: sql`now()` })
+        .set({
+          status: semRegressao(sql`'delivered'::obligation_period_status`),
+          updatedAt: sql`now()`,
+        })
         // Predicado de equipa outra vez, já dentro da transação que o verificou:
         // é a última barreira antes da escrita, e não custa nada.
         .where(and(eq(schema.obligationPeriods.id, periodId), daEquipa(teamId)));

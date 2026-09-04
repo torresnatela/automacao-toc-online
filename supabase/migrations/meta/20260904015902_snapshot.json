@@ -129,12 +129,8 @@
           "name": "profiles_team_id_teams_id_fk",
           "tableFrom": "profiles",
           "tableTo": "teams",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -288,12 +284,8 @@
           "name": "events_trace_id_traces_id_fk",
           "tableFrom": "events",
           "tableTo": "traces",
-          "columnsFrom": [
-            "trace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trace_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -406,12 +398,8 @@
           "name": "logs_trace_id_traces_id_fk",
           "tableFrom": "logs",
           "tableTo": "traces",
-          "columnsFrom": [
-            "trace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trace_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -419,12 +407,8 @@
           "name": "logs_event_id_events_id_fk",
           "tableFrom": "logs",
           "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -735,12 +719,8 @@
           "name": "jobs_team_id_teams_id_fk",
           "tableFrom": "jobs",
           "tableTo": "teams",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -748,12 +728,8 @@
           "name": "jobs_company_id_companies_id_fk",
           "tableFrom": "jobs",
           "tableTo": "companies",
-          "columnsFrom": [
-            "company_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["company_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -985,12 +961,8 @@
           "name": "companies_team_id_teams_id_fk",
           "tableFrom": "companies",
           "tableTo": "teams",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1000,26 +972,17 @@
         "company_niss_team_uq": {
           "name": "company_niss_team_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "team_id",
-            "niss"
-          ]
+          "columns": ["team_id", "niss"]
         },
         "company_nif_team_uq": {
           "name": "company_nif_team_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "team_id",
-            "nif"
-          ]
+          "columns": ["team_id", "nif"]
         },
         "company_toconline_team_uq": {
           "name": "company_toconline_team_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "team_id",
-            "toconline_company_id"
-          ]
+          "columns": ["team_id", "toconline_company_id"]
         }
       },
       "policies": {},
@@ -1127,12 +1090,8 @@
           "name": "documents_obligation_period_id_obligation_periods_id_fk",
           "tableFrom": "documents",
           "tableTo": "obligation_periods",
-          "columnsFrom": [
-            "obligation_period_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["obligation_period_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1142,10 +1101,7 @@
         "document_period_type_uq": {
           "name": "document_period_type_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "obligation_period_id",
-            "type"
-          ]
+          "columns": ["obligation_period_id", "type"]
         }
       },
       "policies": {},
@@ -1302,12 +1258,8 @@
           "name": "integration_credentials_team_id_teams_id_fk",
           "tableFrom": "integration_credentials",
           "tableTo": "teams",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1315,12 +1267,8 @@
           "name": "integration_credentials_company_id_companies_id_fk",
           "tableFrom": "integration_credentials",
           "tableTo": "companies",
-          "columnsFrom": [
-            "company_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["company_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1389,12 +1337,8 @@
           "name": "obligation_periods_obligation_id_obligations_id_fk",
           "tableFrom": "obligation_periods",
           "tableTo": "obligations",
-          "columnsFrom": [
-            "obligation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["obligation_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1404,10 +1348,7 @@
         "obligation_period_uq": {
           "name": "obligation_period_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "obligation_id",
-            "period"
-          ]
+          "columns": ["obligation_id", "period"]
         }
       },
       "policies": {},
@@ -1474,12 +1415,8 @@
           "name": "obligations_company_id_companies_id_fk",
           "tableFrom": "obligations",
           "tableTo": "companies",
-          "columnsFrom": [
-            "company_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["company_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1489,10 +1426,7 @@
         "obligation_company_kind_uq": {
           "name": "obligation_company_kind_uq",
           "nullsNotDistinct": false,
-          "columns": [
-            "company_id",
-            "kind"
-          ]
+          "columns": ["company_id", "kind"]
         }
       },
       "policies": {},
@@ -1504,112 +1438,57 @@
     "public.app_role": {
       "name": "app_role",
       "schema": "public",
-      "values": [
-        "admin",
-        "operator",
-        "viewer"
-      ]
+      "values": ["admin", "operator", "viewer"]
     },
     "public.company_status": {
       "name": "company_status",
       "schema": "public",
-      "values": [
-        "active",
-        "inactive",
-        "suspended"
-      ]
+      "values": ["active", "inactive", "suspended"]
     },
     "public.contributor_type": {
       "name": "contributor_type",
       "schema": "public",
-      "values": [
-        "employer",
-        "self_employed",
-        "voluntary_social_insurance",
-        "domestic_service"
-      ]
+      "values": ["employer", "self_employed", "voluntary_social_insurance", "domestic_service"]
     },
     "public.credential_status": {
       "name": "credential_status",
       "schema": "public",
-      "values": [
-        "active",
-        "expired",
-        "invalid"
-      ]
+      "values": ["active", "expired", "invalid"]
     },
     "public.document_status": {
       "name": "document_status",
       "schema": "public",
-      "values": [
-        "extracted",
-        "sent",
-        "error"
-      ]
+      "values": ["extracted", "sent", "error"]
     },
     "public.event_status": {
       "name": "event_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "in_progress",
-        "succeeded",
-        "failed",
-        "skipped"
-      ]
+      "values": ["pending", "in_progress", "succeeded", "failed", "skipped"]
     },
     "public.integration_provider": {
       "name": "integration_provider",
       "schema": "public",
-      "values": [
-        "toconline",
-        "at",
-        "seguranca_social",
-        "efatura"
-      ]
+      "values": ["toconline", "at", "seguranca_social", "efatura"]
     },
     "public.job_status": {
       "name": "job_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "running",
-        "succeeded",
-        "failed",
-        "skipped",
-        "cancelled"
-      ]
+      "values": ["pending", "running", "succeeded", "failed", "skipped", "cancelled"]
     },
     "public.log_level": {
       "name": "log_level",
       "schema": "public",
-      "values": [
-        "debug",
-        "info",
-        "warn",
-        "error"
-      ]
+      "values": ["debug", "info", "warn", "error"]
     },
     "public.obligation_frequency": {
       "name": "obligation_frequency",
       "schema": "public",
-      "values": [
-        "monthly",
-        "quarterly",
-        "annual",
-        "other"
-      ]
+      "values": ["monthly", "quarterly", "annual", "other"]
     },
     "public.obligation_kind": {
       "name": "obligation_kind",
       "schema": "public",
-      "values": [
-        "iva",
-        "irs_retencao",
-        "dmr",
-        "ss_contribuicoes",
-        "other"
-      ]
+      "values": ["iva", "irs_retencao", "dmr", "ss_contribuicoes", "other"]
     },
     "public.obligation_period_status": {
       "name": "obligation_period_status",
@@ -1627,29 +1506,17 @@
     "public.team_status": {
       "name": "team_status",
       "schema": "public",
-      "values": [
-        "active",
-        "inactive"
-      ]
+      "values": ["active", "inactive"]
     },
     "public.trace_status": {
       "name": "trace_status",
       "schema": "public",
-      "values": [
-        "open",
-        "completed",
-        "failed"
-      ]
+      "values": ["open", "completed", "failed"]
     },
     "public.trigger_kind": {
       "name": "trigger_kind",
       "schema": "public",
-      "values": [
-        "webhook",
-        "schedule",
-        "manual",
-        "system"
-      ]
+      "values": ["webhook", "schedule", "manual", "system"]
     }
   },
   "schemas": {},

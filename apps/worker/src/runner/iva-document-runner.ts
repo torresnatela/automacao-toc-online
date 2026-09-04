@@ -181,11 +181,7 @@ export class IvaDocumentRunner implements JobHandler {
     // --- 7. Cap diário ------------------------------------------------------
     // O próprio job não conta para o seu limite: a fila já lhe incrementou a
     // tentativa ao reclamá-lo.
-    const hoje = await this.deps.attempts.attemptsToday(
-      payload.teamId,
-      payload.companyId,
-      job.id,
-    );
+    const hoje = await this.deps.attempts.attemptsToday(payload.teamId, payload.companyId, job.id);
     if (hoje >= this.dailyAttemptCap) return sair("daily_cap_reached", { attempts: hoje });
 
     // --- 8. Credencial ------------------------------------------------------
@@ -465,8 +461,7 @@ export class IvaDocumentRunner implements JobHandler {
       // na query string. O que fica em `last_error` é sempre a etiqueta PT do
       // desfecho; a classe do erro original vai só para o log, nunca a
       // mensagem.
-      const message =
-        conhecido && err instanceof Error ? err.message : IVA_OUTCOMES[outcome].label;
+      const message = conhecido && err instanceof Error ? err.message : IVA_OUTCOMES[outcome].label;
       if (!conhecido) {
         await this.safely(() =>
           started.log.warn("erro não classificado durante a captura da guia", {

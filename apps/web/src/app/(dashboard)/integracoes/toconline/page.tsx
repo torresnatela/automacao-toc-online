@@ -51,9 +51,7 @@ export default async function TocOnlinePage({ searchParams }: PageProps) {
   // pela query string, para que o estado da página e o do formulário sejam o
   // mesmo. O operador fica preso à sua.
   const { team: requestedTeam } = await searchParams;
-  const teamId = isAdmin
-    ? (requestedTeam ?? teams[0]?.id ?? "")
-    : (user.teamId ?? "");
+  const teamId = isAdmin ? (requestedTeam ?? teams[0]?.id ?? "") : (user.teamId ?? "");
 
   const [credential, job] = await Promise.all([
     getTeamCredential("toconline", teamId),

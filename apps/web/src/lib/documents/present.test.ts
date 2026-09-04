@@ -162,7 +162,11 @@ describe("jobErrorFor", () => {
   it("mostra o erro do job falhado", () => {
     expect(
       jobErrorFor(
-        withJob({ job_status: "failed", job_outcome: "at_unavailable", job_error: "Portal em baixo." }),
+        withJob({
+          job_status: "failed",
+          job_outcome: "at_unavailable",
+          job_error: "Portal em baixo.",
+        }),
       ),
     ).toBe("Portal em baixo.");
   });
@@ -172,7 +176,9 @@ describe("jobErrorFor", () => {
     // limpava ao concluir: a guia aparecia com o selo verde e, por baixo, o
     // erro da tentativa que não vingou.
     for (const status of ["succeeded", "skipped", "pending", "running"]) {
-      expect(jobErrorFor(withJob({ job_status: status, job_error: "Portal em baixo." }))).toBeNull();
+      expect(
+        jobErrorFor(withJob({ job_status: status, job_error: "Portal em baixo." })),
+      ).toBeNull();
     }
   });
 
@@ -431,9 +437,9 @@ describe("credentialBanner", () => {
   });
 
   it("um marcador sem segredo continua «por configurar»", () => {
-    expect(credentialBanner("at_direct_login", { hasSecret: false, status: "active" })?.message).toBe(
-      "Configure o acesso à AT antes de buscar guias.",
-    );
+    expect(
+      credentialBanner("at_direct_login", { hasSecret: false, status: "active" })?.message,
+    ).toBe("Configure o acesso à AT antes de buscar guias.");
   });
 
   it("credencial marcada diz o estado por extenso e pede senha nova", () => {

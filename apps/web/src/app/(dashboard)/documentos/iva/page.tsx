@@ -120,8 +120,7 @@ export default async function GuiasIvaPage({ searchParams }: PageProps) {
   // A credencial do gabinete na rota atual — a que o banner comenta. As por
   // empresa já entraram na prontidão de cada linha, acima.
   const teamCredential = credentials.candidates.find(
-    (candidate) =>
-      candidate.provider === providerForAccess(access) && candidate.companyId === null,
+    (candidate) => candidate.provider === providerForAccess(access) && candidate.companyId === null,
   );
   const banner = credentials.failed ? null : credentialBanner(access, teamCredential ?? null);
 
@@ -240,9 +239,7 @@ export default async function GuiasIvaPage({ searchParams }: PageProps) {
                   <TableCell className="font-mono tabular-nums">
                     {row.reference ?? TRAVESSAO}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatEur(row.amount)}
-                  </TableCell>
+                  <TableCell className="text-right tabular-nums">{formatEur(row.amount)}</TableCell>
                   <TableCell className="tabular-nums">{formatDatePt(row.due_date)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex flex-wrap items-start justify-end gap-2">

@@ -146,9 +146,7 @@ const cipher: SecretCipher = { encrypt: (plaintext) => encryptSecret(plaintext) 
 const INVALID_MARKERS = ["invalidReason", "invalidAt", "attemptsLeft"] as const;
 
 /** Exportada para teste: é aqui que se decide o que sobrevive à reativação. */
-export function withoutInvalidMarkers(
-  metadata: Record<string, unknown>,
-): Record<string, unknown> {
+export function withoutInvalidMarkers(metadata: Record<string, unknown>): Record<string, unknown> {
   const clean = { ...metadata };
   for (const key of INVALID_MARKERS) delete clean[key];
   return clean;

@@ -127,7 +127,10 @@ describe("WorkerLoop.tick", () => {
     // browser navegava — e na AT esse URL leva o NIF. O que vai para
     // `last_error` (e daí para o ecrã) é sempre texto nosso; a classe do erro
     // fica num campo à parte, para quem investiga.
-    const loop = build(queue, handler(new Error("Timeout navigating to /pagamentos?nif=501442600")));
+    const loop = build(
+      queue,
+      handler(new Error("Timeout navigating to /pagamentos?nif=501442600")),
+    );
 
     await loop.tick();
     expect(queue.failed).toEqual([

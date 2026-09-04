@@ -30,7 +30,11 @@ const INTEGRATIONS: Integration[] = [
     description: "Portal das Finanças",
     href: "/integracoes/at",
   },
-  { provider: "seguranca_social", label: "Segurança Social Direta", description: "SS Direta (2FA por utilizador dedicado)" },
+  {
+    provider: "seguranca_social",
+    label: "Segurança Social Direta",
+    description: "SS Direta (2FA por utilizador dedicado)",
+  },
   { provider: "efatura", label: "e-Fatura", description: "Faturação eletrónica" },
 ];
 

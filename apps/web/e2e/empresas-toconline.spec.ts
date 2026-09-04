@@ -22,7 +22,9 @@ test("a lista de empresas mostra a ligação ao TOConline (seed)", async ({ page
 
   // "Empresa Sem Ligação Demo" não tem essas colunas no seed.
   await expect(
-    page.getByRole("row", { name: /Empresa Sem Ligação Demo/ }).getByText("Não ligada", { exact: true }),
+    page
+      .getByRole("row", { name: /Empresa Sem Ligação Demo/ })
+      .getByText("Não ligada", { exact: true }),
   ).toBeVisible();
 });
 

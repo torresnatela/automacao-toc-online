@@ -47,7 +47,8 @@ export const WORDING = {
   passwordChange:
     /(?:senha|palavra-passe)[^.]{0,40}(?:expirou|caducou)|(?:deve|tem de|é necessário)[^.]{0,40}alterar[^.]{0,30}(?:senha|palavra-passe)/i,
   /** O contabilista não está autorizado por este contribuinte. // observado em: TODO(recon) */
-  authorizationMissing: /n[aã]o (?:tem|possui|est[aá]) autoriza|sem autoriza[çc][aã]o|n[aã]o est[aá] autorizado/i,
+  authorizationMissing:
+    /n[aã]o (?:tem|possui|est[aá]) autoriza|sem autoriza[çc][aã]o|n[aã]o est[aá] autorizado/i,
   /** Não há guia a emitir — desfecho válido, não falha. // observado em: TODO(recon) */
   noPaymentDocument:
     /n[aã]o (?:existe|h[aá]) documento de pagamento|sem documento de pagamento|n[aã]o h[aá] lugar a pagamento|sem imposto a pagar/i,

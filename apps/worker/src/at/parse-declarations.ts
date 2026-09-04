@@ -131,9 +131,7 @@ function submissionRank(raw: string | null): number | null {
  * antigo. Ordem de desempate: período → data de submissão → a marcada como
  * substituição → a que vier mais abaixo na tabela.
  */
-export function pickMostRecentDeclaration(
-  rows: readonly DeclarationRow[],
-): DeclarationRow | null {
+export function pickMostRecentDeclaration(rows: readonly DeclarationRow[]): DeclarationRow | null {
   let best: DeclarationRow | null = null;
   let bestRank: number | null = null;
 

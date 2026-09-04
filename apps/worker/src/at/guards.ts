@@ -57,10 +57,7 @@ export function assertPdfIntegrity(buf: Buffer): void {
  * mal lido parecer uma troca de contribuinte, que é o alarme que ninguém pode
  * aprender a ignorar.
  */
-export function assertDocumentBelongsTo(
-  expectedNif: string | null,
-  foundNif: string | null,
-): void {
+export function assertDocumentBelongsTo(expectedNif: string | null, foundNif: string | null): void {
   if (expectedNif === null || foundNif === null) return;
   // `taxIdMatches` devolve `null` quando um dos lados não tem dígitos: ilegível,
   // não divergente.

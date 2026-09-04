@@ -121,7 +121,10 @@ describe("capturePdf", () => {
 
     // Eventos que cheguem atrasados já não encontram ninguém à escuta.
     page.emitir("download", { path: async () => "/nao/existe", delete: async () => undefined });
-    context.emitir("page", popupFalso("http://exemplo/doc.pdf", () => (popupFechado = true)));
+    context.emitir(
+      "page",
+      popupFalso("http://exemplo/doc.pdf", () => (popupFechado = true)),
+    );
     expect(context.pedidos).toEqual([]);
     expect(popupFechado).toBe(false);
   });
@@ -158,7 +161,11 @@ describe("capturePdf", () => {
 
     const capturado = await capturePdf(
       alvo,
-      async () => context.emitir("page", popupFalso("http://exemplo/doc.pdf", () => (fechado = true))),
+      async () =>
+        context.emitir(
+          "page",
+          popupFalso("http://exemplo/doc.pdf", () => (fechado = true)),
+        ),
       { timeoutMs: 1_000 },
     );
 
@@ -231,7 +238,10 @@ describe("capturePdf", () => {
             throw new Error("corpo indisponível");
           },
         });
-        context.emitir("page", popupFalso("http://exemplo/doc.pdf", () => undefined));
+        context.emitir(
+          "page",
+          popupFalso("http://exemplo/doc.pdf", () => undefined),
+        );
       },
       { timeoutMs: 10_000 },
     )

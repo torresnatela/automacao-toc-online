@@ -321,7 +321,11 @@ function html(res: ServerResponse, corpo: string, headers: Record<string, string
   res.end(corpo);
 }
 
-function redireciona(res: ServerResponse, para: string, headers: Record<string, string> = {}): void {
+function redireciona(
+  res: ServerResponse,
+  para: string,
+  headers: Record<string, string> = {},
+): void {
   res.writeHead(302, { location: para, ...headers });
   res.end();
 }
@@ -382,9 +386,7 @@ export async function startAtFixtureServer(): Promise<AtFixtureServer> {
           case SENHAS.bloqueada:
             return html(
               res,
-              FORMULARIO_LOGIN(
-                "<p>O acesso encontra-se bloqueado por excesso de tentativas.</p>",
-              ),
+              FORMULARIO_LOGIN("<p>O acesso encontra-se bloqueado por excesso de tentativas.</p>"),
             );
           case SENHAS.doisFatores:
             return html(res, PAGINA_2FA);

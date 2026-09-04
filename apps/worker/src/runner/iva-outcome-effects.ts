@@ -1,4 +1,9 @@
-import { IVA_OUTCOMES, type IvaDocumentJobPayload, type IvaOutcome, type IvaOutcomeDetails } from "@toc/core/domain";
+import {
+  IVA_OUTCOMES,
+  type IvaDocumentJobPayload,
+  type IvaOutcome,
+  type IvaOutcomeDetails,
+} from "@toc/core/domain";
 import type { AtCredentialSource } from "./ports";
 
 /**

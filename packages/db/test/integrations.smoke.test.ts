@@ -44,7 +44,10 @@ async function asUser<T>(userId: string, fn: (c: PoolClient) => Promise<T>) {
 }
 
 async function makeTeamWithUser(role: "viewer" | "admin" = "viewer") {
-  const [team] = await db.insert(teams).values({ name: `Gab ${randomUUID()}` }).returning();
+  const [team] = await db
+    .insert(teams)
+    .values({ name: `Gab ${randomUUID()}` })
+    .returning();
   const userId = randomUUID();
   await db.insert(profiles).values({
     id: userId,
@@ -124,8 +127,9 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("integration_credentials", ()
         .values({ teamId, provider: "toconline", secretEncrypted: "v1:aa:bb:cc" });
 
       const { userId: adminId } = await makeTeamWithUser("admin");
-      const rows = await asUser(adminId, async (c) =>
-        (await c.query("select * from public.integration_credentials")).rows,
+      const rows = await asUser(
+        adminId,
+        async (c) => (await c.query("select * from public.integration_credentials")).rows,
       );
       expect(rows).toHaveLength(0);
     });
@@ -148,8 +152,11 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("integration_credentials", ()
         secretEncrypted: "v1:aa:bb:cc",
       });
 
-      const rows = await asUser(userId, async (c) =>
-        (await c.query("select username, has_secret from public.integration_credentials_safe")).rows,
+      const rows = await asUser(
+        userId,
+        async (c) =>
+          (await c.query("select username, has_secret from public.integration_credentials_safe"))
+            .rows,
       );
       expect(rows).toHaveLength(1);
       expect(rows[0]).toMatchObject({ username: "gabinete@example.pt", has_secret: true });
@@ -162,8 +169,9 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("integration_credentials", ()
         .values({ teamId: outra.teamId, provider: "toconline", secretEncrypted: "v1:aa:bb:cc" });
 
       const { userId } = await makeTeamWithUser();
-      const rows = await asUser(userId, async (c) =>
-        (await c.query("select id from public.integration_credentials_safe")).rows,
+      const rows = await asUser(
+        userId,
+        async (c) => (await c.query("select id from public.integration_credentials_safe")).rows,
       );
       expect(rows).toHaveLength(0);
     });
@@ -206,9 +214,7 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("companies — chaves da varr
   it("vários NIFs nulos convivem na mesma equipe (NULLs são distintos)", async () => {
     const { teamId } = await makeTeamWithUser();
     await db.insert(companies).values({ teamId, name: "Sem NIF 1" });
-    await expect(
-      db.insert(companies).values({ teamId, name: "Sem NIF 2" }),
-    ).resolves.toBeDefined();
+    await expect(db.insert(companies).values({ teamId, name: "Sem NIF 2" })).resolves.toBeDefined();
   });
 
   it("o id do TOConline é único por equipe", async () => {
@@ -218,7 +224,9 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("companies — chaves da varr
       .values({ teamId, name: "A", nif: nextNif(), toconlineCompanyId: 515814 });
 
     await expect(
-      db.insert(companies).values({ teamId, name: "B", nif: nextNif(), toconlineCompanyId: 515814 }),
+      db
+        .insert(companies)
+        .values({ teamId, name: "B", nif: nextNif(), toconlineCompanyId: 515814 }),
     ).rejects.toThrow(/company_toconline_team_uq/);
   });
 
@@ -245,8 +253,9 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("jobs — escopo por equipe",
     const { teamId, userId } = await makeTeamWithUser();
     await db.insert(jobs).values({ teamId, type: `test.scan.${randomUUID()}` });
 
-    const rows = await asUser(userId, async (c) =>
-      (await c.query("select id from public.jobs where team_id = $1", [teamId])).rows,
+    const rows = await asUser(
+      userId,
+      async (c) => (await c.query("select id from public.jobs where team_id = $1", [teamId])).rows,
     );
     expect(rows).toHaveLength(1);
   });
@@ -256,8 +265,10 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("jobs — escopo por equipe",
     await db.insert(jobs).values({ teamId: outra.teamId, type: `test.scan.${randomUUID()}` });
 
     const { userId } = await makeTeamWithUser();
-    const rows = await asUser(userId, async (c) =>
-      (await c.query("select id from public.jobs where team_id = $1", [outra.teamId])).rows,
+    const rows = await asUser(
+      userId,
+      async (c) =>
+        (await c.query("select id from public.jobs where team_id = $1", [outra.teamId])).rows,
     );
     expect(rows).toHaveLength(0);
   });
@@ -267,8 +278,9 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("jobs — escopo por equipe",
     await db.insert(jobs).values({ type });
 
     const { userId } = await makeTeamWithUser();
-    const rows = await asUser(userId, async (c) =>
-      (await c.query("select id from public.jobs where type = $1", [type])).rows,
+    const rows = await asUser(
+      userId,
+      async (c) => (await c.query("select id from public.jobs where type = $1", [type])).rows,
     );
     expect(rows).toHaveLength(0);
   });
@@ -279,8 +291,9 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("jobs — escopo por equipe",
     await db.insert(jobs).values({ teamId: outra.teamId, type });
 
     const { userId: adminId } = await makeTeamWithUser("admin");
-    const rows = await asUser(adminId, async (c) =>
-      (await c.query("select id from public.jobs where type = $1", [type])).rows,
+    const rows = await asUser(
+      adminId,
+      async (c) => (await c.query("select id from public.jobs where type = $1", [type])).rows,
     );
     expect(rows).toHaveLength(1);
   });

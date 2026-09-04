@@ -150,7 +150,8 @@ export class FakeSessions implements AtSessionFactory {
   constructor(private readonly options: FakeSessionsOptions = {}) {
     this.access = options.access ?? "at_direct_login";
     this.credentialProvider =
-      options.credentialProvider ?? (this.access === "toconline_direct_access" ? "toconline" : "at");
+      options.credentialProvider ??
+      (this.access === "toconline_direct_access" ? "toconline" : "at");
   }
 
   precondition(): AtPrecondition {
@@ -300,11 +301,7 @@ export class FakeAttempts implements AttemptGuard {
   readonly calls: { companyId: string; excludeJobId: string }[] = [];
   constructor(private readonly count = 0) {}
 
-  async attemptsToday(
-    _teamId: string,
-    companyId: string,
-    excludeJobId: string,
-  ): Promise<number> {
+  async attemptsToday(_teamId: string, companyId: string, excludeJobId: string): Promise<number> {
     this.calls.push({ companyId, excludeJobId });
     return this.count;
   }

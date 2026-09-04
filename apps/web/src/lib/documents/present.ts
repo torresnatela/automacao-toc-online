@@ -318,9 +318,7 @@ export const NOT_READY_BULK_COPY: Record<IvaNotReadyReason, string> = {
  * lista — uma lista à parte ficaria para trás no dia em que houver mais um
  * motivo. Motivos a zero não aparecem: um resumo não mostra zeros.
  */
-export function formatNotReadyReasons(
-  counts: Partial<Record<IvaNotReadyReason, number>>,
-): string {
+export function formatNotReadyReasons(counts: Partial<Record<IvaNotReadyReason, number>>): string {
   const parts: string[] = [];
   for (const reason of Object.keys(NOT_READY_BULK_COPY) as IvaNotReadyReason[]) {
     const n = counts[reason];
@@ -407,7 +405,8 @@ const ACCESS_TARGET: Record<
     href: "/integracoes/at",
     label: "Configurar acesso à AT",
     missing: "Configure o acesso à AT antes de buscar guias.",
-    blocked: (status) => `O acesso à AT está marcado como ${status} — guarde uma palavra-passe nova.`,
+    blocked: (status) =>
+      `O acesso à AT está marcado como ${status} — guarde uma palavra-passe nova.`,
   },
   toconline: {
     href: "/integracoes/toconline",
@@ -460,10 +459,7 @@ export function credentialBanner(
  * `"route"` = a senha da AT, que se corrige onde a rota a guarda (na rota A
  * vive no TOConline); `"toconline"` = do TOConline em qualquer rota.
  */
-export const CREDENTIAL_OUTCOME_TARGET: Record<
-  IvaOutcome,
-  "at" | "toconline" | "route" | null
-> = {
+export const CREDENTIAL_OUTCOME_TARGET: Record<IvaOutcome, "at" | "toconline" | "route" | null> = {
   // --- Sucesso e estados válidos ------------------------------------------
   fetched: null,
   fetched_without_fields: null,

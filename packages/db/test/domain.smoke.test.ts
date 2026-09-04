@@ -29,10 +29,7 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("domain skeleton", () => {
       .insert(companies)
       .values({ teamId: team!.id, niss: Date.now(), name: "ACME Lda", type: "employer" })
       .returning();
-    const [o] = await db
-      .insert(obligations)
-      .values({ companyId: c!.id, kind: "iva" })
-      .returning();
+    const [o] = await db.insert(obligations).values({ companyId: c!.id, kind: "iva" }).returning();
     const [p] = await db
       .insert(obligationPeriods)
       .values({ obligationId: o!.id, period: "2026-06" })

@@ -118,7 +118,12 @@ beforeEach(() => {
 describe("AcessoGovAtSessions.precondition", () => {
   it("recusa uma empresa sem NIF antes de abrir o browser", () => {
     const factory = new AcessoGovAtSessions({
-      browser: { async newContext() {  throw new Error("não devia abrir"); }, async close() {} },
+      browser: {
+        async newContext() {
+          throw new Error("não devia abrir");
+        },
+        async close() {},
+      },
       state: new InMemoryStorageStateStore(),
     });
     expect(factory.precondition(empresa(null))).toEqual({

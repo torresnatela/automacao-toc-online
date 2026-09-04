@@ -4,8 +4,9 @@ import { AtIntegrityError, StructuralError } from "../../src/errors";
 
 describe("assertAtHost", () => {
   it("aceita os hosts do Portal das Finanças e devolve o host", () => {
-    expect(assertAtHost("https://iva.portaldasfinancas.gov.pt/dpiva/portal/cc/consultar-declaracao"))
-      .toBe("iva.portaldasfinancas.gov.pt");
+    expect(
+      assertAtHost("https://iva.portaldasfinancas.gov.pt/dpiva/portal/cc/consultar-declaracao"),
+    ).toBe("iva.portaldasfinancas.gov.pt");
     expect(assertAtHost("https://www.portaldasfinancas.gov.pt/de/qualquer/coisa")).toBe(
       "www.portaldasfinancas.gov.pt",
     );

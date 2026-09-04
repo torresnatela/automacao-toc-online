@@ -55,10 +55,18 @@ export class DbCredentialSource implements AtCredentialSource {
     if (!row || !row.username || !row.secret) return { ok: false, reason: "not_found" };
     const motivo = motivoDaMarca(row.metadata);
     if (row.status === "invalid") {
-      return { ok: false, reason: "invalid", ...(motivo === null ? {} : { invalidReason: motivo }) };
+      return {
+        ok: false,
+        reason: "invalid",
+        ...(motivo === null ? {} : { invalidReason: motivo }),
+      };
     }
     if (row.status === "expired") {
-      return { ok: false, reason: "expired", ...(motivo === null ? {} : { invalidReason: motivo }) };
+      return {
+        ok: false,
+        reason: "expired",
+        ...(motivo === null ? {} : { invalidReason: motivo }),
+      };
     }
 
     try {

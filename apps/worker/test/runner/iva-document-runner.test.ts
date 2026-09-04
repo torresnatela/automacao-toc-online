@@ -130,13 +130,29 @@ function build(opts: BuildOptions = {}) {
     },
   });
 
-  return { runner, credentials, sessions, declarations, documents, storage, ledger, attempts, gate, sleeps };
+  return {
+    runner,
+    credentials,
+    sessions,
+    declarations,
+    documents,
+    storage,
+    ledger,
+    attempts,
+    gate,
+    sleeps,
+  };
 }
 
 /** Período já entregue e com ficheiro — a linha que dispara `already_fetched`. */
 function periodoEntregue(period: string) {
   return {
-    [period]: { periodId: `period-${period}`, status: "delivered" as const, documentId: "d", hasFile: true },
+    [period]: {
+      periodId: `period-${period}`,
+      status: "delivered" as const,
+      documentId: "d",
+      hasFile: true,
+    },
   };
 }
 
@@ -196,7 +212,11 @@ describe("IvaDocumentRunner", () => {
         warnings: ["entidade_ausente", "referencia_invalida", "valor_ausente"],
       });
       // O PDF vale por si: guarda-se na mesma, com os campos a null.
-      expect(ledger.recorded[0]?.doc).toMatchObject({ entity: null, reference: null, amount: null });
+      expect(ledger.recorded[0]?.doc).toMatchObject({
+        entity: null,
+        reference: null,
+        amount: null,
+      });
     });
 
     it("`already_fetched` (pré-browser): período pedido já entregue com ficheiro", async () => {
@@ -235,9 +255,7 @@ describe("IvaDocumentRunner", () => {
       const ledger = new FakeLedger({ periods: periodoEntregue(PERIODO) });
       const { runner } = build({ ledger });
 
-      const outcome = await runner.run(
-        job({ payload: payload({ period: PERIODO, force: true }) }),
-      );
+      const outcome = await runner.run(job({ payload: payload({ period: PERIODO, force: true }) }));
 
       expect(outcome.status).toBe("succeeded");
     });
@@ -871,9 +889,7 @@ describe("IvaDocumentRunner", () => {
 
       await runner.run(job());
 
-      const registado = [...store.logs.values()].find(
-        (log) => log.data.fingerprint !== undefined,
-      );
+      const registado = [...store.logs.values()].find((log) => log.data.fingerprint !== undefined);
       expect(registado).toMatchObject({
         level: "warn",
         data: { fingerprint: { host: "sitfiscal.portaldasfinancas.pt", headings: ["#"] } },
@@ -1052,8 +1068,14 @@ describe("IvaDocumentRunner", () => {
       // desfecho que a tabela diz ser `skipped`, o dashboard procura o código no
       // sítio errado e mostra "erro inesperado" a quem só precisava de esperar.
       const casos = [
-        { esperado: "at_credential_missing", opts: { credentials: new FakeCredentials({ ok: false, reason: "not_found" as const }) } },
-        { esperado: "company_inactive", opts: { ledger: new FakeLedger({ company: empresa({ status: "inactive" }) }) } },
+        {
+          esperado: "at_credential_missing",
+          opts: { credentials: new FakeCredentials({ ok: false, reason: "not_found" as const }) },
+        },
+        {
+          esperado: "company_inactive",
+          opts: { ledger: new FakeLedger({ company: empresa({ status: "inactive" }) }) },
+        },
         { esperado: "daily_cap_reached", opts: { attempts: new FakeAttempts(5) } },
       ];
 
@@ -1279,7 +1301,9 @@ describe("IvaDocumentRunner", () => {
     });
 
     it("também não os leva quando a AT recusa a senha", async () => {
-      const { runner } = build({ sessions: new FakeSessions({ failure: new AtAuthError("rejected", 1) }) });
+      const { runner } = build({
+        sessions: new FakeSessions({ failure: new AtAuthError("rejected", 1) }),
+      });
 
       const outcome = await runner.run(job());
 

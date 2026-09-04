@@ -41,8 +41,7 @@ export async function requireRole(min: AppRole): Promise<SessionUser | null> {
 
 /** Quem escreve, e sobre que equipe. */
 export type WriterScope =
-  | { ok: true; actor: SessionUser; teamId: string }
-  | { ok: false; status: number; error: string };
+  { ok: true; actor: SessionUser; teamId: string } | { ok: false; status: number; error: string };
 
 /**
  * Sessão + equipa numa passagem, para qualquer serviço que escreva.

@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { validateCredentialInput } from "../src/domain/integration/validate";
-import { saveCredential, type CredentialRepo, type SecretCipher } from "../src/domain/integration/service";
+import {
+  saveCredential,
+  type CredentialRepo,
+  type SecretCipher,
+} from "../src/domain/integration/service";
 import type { CredentialInput, CredentialRecord } from "../src/domain/integration/types";
 
 const SENHA = "IvoCunha-senha-de-exemplo-1971";
@@ -46,13 +50,13 @@ describe("validateCredentialInput", () => {
   it("exige equipa, provider e utilizador", () => {
     expect(validateCredentialInput(input({ teamId: "  " }))?.teamId).toBeTruthy();
     expect(validateCredentialInput(input({ username: "  " }))?.username).toBeTruthy();
-    expect(
-      validateCredentialInput(input({ provider: "outro" as never }))?.provider,
-    ).toBeTruthy();
+    expect(validateCredentialInput(input({ provider: "outro" as never }))?.provider).toBeTruthy();
   });
 
   it("exige a senha só quando pedido", () => {
-    expect(validateCredentialInput(input({ password: "" }), { requirePassword: true })?.password).toBeTruthy();
+    expect(
+      validateCredentialInput(input({ password: "" }), { requirePassword: true })?.password,
+    ).toBeTruthy();
     expect(validateCredentialInput(input({ password: "" }))).toBeNull();
   });
 
@@ -70,9 +74,9 @@ describe("validateCredentialInput", () => {
     const bad = validateCredentialInput(input({ provider: "at", username: "gabinete@example.pt" }));
     expect(bad?.username).toBe("NIF do Contabilista Certificado inválido.");
     // Dígito de controlo errado: estrutura certa, NIF inválido.
-    expect(validateCredentialInput(input({ provider: "at", username: "501442601" }))?.username).toBe(
-      "NIF do Contabilista Certificado inválido.",
-    );
+    expect(
+      validateCredentialInput(input({ provider: "at", username: "501442601" }))?.username,
+    ).toBe("NIF do Contabilista Certificado inválido.");
     expect(validateCredentialInput(input({ provider: "at", username: "501442600" }))).toBeNull();
   });
 

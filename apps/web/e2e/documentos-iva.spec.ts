@@ -295,11 +295,11 @@ test("com credencial, buscar enfileira uma vez e o lote confirma antes de encher
   // página já se desativa sozinho.
   const desatualizada = await page.context().newPage();
   await desatualizada.goto(`/documentos/iva?team=${DEMO_TEAM}`);
-  await expect(
-    linha(desatualizada, LIGADA).getByRole("button", { name: /Buscar/ }),
-  ).toBeEnabled();
+  await expect(linha(desatualizada, LIGADA).getByRole("button", { name: /Buscar/ })).toBeEnabled();
 
-  await linha(page, LIGADA).getByRole("button", { name: /Buscar/ }).click();
+  await linha(page, LIGADA)
+    .getByRole("button", { name: /Buscar/ })
+    .click();
   // Escopado à linha: cada botão tem o seu `role="status"`, e o resumo do lote
   // acrescenta mais um — um `getByRole` solto casaria vários.
   await expect(linha(page, LIGADA).getByRole("status")).toHaveText("Busca enfileirada.");
@@ -309,7 +309,9 @@ test("com credencial, buscar enfileira uma vez e o lote confirma antes de encher
   await expect(linha(page, LIGADA).getByText("Na fila")).toBeVisible();
   await expect(linha(page, LIGADA).getByRole("button", { name: /Buscar/ })).toBeDisabled();
 
-  await linha(desatualizada, LIGADA).getByRole("button", { name: /Buscar/ }).click();
+  await linha(desatualizada, LIGADA)
+    .getByRole("button", { name: /Buscar/ })
+    .click();
   await expect(linha(desatualizada, LIGADA).getByRole("status")).toHaveText(
     "Já existe uma busca em curso para esta empresa.",
   );

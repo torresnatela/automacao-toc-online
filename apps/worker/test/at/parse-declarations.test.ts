@@ -58,11 +58,7 @@ describe("parseDeclarationRows", () => {
     // resto. Descartá-las é certo; inventar-lhes um período seria fatal.
     const rows = parseDeclarationRows(
       ["Período", "Data", "Tipo"],
-      [
-        ["2026-07", "2026-09-10", "Primeira"],
-        ["Total", "", ""],
-        [],
-      ],
+      [["2026-07", "2026-09-10", "Primeira"], ["Total", "", ""], []],
     );
     expect(rows).toHaveLength(1);
   });
@@ -110,7 +106,10 @@ describe("pickMostRecentDeclaration", () => {
   });
 
   it("ordena entre regimes: 2026-07 é mais recente que 2026-Q2", () => {
-    const picked = pickMostRecentDeclaration([row({ period: "2026-Q2" }), row({ period: "2026-07" })]);
+    const picked = pickMostRecentDeclaration([
+      row({ period: "2026-Q2" }),
+      row({ period: "2026-07" }),
+    ]);
     expect(picked?.period).toBe("2026-07");
   });
 

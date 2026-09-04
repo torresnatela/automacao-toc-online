@@ -172,7 +172,12 @@ describe("credentialRepo.update", () => {
   });
 
   it("uma linha sem metadata guardado não rebenta", async () => {
-    const admin = fakeAdmin({ id: "cred-1", secret_encrypted: null, status: "invalid", metadata: null });
+    const admin = fakeAdmin({
+      id: "cred-1",
+      secret_encrypted: null,
+      status: "invalid",
+      metadata: null,
+    });
     const repo = credentialRepo(admin);
 
     await repo.update("cred-1", record());

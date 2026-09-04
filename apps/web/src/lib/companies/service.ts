@@ -112,7 +112,10 @@ function companyRowToInput(row: CompanyRow): CompanyInput {
 
 export async function listCompanies(): Promise<CompanyRow[]> {
   const supabase = await getSupabaseServerClient();
-  const { data } = await supabase.from("companies").select(COLUMNS).order("name", { ascending: true });
+  const { data } = await supabase
+    .from("companies")
+    .select(COLUMNS)
+    .order("name", { ascending: true });
   return (data ?? []) as CompanyRow[];
 }
 
@@ -276,7 +279,11 @@ export async function updateCompanyFromInput(
     .maybeSingle();
   // 404 (e NÃO 403) também para empresa de outra equipe: não revela existência
   // de registros de outros tenants a um operador que adivinhe ids.
-  const notFound: CompanyMutationResult = { ok: false, status: 404, error: "Empresa não encontrada." };
+  const notFound: CompanyMutationResult = {
+    ok: false,
+    status: 404,
+    error: "Empresa não encontrada.",
+  };
   if (!existing) return notFound;
   const current = existing as CompanyRow;
   if (actor.role !== "admin" && current.team_id !== actor.teamId) return notFound;
@@ -325,7 +332,11 @@ export async function deleteCompany(id: string): Promise<CompanyMutationResult> 
     .eq("id", id)
     .maybeSingle();
   // 404 (não 403) também para empresa de outra equipe — ver updateCompanyFromInput.
-  const notFound: CompanyMutationResult = { ok: false, status: 404, error: "Empresa não encontrada." };
+  const notFound: CompanyMutationResult = {
+    ok: false,
+    status: 404,
+    error: "Empresa não encontrada.",
+  };
   if (!existing) return notFound;
   const current = existing as { id: string; team_id: string };
   if (actor.role !== "admin" && current.team_id !== actor.teamId) return notFound;

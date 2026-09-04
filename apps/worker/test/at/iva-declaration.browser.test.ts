@@ -141,10 +141,7 @@ describe.skipIf(skip)("AtIvaDeclarationReader (browser + Portal das Finanças lo
 
   it("sem autorização no portal → AtAuthError(authorization_missing)", async () => {
     const session = await abrirSessao(NIFS.bom);
-    const alvo = apontada(
-      session,
-      `${session.urls.consultarDeclaracao}?semAutorizacao=1`,
-    );
+    const alvo = apontada(session, `${session.urls.consultarDeclaracao}?semAutorizacao=1`);
 
     await expect(reader().readMostRecent(alvo, empresa(NIFS.bom))).rejects.toBeInstanceOf(
       AtAuthError,

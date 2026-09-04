@@ -16,9 +16,7 @@ describe("IVA_ROW_TONES", () => {
    * apanhado por tipos se alguém recompilar — este teste falha na mesma no CI.
    */
   it("cobre exatamente os desfechos do domínio mais os estados de UI", () => {
-    expect(Object.keys(IVA_ROW_TONES).sort()).toEqual(
-      [...IVA_OUTCOME_CODES, ...UI_STATES].sort(),
-    );
+    expect(Object.keys(IVA_ROW_TONES).sort()).toEqual([...IVA_OUTCOME_CODES, ...UI_STATES].sort());
   });
 
   it("dá a todos os estados um rótulo não vazio", () => {

@@ -57,7 +57,10 @@ async function asUser<T>(userId: string, fn: (c: PoolClient) => Promise<T>) {
 
 // Cria uma equipe e um usuário (profile) atribuído a ela. Papel default viewer.
 async function makeTeamWithUser(role: "viewer" | "admin" = "viewer") {
-  const [team] = await db.insert(teams).values({ name: `Gab ${randomUUID()}` }).returning();
+  const [team] = await db
+    .insert(teams)
+    .values({ name: `Gab ${randomUUID()}` })
+    .returning();
   const userId = randomUUID();
   await db.insert(profiles).values({
     id: userId,
@@ -170,8 +173,12 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("tenancy: isolamento por equi
     const docB = await makeDocument(cB.id);
 
     const seen = await asUser(a.userId, async (c) => {
-      const obl = await c.query("select id from public.obligations where id = $1", [docB.obligationId]);
-      const per = await c.query("select id from public.obligation_periods where id = $1", [docB.periodId]);
+      const obl = await c.query("select id from public.obligations where id = $1", [
+        docB.obligationId,
+      ]);
+      const per = await c.query("select id from public.obligation_periods where id = $1", [
+        docB.periodId,
+      ]);
       const doc = await c.query("select id from public.documents where id = $1", [docB.documentId]);
       return { obl: obl.rowCount, per: per.rowCount, doc: doc.rowCount };
     });

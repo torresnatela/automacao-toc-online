@@ -4,11 +4,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { createDb, schema } from "@toc/db";
 import { encryptSecret, generateEncryptionKey } from "@toc/core/crypto";
-import {
-  IVA_DOCUMENT_JOB_TYPE,
-  IVA_DOCUMENT_TYPE,
-  IVA_OBLIGATION_KIND,
-} from "@toc/core/domain";
+import { IVA_DOCUMENT_JOB_TYPE, IVA_DOCUMENT_TYPE, IVA_OBLIGATION_KIND } from "@toc/core/domain";
 import { AtTransientError, StructuralError } from "../../src/errors";
 import { DbAttemptGuard } from "../../src/sinks/attempt-guard";
 import { DbCredentialSource } from "../../src/sinks/credential-source";
@@ -131,8 +127,20 @@ describe.skipIf(SKIP_DB)("DbObligationLedger", () => {
     const company = await makeCompany(teamId);
     const ledger = new DbObligationLedger(db);
 
-    const primeiro = await ledger.beginPeriod(teamId, company.id, "2026-07", "2026-09-25", "monthly");
-    const segundo = await ledger.beginPeriod(teamId, company.id, "2026-07", "2026-09-25", "monthly");
+    const primeiro = await ledger.beginPeriod(
+      teamId,
+      company.id,
+      "2026-07",
+      "2026-09-25",
+      "monthly",
+    );
+    const segundo = await ledger.beginPeriod(
+      teamId,
+      company.id,
+      "2026-07",
+      "2026-09-25",
+      "monthly",
+    );
 
     expect(segundo.periodId).toBe(primeiro.periodId);
     const obrigacoes = await db
@@ -184,7 +192,13 @@ describe.skipIf(SKIP_DB)("DbObligationLedger", () => {
     const company = await makeCompany(teamId);
     const ledger = new DbObligationLedger(db);
 
-    const { periodId } = await ledger.beginPeriod(teamId, company.id, "2026-07", "2026-09-25", "monthly");
+    const { periodId } = await ledger.beginPeriod(
+      teamId,
+      company.id,
+      "2026-07",
+      "2026-09-25",
+      "monthly",
+    );
     const { documentId } = await ledger.recordDocument(teamId, periodId, doc());
 
     const [row] = await db
@@ -570,60 +584,72 @@ const STORAGE_TIMEOUT = 20_000;
 describe.skipIf(SKIP_STORAGE)("SupabaseDocumentStore", () => {
   const pdf = Buffer.from(`%PDF-1.4\n${"x".repeat(1200)}\n%%EOF`);
 
-  it("guarda o PDF no caminho do período e devolve os bytes escritos", async () => {
-    const client = storageClient();
-    const store = new SupabaseDocumentStore(client);
-    const teamId = randomUUID();
-    const companyId = randomUUID();
-    const esperado = `${teamId}/${companyId}/iva/2026-07.pdf`;
-    ficheirosCriados.push(esperado);
+  it(
+    "guarda o PDF no caminho do período e devolve os bytes escritos",
+    async () => {
+      const client = storageClient();
+      const store = new SupabaseDocumentStore(client);
+      const teamId = randomUUID();
+      const companyId = randomUUID();
+      const esperado = `${teamId}/${companyId}/iva/2026-07.pdf`;
+      ficheirosCriados.push(esperado);
 
-    const stored = await store.put({ teamId, companyId, kind: "iva", period: "2026-07", pdf });
+      const stored = await store.put({ teamId, companyId, kind: "iva", period: "2026-07", pdf });
 
-    expect(stored).toEqual({ storagePath: esperado, bytes: pdf.length });
-    const { data, error } = await client.storage.from("documents").download(esperado);
-    expect(error).toBeNull();
-    const bytes = Buffer.from(await data!.arrayBuffer());
-    expect(bytes.equals(pdf)).toBe(true);
-  }, STORAGE_TIMEOUT);
+      expect(stored).toEqual({ storagePath: esperado, bytes: pdf.length });
+      const { data, error } = await client.storage.from("documents").download(esperado);
+      expect(error).toBeNull();
+      const bytes = Buffer.from(await data!.arrayBuffer());
+      expect(bytes.equals(pdf)).toBe(true);
+    },
+    STORAGE_TIMEOUT,
+  );
 
-  it("upsert: buscar a guia do mesmo período outra vez sobrescreve o ficheiro", async () => {
-    const client = storageClient();
-    const store = new SupabaseDocumentStore(client);
-    const teamId = randomUUID();
-    const companyId = randomUUID();
-    const caminho = `${teamId}/${companyId}/iva/2026-08.pdf`;
-    ficheirosCriados.push(caminho);
-    const segundoPdf = Buffer.from(`%PDF-1.4\n${"y".repeat(1300)}\n%%EOF`);
+  it(
+    "upsert: buscar a guia do mesmo período outra vez sobrescreve o ficheiro",
+    async () => {
+      const client = storageClient();
+      const store = new SupabaseDocumentStore(client);
+      const teamId = randomUUID();
+      const companyId = randomUUID();
+      const caminho = `${teamId}/${companyId}/iva/2026-08.pdf`;
+      ficheirosCriados.push(caminho);
+      const segundoPdf = Buffer.from(`%PDF-1.4\n${"y".repeat(1300)}\n%%EOF`);
 
-    await store.put({ teamId, companyId, kind: "iva", period: "2026-08", pdf });
-    const stored = await store.put({
-      teamId,
-      companyId,
-      kind: "iva",
-      period: "2026-08",
-      pdf: segundoPdf,
-    });
-
-    expect(stored.storagePath).toBe(caminho);
-    const { data } = await client.storage.from("documents").download(caminho);
-    const bytes = Buffer.from(await data!.arrayBuffer());
-    expect(bytes.equals(segundoPdf)).toBe(true);
-  }, STORAGE_TIMEOUT);
-
-  it("uma recusa 4xx do Storage é estrutural (não se retenta um bucket que não existe)", async () => {
-    const store = new SupabaseDocumentStore(storageClient(), `inexistente-${randomUUID()}`);
-
-    await expect(
-      store.put({
-        teamId: randomUUID(),
-        companyId: randomUUID(),
+      await store.put({ teamId, companyId, kind: "iva", period: "2026-08", pdf });
+      const stored = await store.put({
+        teamId,
+        companyId,
         kind: "iva",
-        period: "2026-07",
-        pdf,
-      }),
-    ).rejects.toBeInstanceOf(StructuralError);
-  }, STORAGE_TIMEOUT);
+        period: "2026-08",
+        pdf: segundoPdf,
+      });
+
+      expect(stored.storagePath).toBe(caminho);
+      const { data } = await client.storage.from("documents").download(caminho);
+      const bytes = Buffer.from(await data!.arrayBuffer());
+      expect(bytes.equals(segundoPdf)).toBe(true);
+    },
+    STORAGE_TIMEOUT,
+  );
+
+  it(
+    "uma recusa 4xx do Storage é estrutural (não se retenta um bucket que não existe)",
+    async () => {
+      const store = new SupabaseDocumentStore(storageClient(), `inexistente-${randomUUID()}`);
+
+      await expect(
+        store.put({
+          teamId: randomUUID(),
+          companyId: randomUUID(),
+          kind: "iva",
+          period: "2026-07",
+          pdf,
+        }),
+      ).rejects.toBeInstanceOf(StructuralError);
+    },
+    STORAGE_TIMEOUT,
+  );
 });
 
 /**
@@ -653,9 +679,9 @@ describe("SupabaseDocumentStore × classificação do erro", () => {
     // chegou (DNS, socket cortado). Tratá-lo como 4xx marcaria a guia como
     // recusada para sempre por uma falha de rede, e o operador não teria nada
     // para corrigir.
-    await expect(put(storeQueDevolve({ status: 0, message: "Failed to fetch" }))).rejects.toBeInstanceOf(
-      AtTransientError,
-    );
+    await expect(
+      put(storeQueDevolve({ status: 0, message: "Failed to fetch" })),
+    ).rejects.toBeInstanceOf(AtTransientError);
   });
 
   it("um 5xx também é transitório e um 4xx continua estrutural", async () => {
@@ -670,7 +696,13 @@ describe.skipIf(SKIP_DB)("view iva_documents_overview × constantes do domínio"
     const company = await makeCompany(teamId);
     const ledger = new DbObligationLedger(db);
 
-    const { periodId } = await ledger.beginPeriod(teamId, company.id, "2026-07", "2026-09-25", "monthly");
+    const { periodId } = await ledger.beginPeriod(
+      teamId,
+      company.id,
+      "2026-07",
+      "2026-09-25",
+      "monthly",
+    );
     await ledger.recordDocument(
       teamId,
       periodId,

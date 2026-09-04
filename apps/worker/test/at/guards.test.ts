@@ -27,7 +27,9 @@ describe("assertPdfIntegrity", () => {
   });
 
   it("recusa um download cortado a meio", () => {
-    expect(() => assertPdfIntegrity(Buffer.from("%PDF-1.7\nmuito curto"))).toThrow(AtTransientError);
+    expect(() => assertPdfIntegrity(Buffer.from("%PDF-1.7\nmuito curto"))).toThrow(
+      AtTransientError,
+    );
   });
 
   it("classifica a falha como retentável, com o desfecho da captura", () => {

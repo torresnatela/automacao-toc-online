@@ -243,9 +243,7 @@ describe("classifyAtPage — precedência", () => {
   });
 
   it("um 503 é erro de servidor mesmo com redação de manutenção", () => {
-    const kind = classifyAtPage(
-      snap({ status: 503, text: "O portal encontra-se em manutenção." }),
-    );
+    const kind = classifyAtPage(snap({ status: 503, text: "O portal encontra-se em manutenção." }));
     expect(kind).toEqual({ kind: "server_error" });
   });
 

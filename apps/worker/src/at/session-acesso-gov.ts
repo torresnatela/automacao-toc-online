@@ -89,9 +89,7 @@ export class AcessoGovAtSessions implements AtSessionFactory {
    * é a troca de contribuinte a acontecer sozinha.
    */
   private chave(scope: CredentialScope): string {
-    return scope.companyId === null
-      ? `at:team:${scope.teamId}`
-      : `at:company:${scope.companyId}`;
+    return scope.companyId === null ? `at:team:${scope.teamId}` : `at:company:${scope.companyId}`;
   }
 
   async open(input: {
