@@ -515,8 +515,8 @@
     "semantic_hash": ""
   },
   "apps/web/e2e/teams.spec.ts": {
-    "mtime": 1788469668.047351,
-    "ast_hash": "3bc99cf8b58f6290b9a167a5169dcece",
+    "mtime": 1788556147.6073666,
+    "ast_hash": "425fd2c40c4e0d54e01df89c5429c13b",
     "semantic_hash": ""
   },
   "apps/web/src/app/(dashboard)/empresas/CompanyForm.tsx": {
@@ -1005,8 +1005,8 @@
     "semantic_hash": ""
   },
   "apps/worker/test/sinks/sinks.test.ts": {
-    "mtime": 1788489314.6792138,
-    "ast_hash": "2cfcf87f8fec6e078930ad875de4aa29",
+    "mtime": 1788555702.4481077,
+    "ast_hash": "de75359b1818cf6c9de1cdaf8cb9164e",
     "semantic_hash": ""
   },
   "apps/worker/test/toconline/companies-grid.browser.test.ts": {
@@ -1155,8 +1155,8 @@
     "semantic_hash": ""
   },
   ".superpowers/sdd/construa-um-plano-completo-vast-clock/progress.md": {
-    "mtime": 1788545005.9621716,
-    "ast_hash": "7b5392003d5c739e83b7ae3ddf21cb01",
+    "mtime": 1788556191.5376596,
+    "ast_hash": "dfa41928f4b28d614380eb07b4f7d46a",
     "semantic_hash": ""
   },
   ".superpowers/sdd/construa-um-plano-completo-vast-clock/task-1-brief.md": {
@@ -1470,8 +1470,8 @@
     "semantic_hash": ""
   },
   "apps/worker/test/sinks/iva-sinks.test.ts": {
-    "mtime": 1788550870.6653898,
-    "ast_hash": "42faf79fbece84831d61ef840f09a3bc",
+    "mtime": 1788555688.338728,
+    "ast_hash": "094a26f411fe62c088248ccde0dd17cf",
     "semantic_hash": ""
   },
   ".superpowers/sdd/construa-um-plano-completo-vast-clock/task-7-report.md": {
@@ -1705,8 +1705,8 @@
     "semantic_hash": ""
   },
   "docs/local-development.md": {
-    "mtime": 1788546221.8076136,
-    "ast_hash": "4c0884f401a0700cb3a4acdcc4d7e0f0",
+    "mtime": 1788556007.0990012,
+    "ast_hash": "fafcc93370d57c558eb2400c87fdf6c1",
     "semantic_hash": ""
   },
   ".superpowers/sdd/construa-um-plano-completo-vast-clock/final-fix-brief.md": {
@@ -1737,6 +1737,26 @@
   "supabase/migrations/20260904163659_iva_view_deferred_rls.sql": {
     "mtime": 1788550642.4983714,
     "ast_hash": "ad65e0d7bbbdc915bc7512f5b725b8a9",
+    "semantic_hash": ""
+  },
+  ".superpowers/sdd/construa-um-plano-completo-vast-clock/final-fix-report.md": {
+    "mtime": 1788551470.2900844,
+    "ast_hash": "c63be312ad57c4ebf0c3508794e36361",
+    "semantic_hash": ""
+  },
+  ".superpowers/sdd/construa-um-plano-completo-vast-clock/live-gates.txt": {
+    "mtime": 1788555551.4231482,
+    "ast_hash": "f501e99bb2efe5d25318a8cb6e5d6df4",
+    "semantic_hash": ""
+  },
+  ".superpowers/sdd/construa-um-plano-completo-vast-clock/live-gates-2.txt": {
+    "mtime": 1788555843.7315383,
+    "ast_hash": "c19656a4ac9caa6d2b1dfa7eaa68bbd6",
+    "semantic_hash": ""
+  },
+  ".superpowers/sdd/construa-um-plano-completo-vast-clock/live-gates-3.txt": {
+    "mtime": 1788556094.3280864,
+    "ast_hash": "016334eae1e1f128162c866db3877c8b",
     "semantic_hash": ""
   }
 }

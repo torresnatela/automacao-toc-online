@@ -1,16 +1,16 @@
 # Graph Report - automacao-toc-online-main  (2026-09-04)
 
 ## Corpus Check
-- 338 files · ~244,736 words
+- 338 files · ~245,768 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2497 nodes · 4959 edges · 159 communities (134 shown, 25 thin omitted)
+- 2498 nodes · 4960 edges · 178 communities (152 shown, 26 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 15 edges (avg confidence: 0.7)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `50537c8f`
+- Built from commit: `ae5198d1`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -48,7 +48,7 @@
 - Vercel Logo Asset
 - Window Icon Asset
 - Config Package
-- IRS Withholding (IRS)
+- .run
 - Management Dashboard (planned)
 - TS Strict Convention
 - CLAUDE.md — Automação de Guias Fiscais (TOConline)
@@ -115,12 +115,12 @@
 - PR Checklist (TDD, lint/typecheck/test, migrations, no secrets)
 - pnpm workspace config (apps/*, packages/*)
 - Task 5 — `IvaDocumentRunner` (orquestração) + testes com fakes
-- Banco de dados
+- AcessoGovAtSessions
 - Task 11 — Serviço de documentos (listar, enfileirar por empresa, enfileirar em lote) + página mínima + e2e de enfileiramento
 - service.ts
 - package.json
 - session.ts
-- CLAUDE.md — Automação de Guias Fiscais (TOConline)
+- iva-sinks.test.ts
 - Onda final de correções — Módulo 1 (uma só passagem)
 - storage-state.ts
 - cn
@@ -129,7 +129,8 @@
 - Task 2 Report: Buckets de Storage (`guias` e `rpa-diagnostics`)
 - types.ts
 - enums.ts
-- getSupabaseAdminClient
+- session-acesso-gov.browser.test.ts
+- supabase-store.test.ts
 - supabase-store.test.ts
 - tsconfig.test.json
 - page.tsx
@@ -137,7 +138,7 @@
 - index.ts
 - task-1-brief.md
 - auth-profiles.smoke.test.ts
-- build
+- browser.ts
 - ObligationLedger
 - tsconfig.json
 - SDD ledger — plan: /Users/gabrieltorresbolognani/.claude/plans/construa-um-plano-completo-vast-clock.md
@@ -152,12 +153,30 @@
 - types.ts
 - CompanyScanner
 - Logger
+- cn
+- user-menu.tsx
 - page.tsx
 - enums.ts
 - company-directory.ts
 - integracoes-at.spec.ts
+- GridProjection
+- service.ts
 - DbAttemptGuard
+- due-date.ts
+- actions.ts
 - AtPaymentDocumentFetcher
+- credential.ts
+- obligation-ledger.ts
+- Emissor
+- sinks.test.ts
+- readiness.ts
+- document-store.ts
+- page.tsx
+- actions.ts
+- CLAUDE.md — Automação de Guias Fiscais (TOConline)
+- Tabelas (base)
+- Logger
+- Automação de Guias Fiscais (TOConline)
 
 ## God Nodes (most connected - your core abstractions)
 1. `cn()` - 60 edges
@@ -172,16 +191,16 @@
 10. `AcessoGovAtSessions` - 20 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `LastFetch` --references--> `IvaOutcome`  [EXTRACTED]
+  apps/web/src/lib/documents/bulk.ts → packages/core/src/domain/at/outcomes.ts
 - `WorkerEnv` --references--> `AtAccessMode`  [EXTRACTED]
   apps/worker/src/config/env.ts → packages/core/src/domain/at/types.ts
+- `ContextoDoJob` --references--> `AtAccessMode`  [EXTRACTED]
+  apps/worker/src/runner/iva-document-runner.ts → packages/core/src/domain/at/types.ts
 - `makeCredential()` --calls--> `encryptSecret()`  [EXTRACTED]
   apps/worker/test/sinks/iva-sinks.test.ts → packages/core/src/crypto/secret-box.ts
-- `createUser()` --calls--> `registerUser()`  [EXTRACTED]
-  apps/web/src/app/(dashboard)/admin/users/actions.ts → packages/core/src/auth/register.ts
-- `ProfileRow` --references--> `AppRole`  [EXTRACTED]
-  apps/web/src/app/(dashboard)/admin/users/page.tsx → packages/core/src/auth/roles.ts
-- `AdminUsersPage()` --calls--> `dbRoleToUiLabel()`  [EXTRACTED]
-  apps/web/src/app/(dashboard)/admin/users/page.tsx → packages/core/src/auth/roles.ts
+- `planCompanyReconciliation()` --indirect_call--> `company()`  [INFERRED]
+  packages/core/src/domain/toconline/reconcile.ts → apps/worker/test/toconline/guards.test.ts
 
 ## Import Cycles
 - None detected.
@@ -189,11 +208,11 @@
 ## Hyperedges (group relationships)
 - **Next.js scaffold default assets** — apps_web_public_file_icon, apps_web_public_globe_icon, apps_web_public_next_logo, apps_web_public_vercel_logo, apps_web_public_window_icon [INFERRED 0.85]
 
-## Communities (159 total, 25 thin omitted)
+## Communities (178 total, 26 thin omitted)
 
 ### Community 0 - "Observability Tracer/Logger"
-Cohesion: 0.07
-Nodes (33): CompanyRepo, CompanyServiceOutput, createCompany(), nn(), normalizeCompany(), updateCompany(), CompanyField, validateCompanyInput() (+25 more)
+Cohesion: 0.14
+Nodes (17): CompanyField, validateCompanyInput(), TeamField, COMPANY_STATUSES, CompanyInput, CONTRIBUTOR_TYPES, ContributorType, DOCUMENT_STATUSES (+9 more)
 
 ### Community 1 - "Architecture & Domain Overview"
 Cohesion: 0.18
@@ -204,24 +223,24 @@ Cohesion: 0.07
 Nodes (29): 1. `supabase/config.toml` — bucket declarado num sítio só, 2. `packages/db/tsconfig.json` — `rootDir` de `"../.."` para `".."`, 3. `packages/db/test/iva-documents.smoke.test.ts`, Auto-revisão, Commits, Concerns, Desvio necessário: `packages/db/tsconfig.json`, Estado dos concerns originais (+21 more)
 
 ### Community 3 - "Observability Stores & DB Client"
-Cohesion: 0.11
-Nodes (28): AtFixtureMode, AtFixtureServer, AtFixtureState, DECLARACOES, fechar(), FORMULARIO_LOGIN(), html(), lerCookies() (+20 more)
+Cohesion: 0.10
+Nodes (29): AtFixtureMode, AtFixtureServer, AtFixtureState, DECLARACOES, fechar(), FORMULARIO_LOGIN(), gerarPdfSintetico(), html() (+21 more)
 
 ### Community 4 - "Web App Dependencies"
 Cohesion: 0.05
 Nodes (39): dependencies, class-variance-authority, clsx, lucide-react, next, @radix-ui/react-dialog, @radix-ui/react-dropdown-menu, react (+31 more)
 
 ### Community 5 - "Database"
-Cohesion: 0.09
-Nodes (14): InvalidCredentialsError, ScanOutcome, ScanPayload, ScanRunnerDeps, CredentialLookup, CredentialSource, TocSessionFactory, build() (+6 more)
+Cohesion: 0.10
+Nodes (20): ScanOutcome, ScanPayload, ScanRunnerDeps, AtSessionUrls, AuthenticatedTocSession, CompanyDirectory, CompanyScanner, CredentialSource (+12 more)
 
 ### Community 6 - "Fiscal Domain & RLS"
-Cohesion: 0.21
-Nodes (8): CompanyDirectory, UpsertReport, chunk(), DbCompanyDirectory, tocMetadata(), FakeDirectory, ExistingCompany, ReconcilePlan
+Cohesion: 0.13
+Nodes (6): FileStorageStateStore, InMemoryStorageStateStore, safeName(), SavedSession, StorageStateStore, dirs
 
 ### Community 7 - "Turborepo & Lint Config"
-Cohesion: 0.06
-Nodes (37): abortar(), lerChave(), main(), USO, assertAtHost(), BrowserProvider, PlaywrightBrowser, PlaywrightBrowserOptions (+29 more)
+Cohesion: 0.11
+Nodes (20): BrowserProvider, PlaywrightBrowser, StorageState, NIFS, padroesDeHost(), SENHAS, abrirSessao(), apontada() (+12 more)
 
 ### Community 8 - "Root Package Scripts"
 Cohesion: 0.07
@@ -241,11 +260,11 @@ Nodes (19): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModu
 
 ### Community 12 - "Web Auth & Pages"
 Cohesion: 0.13
-Nodes (27): Ctx, DELETE(), GET(), PATCH(), GET(), POST(), GET(), ChangePasswordPage() (+19 more)
+Nodes (27): Ctx, DELETE(), GET(), PATCH(), GET(), POST(), CompanyFormState, createCompanyAction() (+19 more)
 
 ### Community 13 - "Shared Base tsconfig"
-Cohesion: 0.12
-Nodes (22): assertDocumentBelongsTo(), assertPdfIntegrity(), assertPeriodMatches(), AtAuthError, AtAuthReason, AtIntegrityError, AtIntegrityOutcome, AtTransientError (+14 more)
+Cohesion: 0.22
+Nodes (11): ClassifiedFailure, classifyFailure(), estruturalPorEtapa(), outcomeDe(), outcomeDoLogin(), transitorioPorEtapa(), CLASSES, IvaOutcome (+3 more)
 
 ### Community 14 - "Shared Base tsconfig (variant)"
 Cohesion: 0.12
@@ -264,8 +283,8 @@ Cohesion: 0.14
 Nodes (13): Base do Projeto (Automação TOConline) — Implementation Plan, File Structure, Global Constraints, Task 0: Branch de trabalho, Task 1: Esqueleto do monorepo + tooling, Task 2: Supabase local + `packages/db` (Drizzle base), Task 3: Schema backbone — auth + observabilidade + jobs (com RLS), Task 4: Schema esqueleto de domínio (com RLS) (+5 more)
 
 ### Community 19 - "Package tsconfig (db)"
-Cohesion: 0.11
-Nodes (24): assertScanIntegrity(), company(), scan(), isPersistable(), normalizeScan(), persistableCompanies(), toCleanString(), toPositiveInt() (+16 more)
+Cohesion: 0.14
+Nodes (20): isPersistable(), normalizeScan(), persistableCompanies(), toCleanString(), toPositiveInt(), diff(), emptySummary(), planCompanyReconciliation() (+12 more)
 
 ### Community 20 - "Package tsconfig (worker)"
 Cohesion: 0.29
@@ -279,21 +298,17 @@ Nodes (3): display, metadata, sans
 Cohesion: 0.14
 Nodes (14): 10. Glossário, 11. Pontos ainda em aberto (a confirmar com o cliente), 1. Resumo executivo, 2. Atores e stakeholders, 3. A plataforma TOConline, 4.1. O que já é automático (em lote, dentro do TOConline), 4.2. O gargalo (manual, cliente a cliente), 4. O processo atual (como o gabinete trabalha hoje) (+6 more)
 
-### Community 26 - "Worker Entrypoint"
-Cohesion: 0.18
-Nodes (9): ContextoDoJob, AtCompanyHandle, AtPrecondition, AtSessionFactory, PortalCredentials, FakeLedgerOptions, FakeSessions, FakeSessionsOptions (+1 more)
-
 ### Community 35 - "Config Package"
 Cohesion: 0.08
 Nodes (25): Achados do revisor (verbatim), Causa raiz confirmada (por que a restruturação resolve, e o escape não seria necessário), Causa raiz identificada, Comandos executados e saída, Comandos executados e saída, Commit, Commit, Commit (+17 more)
 
-### Community 36 - "IRS Withholding (IRS)"
+### Community 36 - ".run"
 Cohesion: 0.22
-Nodes (9): 1. Instalar e subir o Supabase local, 2. Variáveis de ambiente — dois ficheiros, dois leitores, 3. Aplicar migrations e seed, 4. Subir o dashboard, 5. Subir o worker, Desenvolvimento local, Requisitos, Scripts de reconhecimento (Fase 0 do Módulo 1) (+1 more)
+Nodes (6): IvaDocumentRunner, desfechoDoJob, markByOutcome(), RAZAO_POR_DESFECHO, AtCredentialSource, IvaDocumentJobPayload
 
 ### Community 37 - "Management Dashboard (planned)"
-Cohesion: 0.14
-Nodes (29): PageProps, CompanyForm(), TeamForm(), capitalize(), dateFmt, formatDate(), TraceRow, TracesPage() (+21 more)
+Cohesion: 0.11
+Nodes (35): PageProps, CompanyForm(), EditTeamPage(), TeamForm(), capitalize(), dateFmt, formatDate(), TraceRow (+27 more)
 
 ### Community 42 - "CLAUDE.md — Automação de Guias Fiscais (TOConline)"
 Cohesion: 0.18
@@ -312,8 +327,8 @@ Cohesion: 0.33
 Nodes (5): compilerOptions, outDir, rootDir, extends, include
 
 ### Community 46 - "README.md"
-Cohesion: 0.09
-Nodes (11): DbStore, SupabaseStore, EventRecord, LogRecord, TraceRecord, fakeClient(), loggedAt, makeStore() (+3 more)
+Cohesion: 0.10
+Nodes (5): DbStore, InMemoryStore, SupabaseStore, EventRecord, TraceRecord
 
 ### Community 47 - "@toc/worker (scaffold)"
 Cohesion: 0.40
@@ -324,16 +339,16 @@ Cohesion: 0.14
 Nodes (26): abortar(), abrirContexto(), Argumentos, escutar(), escutarPagina(), etapa(), hostDe(), irPara() (+18 more)
 
 ### Community 49 - "Worker runs off Vercel (long-running process + real browser)"
-Cohesion: 0.14
-Nodes (24): Ctx, DELETE(), GET(), PATCH(), POST(), createTeamAction(), deleteTeamAction(), updateTeamAction() (+16 more)
+Cohesion: 0.16
+Nodes (23): Ctx, DELETE(), GET(), PATCH(), POST(), createTeamAction(), deleteTeamAction(), TeamFormState (+15 more)
 
 ### Community 50 - "Portal automation (TOConline, AT, Segurança Social, e-Fatura)"
 Cohesion: 0.06
-Nodes (23): DeclarationRead, IvaDeclarationReader, ObligationLedger, traceDoDashboard(), AGORA, build(), BuildOptions, DeclaracoesQueLancamLixo (+15 more)
+Nodes (29): AtCompanyHandle, AtPrecondition, AtSessionFactory, DeclarationRead, PaymentDocumentFetch, traceDoDashboard(), AGORA, build() (+21 more)
 
 ### Community 51 - "@toc/worker RPA worker (scaffold)"
-Cohesion: 0.16
-Nodes (16): LastFetch, BadgeTone, IVA_ROW_TONES, IvaRowState, ROW_STATE_META, rowStateMeta, SEVERITY_SHORT, SEVERITY_TONE (+8 more)
+Cohesion: 0.19
+Nodes (13): BadgeTone, IVA_ROW_TONES, IvaRowState, ROW_STATE_META, rowStateMeta, SEVERITY_SHORT, SEVERITY_TONE, UI_STATE_META (+5 more)
 
 ### Community 52 - "TocCredentialForm.tsx"
 Cohesion: 0.08
@@ -348,8 +363,8 @@ Cohesion: 0.18
 Nodes (7): companies, integrationCredentials, jobStatus, jobs, criadas, db, pool
 
 ### Community 55 - "ObligationLedger"
-Cohesion: 0.13
-Nodes (23): GET(), naoEncontrado(), changePassword(), createUser(), CreateUserState, VALID_UI_ROLES, CreateUserForm(), LogsPage() (+15 more)
+Cohesion: 0.19
+Nodes (17): GET(), naoEncontrado(), GET(), changePassword(), ChangePasswordPage(), DashboardLayout(), LogsPage(), TraceRow (+9 more)
 
 ### Community 56 - "domain.smoke.test.ts"
 Cohesion: 0.08
@@ -372,8 +387,8 @@ Cohesion: 0.09
 Nodes (21): 1. O que foi implementado, 1. O teste do `acceptDownloads` não provava nada, 2. `server_error` inalcançável pelo código HTTP, 2. Testes e resultados, 3. Ficheiros alterados, 3. Seletor em falta escapava como `TimeoutError` cru, 4. Auto-revisão, 4. Menores (+13 more)
 
 ### Community 61 - "DbObligationLedger"
-Cohesion: 0.18
-Nodes (5): desfechoDoJob, markByOutcome(), RAZAO_POR_DESFECHO, AtCredentialSource, FakeCredentials
+Cohesion: 0.15
+Nodes (3): CredentialLookup, FakeCredentials, FakeCredentials
 
 ### Community 62 - "sinks.test.ts"
 Cohesion: 0.09
@@ -437,7 +452,7 @@ Nodes (10): 1. Refactors, 2. Vitest no web, 3. `apps/web/src/lib/documents/acces
 
 ### Community 80 - "clients (empresas do gabinete)"
 Cohesion: 0.08
-Nodes (29): ProfileRow, CookieToSet, updateSession(), config, proxy(), ChangePasswordGuardInput, shouldRedirectToChangePassword(), generateTempPassword() (+21 more)
+Nodes (30): ProfileRow, SessionUser, CookieToSet, updateSession(), config, proxy(), ChangePasswordGuardInput, shouldRedirectToChangePassword() (+22 more)
 
 ### Community 81 - "README.md"
 Cohesion: 0.50
@@ -452,8 +467,8 @@ Cohesion: 0.06
 Nodes (32): 10. Observabilidade, 11. Fase 0 — Reconhecimento (o portão), 12. Fases de implementação (TDD red → green; cada fase termina com `pnpm lint && pnpm typecheck && pnpm test` verdes), 13. Verificação end-to-end, 14. Riscos e incógnitas (abertas até à F0), 15. Fora de escopo (explícito), 1. Objetivo, 2. Contexto e decisões com o utilizador (+24 more)
 
 ### Community 88 - "cn"
-Cohesion: 0.05
-Nodes (76): initialState, fetchAllIvaDocumentsAction(), FetchAllState, fetchIvaDocumentAction(), FetchState, FetchAllButton(), FetchAllButtonProps, FetchButton() (+68 more)
+Cohesion: 0.15
+Nodes (25): initialState, TeamFormProps, AuthLayout(), AuthLayoutProps, CredentialForm(), CredentialFormCopy, CredentialFormProps, formatDate() (+17 more)
 
 ### Community 89 - "Design System Cliconta + Reformulação do Front-end — Design"
 Cohesion: 0.18
@@ -468,12 +483,12 @@ Cohesion: 0.18
 Nodes (10): 1. `apps/worker/src/errors.ts` (acrescentar; manter as classes existentes), 2. `apps/worker/src/runner/classify-failure.ts` (pura), 3. `apps/worker/src/runner/ports.ts` (acrescentar; não remover nada), 4. `apps/worker/src/runner/job-queue.ts`, 5. `apps/worker/src/runner/worker-loop.ts`, 6. `apps/worker/src/runner/portal-gate.ts`, 7. Compatibilidade, Onde encaixa (+2 more)
 
 ### Community 93 - "types.ts"
-Cohesion: 0.27
-Nodes (9): DocumentFieldWarning, CREDENTIAL_SCOPES, IvaDocumentJobResult, IvaResultKey, IvaStage, nonEmptyString(), parseIvaDocumentPayload(), ResultKeysCoverAll (+1 more)
+Cohesion: 0.36
+Nodes (7): DocumentFieldWarning, CREDENTIAL_SCOPES, IvaDocumentJobResult, IvaResultKey, nonEmptyString(), parseIvaDocumentPayload(), ResultKeysCoverAll
 
 ### Community 94 - "browser.ts"
-Cohesion: 0.12
-Nodes (30): BatchProgress(), ACCESS_TARGET, batchProgress(), BatchProgressCounts, createdAtMs(), CREDENTIAL_OUTCOME_TARGET, credentialBanner, deriveState() (+22 more)
+Cohesion: 0.11
+Nodes (33): BatchProgress(), ACCESS_TARGET, batchProgress(), BatchProgressCounts, createdAtMs(), CREDENTIAL_OUTCOME_TARGET, credentialBanner, credentialLinkFor() (+25 more)
 
 ### Community 95 - "normalize.ts"
 Cohesion: 0.35
@@ -499,9 +514,9 @@ Nodes (9): 1. `apps/worker/src/config/env.ts`, 2. `apps/worker/src/index.ts`, 3.
 Cohesion: 0.22
 Nodes (8): Ficheiro: `apps/worker/src/runner/iva-document-runner.ts`, `markByOutcome` (regra: a credencial é marcada pelo que o portal disse sobre ELA, nunca sobre a empresa), Onde encaixa, Ordem dos passos (cada saída antecipada passa por `closeEarly` com o mesmo `job.started`), Regras, Salvaguardas, Task 5 — `IvaDocumentRunner` (orquestração) + testes com fakes, Testes: `apps/worker/test/runner/iva-document-runner.test.ts`
 
-### Community 110 - "Banco de dados"
-Cohesion: 0.25
-Nodes (8): Acesso a dados, Banco de dados, Bootstrap do admin, Documentos e Storage (Módulo 1), Fluxo de migrations, RLS, Seed local (Módulo 1), View `iva_documents_overview`
+### Community 110 - "AcessoGovAtSessions"
+Cohesion: 0.23
+Nodes (6): AcessoGovAtSessions, caminhosDe(), seguirODocumento(), CredentialScope, OpenedAtSession, PortalCredentials
 
 ### Community 111 - "Task 11 — Serviço de documentos (listar, enfileirar por empresa, enfileirar em lote) + página mínima + e2e de enfileiramento"
 Cohesion: 0.25
@@ -516,12 +531,12 @@ Cohesion: 0.08
 Nodes (23): dependencies, drizzle-orm, playwright, @supabase/supabase-js, @toc/core, @toc/db, devDependencies, eslint (+15 more)
 
 ### Community 115 - "session.ts"
-Cohesion: 0.20
-Nodes (15): fieldOf(), formatDatePt(), INVALID_REASON_LABELS, isDeferred(), IVA_OUTCOME_CODES, IvaOutcomeRead, IvaOutcomeSpec, IvaSeverity (+7 more)
+Cohesion: 0.21
+Nodes (14): fieldOf(), formatDatePt(), INVALID_REASON_LABELS, isDeferred(), IvaOutcomeRead, IvaOutcomeSpec, IvaSeverity, JobRowForOutcome (+6 more)
 
-### Community 116 - "CLAUDE.md — Automação de Guias Fiscais (TOConline)"
-Cohesion: 0.29
-Nodes (7): CLAUDE.md — Automação de Guias Fiscais (TOConline), Comandos essenciais, Convenções técnicas, Estrutura, graphify, Mapa da documentação, Regras de trabalho
+### Community 116 - "iva-sinks.test.ts"
+Cohesion: 0.15
+Nodes (8): db, equipasCriadas, ficheirosCriados, KEY, makeCompany(), makeCredential(), nextNif(), pool
 
 ### Community 117 - "Onda final de correções — Módulo 1 (uma só passagem)"
 Cohesion: 0.29
@@ -540,44 +555,48 @@ Cohesion: 0.29
 Nodes (6): 1. `apps/web/src/components/integrations/credential-form.tsx` — `CredentialForm`, 2. `apps/web/src/app/(dashboard)/integracoes/at/page.tsx` + `actions.ts`, 3. e2e `apps/web/e2e/integracoes-at.spec.ts` (serial), Onde encaixa, Regras, Task 13 — `CredentialForm` genérico, página `/integracoes/at`, nav + e2e
 
 ### Community 121 - "session.browser.test.ts"
-Cohesion: 0.11
-Nodes (31): addDays(), derivePaymentDueDate(), DueDateOptions, DueDates, easterSunday(), endMonthOf(), FIXED_HOLIDAYS, isoDate() (+23 more)
+Cohesion: 0.15
+Nodes (19): build(), comparePeriods(), match(), MONTH_BY_NAME, MONTH_NAME_PATTERNS, MONTH_NAMES_PT, MONTH_PATTERNS, monthPeriod() (+11 more)
 
 ### Community 122 - "Task 2 Report: Buckets de Storage (`guias` e `rpa-diagnostics`)"
 Cohesion: 0.38
 Nodes (8): companyStatus, contributorType, credentialStatus, documentStatus, integrationProvider, obligationFrequency, obligationKind, obligationPeriodStatus
 
 ### Community 123 - "types.ts"
-Cohesion: 0.09
-Nodes (12): backoffMs(), JobQueue, PeriodState, DbCredentialSource, motivoDaMarca(), daEquipa(), DbObligationLedger, semRegressao() (+4 more)
+Cohesion: 0.16
+Nodes (5): backoffMs(), JobQueue, DbAttemptGuard, DbCredentialSource, Database
 
 ### Community 124 - "enums.ts"
-Cohesion: 0.16
-Nodes (18): db, KEY, makeCredential(), makeTeam(), nextNif(), pool, scanned(), decryptSecret() (+10 more)
+Cohesion: 0.25
+Nodes (11): decryptSecret(), encryptSecret(), generateEncryptionKey(), isEncryptedSecret(), MESSAGES, ParsedToken, parseToken(), resolveKey() (+3 more)
 
-### Community 126 - "getSupabaseAdminClient"
-Cohesion: 0.33
-Nodes (6): Auth / autorização, Domínio (esqueleto, enums extensíveis), Multi-tenant (equipe = gabinete), Observabilidade, Orquestração, Tabelas (base)
+### Community 125 - "session-acesso-gov.browser.test.ts"
+Cohesion: 0.18
+Nodes (9): abrir(), contextos, empresa(), ESCOPO_CC, ESCOPO_EMPRESA, opcoesDeContexto, pedidos, provider() (+1 more)
+
+### Community 126 - "supabase-store.test.ts"
+Cohesion: 0.18
+Nodes (7): LogRecord, fakeClient(), loggedAt, makeStore(), occurredAt, RecordedCall, startedAt
 
 ### Community 127 - "supabase-store.test.ts"
-Cohesion: 0.05
-Nodes (49): deleteAtCredentialAction(), saveAtCredentialAction(), deleteTocCredentialAction(), saveTocCredentialAction(), ScanFormState, startCompanyScanAction(), ScanPanel(), ScanPanelProps (+41 more)
+Cohesion: 0.06
+Nodes (42): deleteAtCredentialAction(), saveAtCredentialAction(), deleteTocCredentialAction(), saveTocCredentialAction(), ScanFormState, startCompanyScanAction(), ScanPanel(), ScanPanelProps (+34 more)
 
 ### Community 128 - "tsconfig.test.json"
 Cohesion: 0.33
 Nodes (5): compilerOptions, noEmit, rootDir, extends, include
 
 ### Community 129 - "page.tsx"
-Cohesion: 0.08
-Nodes (52): requireWriterOn(), buildBulkRows(), BulkCompany, BulkCounts, BulkPlan, bulkRowsFromReads(), BulkRowsResult, companyForEnqueue() (+44 more)
+Cohesion: 0.09
+Nodes (42): FetchAllButtonProps, buildBulkRows(), BulkCompany, BulkCounts, BulkPlan, BulkPlanSummary, bulkRowsFromReads(), BulkRowsResult (+34 more)
 
 ### Community 130 - "index.ts"
 Cohesion: 0.47
 Nodes (3): appRole, teamStatus, teams
 
 ### Community 132 - "index.ts"
-Cohesion: 0.15
-Nodes (9): InMemoryStore, Tracer, ErrorInput, EventStatus, StartTraceInput, TraceStatus, TriggerKind, recordUserEvent() (+1 more)
+Cohesion: 0.27
+Nodes (8): ErrorInput, EventInput, EventStatus, LogLevel, StartTraceInput, TraceStatus, TriggerKind, UserEventInput
 
 ### Community 133 - "task-1-brief.md"
 Cohesion: 0.15
@@ -587,13 +606,13 @@ Nodes (6): OBLIGATION_KINDS, createdStorageObjectIds, createdTeamIds, createdUse
 Cohesion: 0.33
 Nodes (3): profiles, db, pool
 
-### Community 136 - "build"
+### Community 136 - "browser.ts"
 Cohesion: 0.33
-Nodes (6): Automação de Guias Fiscais (TOConline), Comandos, Estrutura, Requisitos, Setup rápido, Stack
+Nodes (7): abortar(), lerChave(), main(), USO, assertAtHost(), PlaywrightBrowserOptions, installKeepNamesShim()
 
 ### Community 137 - "ObligationLedger"
-Cohesion: 0.20
-Nodes (9): AtIvaDeclarationReader, cellAt(), COLUMN_KEYWORDS, DeclarationRow, findColumn(), parseDeclarationRows(), pickMostRecentDeclaration(), plain() (+1 more)
+Cohesion: 0.33
+Nodes (8): cellAt(), COLUMN_KEYWORDS, DeclarationRow, findColumn(), parseDeclarationRows(), pickMostRecentDeclaration(), plain(), submissionRank()
 
 ### Community 139 - "tsconfig.json"
 Cohesion: 0.33
@@ -608,20 +627,24 @@ Cohesion: 0.40
 Nodes (4): Alterações, Onde encaixa, Regras, Task 15 — Coluna "TOConline" em `/empresas`
 
 ### Community 142 - "PortalGate"
-Cohesion: 0.21
-Nodes (5): CompanyScanRunner, parsePayload(), IvaDocumentRunner, IvaDocumentJobPayload, TraceHandle
+Cohesion: 0.35
+Nodes (3): CompanyScanRunner, parsePayload(), TraceHandle
 
 ### Community 143 - "ports.ts"
-Cohesion: 0.13
-Nodes (6): FileStorageStateStore, InMemoryStorageStateStore, safeName(), SavedSession, StorageStateStore, dirs
+Cohesion: 0.17
+Nodes (12): assertDocumentBelongsTo(), assertPdfIntegrity(), assertPeriodMatches(), AtTransientError, ContextoDoJob, IvaRunnerDeps, IvaRunnerPolicy, AttemptGuard (+4 more)
 
 ### Community 144 - "ObservabilityStore"
-Cohesion: 0.16
-Nodes (6): Logger, ObservabilityStore, createEvent(), EventHandle, EventInput, LogLevel
+Cohesion: 0.22
+Nodes (3): ObservabilityStore, createEvent(), EventHandle
+
+### Community 145 - "companies-grid.browser.test.ts"
+Cohesion: 0.18
+Nodes (3): InMemoryPortalGate, PortalGateOptions, PortalGate
 
 ### Community 146 - "AtSessionFactory"
 Cohesion: 0.12
-Nodes (23): allFields(), AtPageKind, AtPageSnapshot, classifyAtPage(), fingerprint(), hasNifField(), hasPasswordField(), hostOf() (+15 more)
+Nodes (21): allFields(), AtPageKind, AtPageSnapshot, classifyAtPage(), fingerprint(), hasNifField(), hasPasswordField(), hostOf() (+13 more)
 
 ### Community 147 - "validate.ts"
 Cohesion: 0.40
@@ -632,56 +655,124 @@ Cohesion: 0.40
 Nodes (4): Formato, Objetivo, Regras, Task 1 — Spec do Módulo 1 em `docs/superpowers/specs/`
 
 ### Community 149 - "types.ts"
-Cohesion: 0.27
-Nodes (8): loadEnv(), MissingEnvError, parseAtAccessMode(), parsePositiveInt(), REQUIRED, WorkerEnv, complete, AT_ACCESS_MODES
+Cohesion: 0.23
+Nodes (11): loadEnv(), MissingEnvError, parseAtAccessMode(), parsePositiveInt(), REQUIRED, WorkerEnv, criarSessoesAt(), log() (+3 more)
 
 ### Community 150 - "CompanyScanner"
 Cohesion: 0.12
 Nodes (11): CapturedPdf, capturePdf(), Estrategia, porDownload(), porPopup(), porResposta(), PdfVia, pdf() (+3 more)
 
 ### Community 151 - "Logger"
-Cohesion: 0.13
-Nodes (12): CompanyScanner, sleep(), countItems(), GridRead, GridReadOptions, readCompaniesGrid(), GridProjection, GridSource (+4 more)
+Cohesion: 0.16
+Nodes (10): sleep(), countItems(), GridRead, GridReadOptions, readCompaniesGrid(), GridProjection, GridSource, projectGrid() (+2 more)
+
+### Community 152 - "cn"
+Cohesion: 0.16
+Nodes (17): WaveMotif(), WaveMotifProps, FormFieldProps, Button(), ButtonProps, CardFooter(), DialogContent(), DialogDescription() (+9 more)
+
+### Community 153 - "user-menu.tsx"
+Cohesion: 0.14
+Nodes (14): AppShellProps, NAV_ITEMS, NavItem, SidebarContent(), ROLE_LABELS, UserMenu(), Logo(), LogoProps (+6 more)
 
 ### Community 154 - "page.tsx"
-Cohesion: 0.13
-Nodes (24): AdminUsersPage(), GuiasIvaPage(), RowDetailsDialog(), EditCompanyPage(), EmpresasPage(), EquipesPage(), AtPage(), PageProps (+16 more)
+Cohesion: 0.12
+Nodes (26): AdminUsersPage(), GuiasIvaPage(), RowDetailsDialog(), EditCompanyPage(), EmpresasPage(), EquipesPage(), AtPage(), PageProps (+18 more)
 
 ### Community 155 - "enums.ts"
-Cohesion: 0.47
-Nodes (4): firstGroup(), parseFieldsFromText(), PATTERNS, RawPortalDocumentFields
+Cohesion: 0.20
+Nodes (9): createTeam(), nn(), normalizeTeam(), TeamRepo, TeamServiceOutput, updateTeam(), validateTeamInput(), TeamInput (+1 more)
 
 ### Community 156 - "company-directory.ts"
-Cohesion: 0.14
-Nodes (13): AuthenticatedTocSession, OpenedSession, TocOnlineCredentials, TOCONLINE, assertTocHost(), PlaywrightTocSessions, REJECTION_NOTICE, TocOnlineOptions (+5 more)
+Cohesion: 0.16
+Nodes (12): OpenedSession, TocOnlineCredentials, TOCONLINE, assertTocHost(), PlaywrightTocSessions, REJECTION_NOTICE, TocOnlineOptions, PAGINA_LOGIN() (+4 more)
+
+### Community 158 - "GridProjection"
+Cohesion: 0.12
+Nodes (12): AtAuthReason, AtIntegrityOutcome, AtTransientOutcome, InvalidCredentialsError, StructuralError, classificar(), estado(), SupabaseDocumentStore (+4 more)
+
+### Community 159 - "service.ts"
+Cohesion: 0.23
+Nodes (7): CompanyRepo, CompanyServiceOutput, createCompany(), nn(), normalizeCompany(), updateCompany(), CompanyRecord
 
 ### Community 160 - "DbAttemptGuard"
-Cohesion: 0.12
-Nodes (16): criarSessoesAt(), log(), main(), AtSessionUrls, AttemptGuard, DbAttemptGuard, db, equipasCriadas (+8 more)
+Cohesion: 0.21
+Nodes (7): ActionMeta, getTracer(), db, equipasCriadas, queue, createDb(), schema
+
+### Community 161 - "due-date.ts"
+Cohesion: 0.31
+Nodes (12): addDays(), derivePaymentDueDate(), DueDateOptions, DueDates, easterSunday(), endMonthOf(), FIXED_HOLIDAYS, isoDate() (+4 more)
+
+### Community 162 - "actions.ts"
+Cohesion: 0.24
+Nodes (10): fetchAllIvaDocumentsAction(), FetchAllState, fetchIvaDocumentAction(), FetchState, FetchAllButton(), FetchButton(), FetchButtonProps, RowDetailsDialogProps (+2 more)
 
 ### Community 163 - "AtPaymentDocumentFetcher"
-Cohesion: 0.13
-Nodes (6): AtPaymentDocumentFetcher, IvaRunnerDeps, PaymentDocumentFetch, PaymentDocumentFetcher, PortalGate, FakeDocuments
+Cohesion: 0.20
+Nodes (5): firstGroup(), parseFieldsFromText(), PATTERNS, AtPaymentDocumentFetcher, RawPortalDocumentFields
+
+### Community 164 - "credential.ts"
+Cohesion: 0.26
+Nodes (9): AccessCredentialSelection, CredentialCandidate, evaluate(), rejected(), selectAccessCredential(), CredentialStatus, atCompany, atTeam (+1 more)
+
+### Community 165 - "obligation-ledger.ts"
+Cohesion: 0.26
+Nodes (4): PeriodState, daEquipa(), DbObligationLedger, semRegressao()
+
+### Community 166 - "Emissor"
+Cohesion: 0.22
+Nodes (9): 1. Instalar e subir o Supabase local, 2. Variáveis de ambiente — dois ficheiros, dois leitores, 3. Aplicar migrations e seed, 4. Subir o dashboard, 5. Subir o worker, Desenvolvimento local, Requisitos, Scripts de reconhecimento (Fase 0 do Módulo 1) (+1 more)
+
+### Community 167 - "sinks.test.ts"
+Cohesion: 0.15
+Nodes (12): chunk(), DbCompanyDirectory, tocMetadata(), motivoDaMarca(), db, equipasCriadas, KEY, makeCredential() (+4 more)
+
+### Community 168 - "readiness.ts"
+Cohesion: 0.33
+Nodes (5): BulkRow, calendarMonth(), CONCLUSIVE_OUTCOMES, planBulkFetch(), ReadinessInput
+
+### Community 169 - "document-store.ts"
+Cohesion: 0.25
+Nodes (8): Acesso a dados, Banco de dados, Bootstrap do admin, Documentos e Storage (Módulo 1), Fluxo de migrations, RLS, Seed local (Módulo 1), View `iva_documents_overview`
+
+### Community 171 - "page.tsx"
+Cohesion: 0.40
+Nodes (5): EventRow, LogRow, renderEventTree(), TraceDetailPage(), TraceRow
+
+### Community 172 - "actions.ts"
+Cohesion: 0.50
+Nodes (4): createUser(), CreateUserState, VALID_UI_ROLES, CreateUserForm()
+
+### Community 173 - "CLAUDE.md — Automação de Guias Fiscais (TOConline)"
+Cohesion: 0.29
+Nodes (7): CLAUDE.md — Automação de Guias Fiscais (TOConline), Comandos essenciais, Convenções técnicas, Estrutura, graphify, Mapa da documentação, Regras de trabalho
+
+### Community 175 - "Tabelas (base)"
+Cohesion: 0.33
+Nodes (6): Auth / autorização, Domínio (esqueleto, enums extensíveis), Multi-tenant (equipe = gabinete), Observabilidade, Orquestração, Tabelas (base)
+
+### Community 177 - "Automação de Guias Fiscais (TOConline)"
+Cohesion: 0.33
+Nodes (6): Automação de Guias Fiscais (TOConline), Comandos, Estrutura, Requisitos, Setup rápido, Stack
 
 ## Knowledge Gaps
-- **977 isolated node(s):** `$schema`, `style`, `rsc`, `tsx`, `config` (+972 more)
+- **978 isolated node(s):** `$schema`, `style`, `rsc`, `tsx`, `config` (+973 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **25 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **26 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `cn()` connect `cn` to `Management Dashboard (planned)`?**
+- **Why does `cn()` connect `cn` to `cn`, `user-menu.tsx`, `Management Dashboard (planned)`?**
   _High betweenness centrality (0.012) - this node is a cross-community bridge._
-- **Why does `AppShell()` connect `Web App Dependencies` to `cn`, `Web Auth & Pages`?**
+- **Why does `AppShell()` connect `Web App Dependencies` to `user-menu.tsx`, `ObligationLedger`?**
   _High betweenness centrality (0.011) - this node is a cross-community bridge._
 - **What connects `$schema`, `style`, `rsc` to the rest of the system?**
-  _980 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _981 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Observability Tracer/Logger` be split into smaller, more focused modules?**
-  _Cohesion score 0.06896551724137931 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.14130434782608695 - nodes in this community are weakly interconnected._
 - **Should `DB Schema (Drizzle)` be split into smaller, more focused modules?**
   _Cohesion score 0.06666666666666667 - nodes in this community are weakly interconnected._
 - **Should `Observability Stores & DB Client` be split into smaller, more focused modules?**
-  _Cohesion score 0.10574712643678161 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.1010752688172043 - nodes in this community are weakly interconnected._
 - **Should `Web App Dependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.05 - nodes in this community are weakly interconnected._
