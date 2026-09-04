@@ -6,16 +6,26 @@
  *
  * Arranque: `pnpm --filter @toc/worker dev` (tsx watch), ou `run start`.
  */
+import { createClient } from "@supabase/supabase-js";
 import { createDb } from "@toc/db";
 import { createTracer, DbStore } from "@toc/core";
-import { SCAN_JOB_TYPE } from "@toc/core/domain";
+import { IVA_DOCUMENT_JOB_TYPE, SCAN_JOB_TYPE } from "@toc/core/domain";
 import { loadEnv, MissingEnvError } from "./config/env";
 import { PlaywrightBrowser } from "./browser/browser";
+import { AtIvaDeclarationReader } from "./at/iva-declaration";
+import { AtPaymentDocumentFetcher } from "./at/payment-document";
+import { AcessoGovAtSessions } from "./at/session-acesso-gov";
 import { JobQueue } from "./runner/job-queue";
 import { CompanyScanRunner } from "./runner/company-scan-runner";
+import { IvaDocumentRunner } from "./runner/iva-document-runner";
+import { InMemoryPortalGate } from "./runner/portal-gate";
+import type { AtSessionFactory } from "./runner/ports";
 import { WorkerLoop } from "./runner/worker-loop";
+import { DbAttemptGuard } from "./sinks/attempt-guard";
 import { DbCompanyDirectory } from "./sinks/company-directory";
 import { DbCredentialSource } from "./sinks/credential-source";
+import { SupabaseDocumentStore } from "./sinks/document-store";
+import { DbObligationLedger } from "./sinks/obligation-ledger";
 import { PlaywrightTocSessions } from "./toconline/session";
 import { TocCompanyScanner } from "./toconline/scanner";
 import { FileStorageStateStore } from "./toconline/storage-state";
@@ -23,6 +33,28 @@ import { FileStorageStateStore } from "./toconline/storage-state";
 function log(message: string, data: Record<string, unknown> = {}) {
   // Linha JSON estruturada, como o Logger do @toc/core. Nunca inclui segredos.
   console.log(JSON.stringify({ ts: new Date().toISOString(), source: "worker", message, ...data }));
+}
+
+/**
+ * Escolhe o adaptador de sessão da AT conforme a rota configurada.
+ *
+ * Falha **no arranque** e não a meio de um job: uma rota que ainda não existe
+ * descoberta à 143.ª empresa deixaria um lote meio feito e um trace aberto por
+ * empresa. Aqui o processo nem sobe, e a mensagem diz o que falta.
+ */
+function criarSessoesAt(
+  env: ReturnType<typeof loadEnv>,
+  browser: PlaywrightBrowser,
+): AtSessionFactory {
+  if (env.atAccessMode === "at_direct_login") {
+    return new AcessoGovAtSessions({
+      browser,
+      state: new FileStorageStateStore(env.stateDir),
+    });
+  }
+  throw new Error(
+    "AT_ACCESS_MODE=toconline_direct_access ainda não está disponível neste worker (aguarda a Fase 0).",
+  );
 }
 
 async function main() {
@@ -40,12 +72,22 @@ async function main() {
 
   const db = createDb(env.databaseUrl);
   const store = new DbStore(db);
+  const tracer = createTracer(store);
   const browser = new PlaywrightBrowser({ headless: env.headless });
+  // Service role: o worker escreve no Storage por trás do RLS. Sem sessão
+  // persistida nem refresh — é um processo, não um browser com utilizador.
+  const supabase = createClient(env.supabaseUrl, env.supabaseServiceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  // Uma só instância: a mesma tabela de credenciais serve as duas automações, e
+  // duplicá-la duplicaria também a chave de cifra em memória sem ganho nenhum.
+  const credentials = new DbCredentialSource(db, env.credentialsEncKey);
 
   const runner = new CompanyScanRunner({
-    tracer: createTracer(store),
+    tracer,
     store,
-    credentials: new DbCredentialSource(db, env.credentialsEncKey),
+    credentials,
     sessions: new PlaywrightTocSessions({
       browser,
       state: new FileStorageStateStore(env.stateDir),
@@ -54,9 +96,23 @@ async function main() {
     directory: new DbCompanyDirectory(db),
   });
 
+  const ivaRunner = new IvaDocumentRunner({
+    tracer,
+    store,
+    credentials,
+    sessions: criarSessoesAt(env, browser),
+    declarations: new AtIvaDeclarationReader(),
+    documents: new AtPaymentDocumentFetcher(),
+    storage: new SupabaseDocumentStore(supabase, env.documentsBucket),
+    ledger: new DbObligationLedger(db),
+    attempts: new DbAttemptGuard(db),
+    gate: new InMemoryPortalGate({ pauseMs: env.atPortalPauseMs }),
+    policy: { dailyAttemptCap: env.atDailyAttemptCap, pacingMs: env.atPacingMs },
+  });
+
   const loop = new WorkerLoop({
     queue: new JobQueue(db),
-    handlers: { [SCAN_JOB_TYPE]: runner },
+    handlers: { [SCAN_JOB_TYPE]: runner, [IVA_DOCUMENT_JOB_TYPE]: ivaRunner },
     log,
   });
 
@@ -76,7 +132,11 @@ async function main() {
 
   // `concurrency` não entra aqui de propósito: o WorkerLoop é estritamente
   // serial, e anunciar um número que não se cumpre faz o log mentir.
-  log("worker no ar", { headless: env.headless, handles: [SCAN_JOB_TYPE] });
+  log("worker no ar", {
+    headless: env.headless,
+    handles: [SCAN_JOB_TYPE, IVA_DOCUMENT_JOB_TYPE],
+    atAccessMode: env.atAccessMode,
+  });
 
   await loop.start(controller.signal);
   await browser.close().catch(() => undefined);

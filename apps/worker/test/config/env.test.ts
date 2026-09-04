@@ -114,4 +114,122 @@ describe("loadEnv", () => {
       expect(env.rpaConcurrency).toBe(1);
     });
   });
+
+  // --- Módulo 1 — guia de pagamento do IVA (AT) ----------------------------
+  // Todas com valor por omissão: um worker que só faz varredura não pode
+  // deixar de arrancar por causa da configuração de um módulo que não usa.
+
+  describe("AT_ACCESS_MODE", () => {
+    it("assume at_direct_login por omissão", () => {
+      expect(loadEnv(complete).atAccessMode).toBe("at_direct_login");
+    });
+
+    it("aceita toconline_direct_access", () => {
+      const env = loadEnv({ ...complete, AT_ACCESS_MODE: "toconline_direct_access" });
+      expect(env.atAccessMode).toBe("toconline_direct_access");
+    });
+
+    it("assume o valor por omissão quando a variável está vazia", () => {
+      expect(loadEnv({ ...complete, AT_ACCESS_MODE: "" }).atAccessMode).toBe("at_direct_login");
+    });
+
+    // Ao contrário dos números, um modo desconhecido NÃO cai no default: cair
+    // em silêncio levaria o worker a abrir sessões pela rota errada contra o
+    // portal do Estado, que é exatamente o erro que não se pode dar.
+    it("lança quando o valor não é um modo conhecido", () => {
+      expect(() => loadEnv({ ...complete, AT_ACCESS_MODE: "lixo" })).toThrow(/AT_ACCESS_MODE/);
+    });
+
+    it("nomeia os valores válidos na mensagem de erro", () => {
+      try {
+        loadEnv({ ...complete, AT_ACCESS_MODE: "lixo" });
+        throw new Error("devia ter lançado");
+      } catch (err) {
+        const message = (err as Error).message;
+        expect(message).toContain("at_direct_login");
+        expect(message).toContain("toconline_direct_access");
+      }
+    });
+  });
+
+  describe("DOCUMENTS_BUCKET", () => {
+    it("assume documents por omissão", () => {
+      expect(loadEnv(complete).documentsBucket).toBe("documents");
+    });
+
+    it("aceita um bucket indicado", () => {
+      expect(loadEnv({ ...complete, DOCUMENTS_BUCKET: "guias" }).documentsBucket).toBe("guias");
+    });
+
+    it("assume documents quando a variável está vazia", () => {
+      expect(loadEnv({ ...complete, DOCUMENTS_BUCKET: "" }).documentsBucket).toBe("documents");
+    });
+  });
+
+  describe("AT_PACING_MS", () => {
+    it("assume 5000 por omissão", () => {
+      expect(loadEnv(complete).atPacingMs).toBe(5_000);
+    });
+
+    it("usa o valor indicado quando é um inteiro positivo", () => {
+      expect(loadEnv({ ...complete, AT_PACING_MS: "12000" }).atPacingMs).toBe(12_000);
+    });
+
+    it("cai no valor por omissão quando não é numérico", () => {
+      expect(loadEnv({ ...complete, AT_PACING_MS: "devagar" }).atPacingMs).toBe(5_000);
+    });
+
+    it("cai no valor por omissão quando é zero ou negativo", () => {
+      expect(loadEnv({ ...complete, AT_PACING_MS: "0" }).atPacingMs).toBe(5_000);
+      expect(loadEnv({ ...complete, AT_PACING_MS: "-1" }).atPacingMs).toBe(5_000);
+    });
+  });
+
+  describe("AT_DAILY_ATTEMPT_CAP", () => {
+    it("assume 5 por omissão", () => {
+      expect(loadEnv(complete).atDailyAttemptCap).toBe(5);
+    });
+
+    it("usa o valor indicado quando é um inteiro positivo", () => {
+      expect(loadEnv({ ...complete, AT_DAILY_ATTEMPT_CAP: "3" }).atDailyAttemptCap).toBe(3);
+    });
+
+    it("cai no valor por omissão quando é inválido", () => {
+      expect(loadEnv({ ...complete, AT_DAILY_ATTEMPT_CAP: "muitas" }).atDailyAttemptCap).toBe(5);
+    });
+  });
+
+  describe("AT_PORTAL_PAUSE_MS", () => {
+    it("assume 15 minutos por omissão", () => {
+      expect(loadEnv(complete).atPortalPauseMs).toBe(900_000);
+    });
+
+    it("usa o valor indicado quando é um inteiro positivo", () => {
+      expect(loadEnv({ ...complete, AT_PORTAL_PAUSE_MS: "60000" }).atPortalPauseMs).toBe(60_000);
+    });
+
+    it("cai no valor por omissão quando não é inteiro", () => {
+      expect(loadEnv({ ...complete, AT_PORTAL_PAUSE_MS: "1.5" }).atPortalPauseMs).toBe(900_000);
+    });
+  });
+
+  describe("RPA_CHROME_*", () => {
+    // Só a rota A (Acesso Direto) precisa de um Chrome real com a extensão do
+    // TOConline instalada. Ausentes é o caso normal.
+    it("ficam por definir quando não vêm no ambiente", () => {
+      const env = loadEnv(complete);
+      expect(env.chromeUserDataDir).toBeUndefined();
+      expect(env.chromeExtensionDir).toBeUndefined();
+    });
+
+    it("são lidos quando presentes", () => {
+      const env = loadEnv({
+        ...complete,
+        RPA_CHROME_USER_DATA_DIR: "/tmp/chrome-profile",
+        RPA_CHROME_EXTENSION_DIR: "/tmp/toconline-extension",
+      });
+      expect(env.chromeUserDataDir).toBe("/tmp/chrome-profile");
+      expect(env.chromeExtensionDir).toBe("/tmp/toconline-extension");
+    });
+  });
 });
