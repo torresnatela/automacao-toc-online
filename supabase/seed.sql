@@ -212,3 +212,53 @@ on conflict (id) do nothing;
 insert into public.teams (id, name, nif)
 values ('66666666-6666-6666-6666-666666666666', 'Gabinete Vazio', '500000026')
 on conflict (id) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- Terceira empresa da equipe demo: a guia foi extraída mas o PDF ainda NÃO está
+-- no storage (`storage_path` nulo).
+--
+-- É o caso que separa "existe linha de documento" de "existe ficheiro": a
+-- listagem tem de esconder o link PDF (a coluna `has_file` da view é
+-- exatamente `storage_path is not null`) e a rota de download tem de responder
+-- 404 "Ficheiro ainda não disponível." em vez de tentar assinar um caminho que
+-- não existe. Sem esta linha o e2e só exercitava o caminho feliz.
+-- ---------------------------------------------------------------------------
+insert into public.companies (id, team_id, name, nif, status)
+values (
+  'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+  '22222222-2222-2222-2222-222222222222',
+  'Empresa Sem Ficheiro Demo', '504567896', 'active'
+)
+on conflict (id) do nothing;
+
+insert into public.obligations (id, company_id, kind, frequency)
+values (
+  '0a0a0a0a-0a0a-0a0a-0a0a-0a0a0a0a0a0a',
+  'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+  'iva', 'monthly'
+)
+on conflict (id) do nothing;
+
+-- Período próprio (2026-08): não pode partilhar o período das outras empresas,
+-- porque a view escolhe UM período por empresa e é o dele que esta linha mostra.
+insert into public.obligation_periods (id, obligation_id, period, status, due_date)
+values (
+  '0b0b0b0b-0b0b-0b0b-0b0b-0b0b0b0b0b0b',
+  '0a0a0a0a-0a0a-0a0a-0a0a-0a0a0a0a0a0a',
+  '2026-08', 'delivered', '2026-10-25'
+)
+on conflict (id) do nothing;
+
+-- Com entidade/referência/valor e SEM `storage_path`: os campos foram lidos, o
+-- ficheiro ainda não subiu.
+insert into public.documents (
+  id, obligation_period_id, type, entity, reference, amount,
+  storage_path, status, extracted_at
+)
+values (
+  '0c0c0c0c-0c0c-0c0c-0c0c-0c0c0c0c0c0c',
+  '0b0b0b0b-0b0b-0b0b-0b0b-0b0b0b0b0b0b',
+  'iva_payment', '11111', '987654321098765', 42.00,
+  null, 'extracted', now()
+)
+on conflict (id) do nothing;

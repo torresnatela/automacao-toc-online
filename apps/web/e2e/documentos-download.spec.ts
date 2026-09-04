@@ -11,6 +11,9 @@ const DOC_DEMO = "77777777-7777-7777-7777-777777777777";
 // A empresa dona do DOC_DEMO — é a linha da listagem que tem de oferecer o PDF.
 const LIGADA = "Empresa Ligada Demo";
 const DOC_OUTRO = "88888888-8888-8888-8888-888888888888";
+// Guia com a linha criada e o ficheiro ainda por subir (`storage_path` nulo).
+const DOC_SEM_FICHEIRO = "0c0c0c0c-0c0c-0c0c-0c0c-0c0c0c0c0c0c";
+const SEM_FICHEIRO = "Empresa Sem Ficheiro Demo";
 const PATH_DEMO = `${DEMO_TEAM}/33333333-3333-3333-3333-333333333333/iva/2026-07.pdf`;
 const PATH_OUTRO =
   "55555555-5555-5555-5555-555555555555/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/iva/2026-07.pdf";
@@ -150,6 +153,15 @@ test.describe("como operador da equipa demo", () => {
     expect((await malformado.json()).ok).toBe(false);
   });
 
+  test("a guia sem ficheiro distingue-se da que não existe", async () => {
+    // 404 nos dois casos (é o que resiste à enumeração de ids), mas com
+    // mensagens diferentes: quem está à espera da guia tem de saber que a
+    // empresa é a certa e que o que falta é o RPA subir o PDF.
+    const res = await baixar(sessao.page, DOC_SEM_FICHEIRO);
+    expect(res.status()).toBe(404);
+    expect(await res.json()).toEqual({ ok: false, error: "Ficheiro ainda não disponível." });
+  });
+
   test("?download=1 pede um anexo com nome sem dados pessoais", async () => {
     test.skip(SEM_STORAGE, MOTIVO_SKIP);
 
@@ -183,6 +195,11 @@ test.describe("como admin global", () => {
     // linha desta empresa oferece.
     const pdf = linha(page, LIGADA).getByRole("link", { name: "PDF" });
     await expect(pdf).toHaveAttribute("href", `/api/documents/${DOC_DEMO}/download`);
+
+    // A linha da empresa cujo documento ainda não tem ficheiro não oferece
+    // link nenhum: o `has_file` da view é que manda, não a existência da linha
+    // `documents` — oferecer um link que dá 404 seria pior do que não o ter.
+    await expect(linha(page, SEM_FICHEIRO).getByRole("link", { name: "PDF" })).toHaveCount(0);
 
     const html = await page.content();
     expect(html).not.toContain("/storage/v1/");
