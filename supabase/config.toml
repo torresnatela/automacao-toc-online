@@ -109,12 +109,13 @@ file_size_limit = "50MiB"
 # [storage.image_transformation]
 # enabled = true
 
-# Uncomment to configure local storage buckets
-# [storage.buckets.images]
-# public = false
-# file_size_limit = "50MiB"
-# allowed_mime_types = ["image/png", "image/jpeg"]
-# objects_path = "./images"
+# Bucket dos PDFs das guias (Módulo 1). Privado: a leitura é sempre por signed
+# URL mintada pelo servidor. Em produção o bucket nasce da migration
+# 20260904015903_iva_documents_rls.sql — aqui é só para o stack local.
+[storage.buckets.documents]
+public = false
+file_size_limit = "10MiB"
+allowed_mime_types = ["application/pdf"]
 
 [auth]
 enabled = true

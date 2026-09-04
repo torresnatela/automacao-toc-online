@@ -1,5 +1,10 @@
 {
   "extends": "@toc/config/tsconfig",
-  "compilerOptions": { "outDir": "dist", "rootDir": "." },
+  // rootDir na raiz do monorepo (e não em `.`): os smoke tests importam as
+  // constantes do Módulo 1 de `packages/core/src` por caminho relativo — @toc/db
+  // não pode depender de @toc/core, porque @toc/core já depende de @toc/db.
+  // O pacote é consumido como TypeScript (exports apontam para ./src), nunca é
+  // compilado, portanto outDir/rootDir só existem para o `tsc --noEmit`.
+  "compilerOptions": { "outDir": "dist", "rootDir": "../.." },
   "include": ["src", "test", "drizzle.config.ts"]
 }
