@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit -p tsconfig.test.json",
-    "lint": "eslint src",
+    "lint": "eslint src scripts",
     "test": "vitest run"
   },
   "dependencies": {

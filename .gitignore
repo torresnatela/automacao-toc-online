@@ -16,3 +16,7 @@ test-results/
 # storageState do Playwright: cookies de sessão do TOConline são equivalentes a
 # credencial. Nunca versionar.
 .rpa/
+
+# Artefactos do reconhecimento da AT (screenshots do portal com dados reais de
+# clientes, redes, formulários). Partilha só pelo canal seguro do gabinete.
+apps/worker/recon/
