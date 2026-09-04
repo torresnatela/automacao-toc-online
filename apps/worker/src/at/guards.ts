@@ -15,11 +15,6 @@ import { AtIntegrityError, AtTransientError } from "../errors";
  *
  * As mensagens são texto nosso: nunca o HTML do portal, nunca um NIF, nunca um
  * valor. Elas acabam num `last_error` que o dashboard mostra.
- *
- * Nota: `runner/document-guards.ts` faz estas mesmas três perguntas com as
- * assinaturas que o `IvaDocumentRunner` já usa (sobre `RawPortalDocumentFields`
- * em vez de valores soltos). Estas são as do adaptador, para poderem ser usadas
- * antes de haver campos normalizados.
  */
 
 /** Um PDF a sério tem pelo menos isto — abaixo é download cortado, não guia. */

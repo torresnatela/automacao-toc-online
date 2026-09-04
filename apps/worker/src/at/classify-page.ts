@@ -87,12 +87,17 @@ function hasNifField(snapshot: AtPageSnapshot): boolean {
  *    o aviso dentro do layout normal do portal.
  * 3. Contexto de autenticação (host do login **ou** um campo de senha à vista),
  *    do mais grave para o mais benigno: bloqueio → recusa → segundo fator →
- *    mudança de senha → e, se nada disso for afirmado, `login_form`.
- * 4. Contexto do portal: falta de autorização → seleção de cliente → sem
- *    declarações → já pago → sem documento → ainda não pronto → e só depois as
- *    duas leituras positivas (documento de pagamento, lista de declarações).
- *    As negativas vêm antes das positivas porque a página de "não existe
- *    documento" continua a ter o título "Documento de pagamento".
+ *    mudança de senha → e, se nada disso for **afirmado**, `login_form`. Os
+ *    quatro primeiros exigem uma frase afirmativa (ver `wording.ts`): rótulos e
+ *    links do próprio formulário nunca classificam nada, porque cada um deles
+ *    dá `AtAuthError` e marca a credencial para todos os jobs seguintes.
+ * 4. Contexto do portal: falta de autorização → sem declarações → já pago → sem
+ *    documento → ainda não pronto → documento de pagamento → lista de
+ *    declarações → e, por último, seleção de cliente. As negativas vêm antes
+ *    das positivas porque a página de "não existe documento" continua a ter o
+ *    título "Documento de pagamento"; e a seleção de cliente vem depois de tudo
+ *    porque é a única que se decide pela estrutura da página e não pelo que ela
+ *    diz.
  * 5. `unknown` — que o chamador regista com `fingerprint`, nunca ignora.
  */
 export function classifyAtPage(
@@ -131,13 +136,6 @@ export function classifyAtPage(
   if (host !== null && portalHostPattern.test(host)) {
     if (WORDING.authorizationMissing.test(text)) return { kind: "authorization_missing" };
 
-    // O único sinal de tabela que um snapshot tem é o próprio texto — é o mesmo
-    // que decide `declaration_list` mais abaixo, e usá-lo aqui evita confundir
-    // a lista (que também mostra o NIF do cliente) com o ecrã de escolha.
-    const looksLikeDeclarationTable =
-      flat.includes("declara") && (flat.includes("periodo") || flat.includes("per."));
-    if (hasNifField(snapshot) && !looksLikeDeclarationTable) return { kind: "client_select" };
-
     if (WORDING.noDeclaration.test(text)) return { kind: "declaration_none" };
     if (WORDING.alreadyPaid.test(text)) return { kind: "already_paid" };
     if (WORDING.noPaymentDocument.test(text)) return { kind: "payment_document_none" };
@@ -149,7 +147,16 @@ export function classifyAtPage(
     ) {
       return { kind: "payment_document" };
     }
-    if (looksLikeDeclarationTable) return { kind: "declaration_list" };
+    if (flat.includes("declara") && (flat.includes("periodo") || flat.includes("per."))) {
+      return { kind: "declaration_list" };
+    }
+
+    // `client_select` fica para o fim porque é a única regra do portal que se
+    // decide pela ESTRUTURA (um campo `nif` num form) e não pelo conteúdo — e a
+    // estrutura é o mais fraco dos dois sinais. Um campo `nif` escondido na
+    // página da guia é banal; a correr primeiro, esta regra dava a guia por
+    // ecrã de escolha de cliente e o PDF nunca chegava a ser capturado.
+    if (hasNifField(snapshot)) return { kind: "client_select" };
   }
 
   // (5) Não se arrisca um palpite.

@@ -76,18 +76,46 @@ describe("classifyAtPage — autenticação", () => {
     expect(kind).toEqual({ kind: "mfa_challenge" });
   });
 
-  it("reconhece a chave móvel digital como segundo fator", () => {
-    const kind = classifyAtPage(
-      snap({ url: LOGIN, text: "Autenticar com Chave Móvel Digital", forms: loginForms() }),
-    );
-    expect(kind).toEqual({ kind: "mfa_challenge" });
+  it("aceita as outras formas de pedir o segundo fator", () => {
+    for (const text of [
+      "Introduza o código de segurança enviado por SMS",
+      "O código de verificação foi enviado para o seu e-mail.",
+      "A autenticação em dois passos é obrigatória nesta conta.",
+    ]) {
+      expect(classifyAtPage(snap({ url: LOGIN, text, forms: loginForms() }))).toEqual({
+        kind: "mfa_challenge",
+      });
+    }
   });
 
-  it("reconhece a exigência de mudança de senha", () => {
-    const kind = classifyAtPage(
-      snap({ url: LOGIN, text: "Tem de alterar a sua palavra-passe antes de continuar.", forms: loginForms() }),
-    );
-    expect(kind).toEqual({ kind: "password_change" });
+  it("reconhece a mudança de senha quando ela é imposta", () => {
+    for (const text of [
+      "Tem de alterar a sua palavra-passe antes de continuar.",
+      "A sua senha expirou. Deve alterar a senha para continuar.",
+      "A sua palavra-passe caducou.",
+    ]) {
+      expect(classifyAtPage(snap({ url: LOGIN, text, forms: loginForms() }))).toEqual({
+        kind: "password_change",
+      });
+    }
+  });
+
+  it("os rótulos e links do próprio formulário não classificam nada", () => {
+    // Cada um destes desfechos dá `AtAuthError` e marca a credencial — a partir
+    // daí todos os jobs da equipa morrem na pré-condição. Um link no rodapé, um
+    // botão de método alternativo ou o rótulo de um captcha não podem ter esse
+    // poder: sem uma frase que AFIRME o pedido, é um formulário e mais nada.
+    for (const text of [
+      "Autenticação\nUtilizador\nSenha\nEntrar\nAlterar palavra-passe",
+      "Autenticação\nUtilizador\nSenha\nEntrar\nRecuperar senha",
+      "Autenticação\nUtilizador\nSenha\nCódigo de segurança\nEntrar",
+      "Autenticar com Chave Móvel Digital",
+      "Definir nova palavra-passe",
+    ]) {
+      expect(classifyAtPage(snap({ url: LOGIN, text, forms: loginForms() }))).toEqual({
+        kind: "login_form",
+      });
+    }
   });
 
   it("um campo de senha no host do portal também cai no ramo de autenticação", () => {
@@ -114,6 +142,38 @@ describe("classifyAtPage — portal", () => {
       }),
     );
     expect(kind).toEqual({ kind: "client_select" });
+  });
+
+  it("um campo nif escondido na guia não a transforma em escolha de cliente", () => {
+    // O ecrã da guia traz um `nif` escondido para o submit seguinte. Se a regra
+    // estrutural corresse antes das de conteúdo, a página era dada por seleção
+    // de cliente e o PDF nunca chegava a ser capturado.
+    const kind = classifyAtPage(
+      snap({
+        title: "Documento de pagamento",
+        text: "Documento de pagamento\nEntidade: 10800\nReferência: 123 456 789 012 345",
+        forms: [
+          {
+            fields: [
+              { name: "nif", type: "hidden" },
+              { name: "ano", type: "select" },
+            ],
+          },
+        ],
+      }),
+    );
+    expect(kind).toEqual({ kind: "payment_document" });
+  });
+
+  it("o rodapé «se já pagou este documento» não dá a guia por paga", () => {
+    // `pag[ao]` sem `\b` casa dentro de "pagou": era o rodapé da própria guia a
+    // impedir a captura do PDF que estava mesmo ali.
+    const kind = classifyAtPage(
+      snap({
+        text: "Documento de pagamento\nEntidade: 10800\nSe já pagou este documento, ignore este aviso.",
+      }),
+    );
+    expect(kind).toEqual({ kind: "payment_document" });
   });
 
   it("reconhece a lista de declarações", () => {
@@ -151,6 +211,10 @@ describe("classifyAtPage — portal", () => {
       kind: "payment_document_none",
     });
     expect(classifyAtPage(snap({ text: "A declaração já foi paga em 2026-09-05." }))).toEqual({
+      kind: "already_paid",
+    });
+    expect(classifyAtPage(snap({ text: "IVA já pago." }))).toEqual({ kind: "already_paid" });
+    expect(classifyAtPage(snap({ text: "Pagamento já efetuado." }))).toEqual({
       kind: "already_paid",
     });
   });
