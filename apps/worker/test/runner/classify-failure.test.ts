@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { IVA_OUTCOMES, IVA_STAGES } from "@toc/core/domain";
-import type { IvaStage } from "@toc/core/domain";
 import {
   AtAuthError,
   AtIntegrityError,
@@ -86,18 +85,6 @@ const CLASSES: { nome: string; criar: () => unknown }[] = [
   { nome: "valor lançado que não é Error", criar: () => "isto não é um Error" },
 ];
 
-/**
- * A única célula onde o código escolhido e a tabela discordam do `retry`.
- *
- * Um `StructuralError` na persistência (ex.: bucket inexistente, 4xx do
- * Storage) não tem código próprio na taxonomia: cai em `unknown_error`, que a
- * tabela declara retentável por ser, no caso comum, um transitório. Aqui a
- * regra única manda e o job não é retentado. Ver o teste dedicado abaixo.
- */
-function divergeDaTabela(nome: string, stage: IvaStage): boolean {
-  return nome === "StructuralError genérico" && stage === "persist";
-}
-
 describe("classifyFailure — a regra única, classe a classe e etapa a etapa", () => {
   for (const { nome, criar } of CLASSES) {
     for (const stage of IVA_STAGES) {
@@ -106,9 +93,8 @@ describe("classifyFailure — a regra única, classe a classe e etapa a etapa", 
         const { outcome, retry, details } = classifyFailure(err, stage);
 
         expect(retry).toBe(!(err instanceof StructuralError));
-        // Nunca se retenta mais do que a taxonomia permite (só menos).
-        if (retry) expect(IVA_OUTCOMES[outcome].retry).toBe(true);
-        if (!divergeDaTabela(nome, stage)) expect(retry).toBe(IVA_OUTCOMES[outcome].retry);
+        // Sem exceções: o desfecho escolhido nunca contradiz a tabela.
+        expect(retry).toBe(IVA_OUTCOMES[outcome].retry);
         expect(details.stage).toBe(stage);
       });
     }
@@ -172,10 +158,11 @@ describe("classifyFailure — erros sem código, decididos pela etapa", () => {
     expect(classifyFailure(estrutural(), "precondition").outcome).toBe("payload_invalid");
   });
 
-  // `persist_failed` é retentável; um erro estrutural nunca é. Prevalece a regra.
-  it("estrutural em persist → unknown_error sem retry, nunca persist_failed", () => {
+  // `persist_failed` é o par retentável (o Storage não respondeu); uma escrita
+  // recusada é outra coisa, e um erro estrutural nunca se retenta.
+  it("estrutural em persist → persist_rejected sem retry", () => {
     const { outcome, retry } = classifyFailure(estrutural(), "persist");
-    expect(outcome).toBe("unknown_error");
+    expect(outcome).toBe("persist_rejected");
     expect(retry).toBe(false);
   });
 

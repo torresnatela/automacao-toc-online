@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { WorkerLoop, type JobHandler, type JobOutcome } from "../../src/runner/worker-loop";
 import type { ClaimedJob, JobQueue } from "../../src/runner/job-queue";
+import { AtAuthError } from "../../src/errors";
 
 const TIPO = "rpa.scan_companies";
 
@@ -126,6 +127,20 @@ describe("WorkerLoop.tick", () => {
 
     await loop.tick();
     expect(queue.failed).toEqual([{ id: "job-1", message: "boom", retry: true }]);
+  });
+
+  // …mas "retentável" não é o mesmo que "sempre": a regra única vale também no
+  // catch-all. Uma senha que a AT recusou, retentada, gasta o contador da conta
+  // e bloqueia-a por dias — e o `AtAuthError` pode escapar de qualquer ponto do
+  // runner, não só de onde o autor se lembrou de o apanhar.
+  it("exceção estrutural que escapa do handler não é retentada", async () => {
+    const queue = new FakeQueue([job()]);
+    const loop = build(queue, handler(new AtAuthError("rejected")));
+
+    await loop.tick();
+    expect(queue.failed).toEqual([
+      { id: "job-1", message: "A Autoridade Tributária recusou a autenticação.", retry: false },
+    ]);
   });
 
   it("despacha cada tipo para o seu handler", async () => {

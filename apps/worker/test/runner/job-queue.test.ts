@@ -261,16 +261,57 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("JobQueue", () => {
     expect(row!.status).toBe("pending");
     expect(row!.attempts).toBe(0);
     expect(row!.startedAt).toBeNull();
+    expect(row!.finishedAt).toBeNull();
     expect(row!.scheduledFor.getTime()).toBe(until.getTime());
     expect(row!.lastError).toMatchObject({ message: "portal_paused", deferred: true });
   });
 
   it("defer nunca deixa as tentativas abaixo de zero", async () => {
-    const job = await enqueue({});
+    const [job] = await db
+      .insert(schema.jobs)
+      .values({
+        type: JOB_TYPE,
+        payload: {},
+        status: "running",
+        attempts: 0,
+        startedAt: new Date(),
+      })
+      .returning();
+
     await queue.defer(job!.id, "portal_paused", new Date(Date.now() + 1000));
 
     const [row] = await db.select().from(schema.jobs).where(eq(schema.jobs.id, job!.id));
     expect(row!.attempts).toBe(0);
+  });
+
+  // Sem a guarda de estado, um `defer` fora de hora ressuscitava um job já
+  // concluído — e o dashboard mostrava "em pausa" um trabalho que acabou bem.
+  it("defer sobre job já terminado é no-op", async () => {
+    await enqueue({});
+    const claimed = await queue.claimNext(JOB_TYPE);
+    await queue.complete(claimed!.id, { documentId: "abc" });
+
+    await queue.defer(claimed!.id, "portal_paused", new Date(Date.now() + 60_000));
+
+    const [row] = await db.select().from(schema.jobs).where(eq(schema.jobs.id, claimed!.id));
+    expect(row!.status).toBe("succeeded");
+    expect(row!.attempts).toBe(1);
+    expect(row!.finishedAt).not.toBeNull();
+  });
+
+  // Duas chamadas descontariam duas tentativas: a segunda não faz nada porque
+  // o job já não está `running`.
+  it("defer duas vezes só desconta uma tentativa", async () => {
+    await enqueue({});
+    const claimed = await queue.claimNext(JOB_TYPE);
+    const until = new Date(Date.now() + 60_000);
+
+    await queue.defer(claimed!.id, "portal_paused", until);
+    await queue.defer(claimed!.id, "portal_paused", new Date(Date.now() + 120_000));
+
+    const [row] = await db.select().from(schema.jobs).where(eq(schema.jobs.id, claimed!.id));
+    expect(row!.attempts).toBe(0);
+    expect(row!.scheduledFor.getTime()).toBe(until.getTime());
   });
 
   // O worker pode morrer a meio (deploy, OOM): sem isto o job ficava `running`

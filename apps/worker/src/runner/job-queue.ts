@@ -143,6 +143,10 @@ export class JobQueue {
    * uma indisponibilidade) não é culpa do job, e se gastasse tentativa três
    * pausas matavam-no sem ele ter chegado a ser tentado. O `deferred: true` em
    * `last_error` é o que o dashboard lê para mostrar "em pausa" em vez de erro.
+   *
+   * Só toca em jobs `running` — só quem reclamou o job o pode adiar. Sem essa
+   * guarda, uma chamada fora de hora ressuscitava um job já concluído, e duas
+   * chamadas seguidas descontavam duas tentativas em vez da que foi gasta.
    */
   async defer(id: string, reason: string, until: Date): Promise<void> {
     await this.db.execute(sql`
@@ -151,9 +155,11 @@ export class JobQueue {
           scheduled_for = ${until},
           attempts = greatest(attempts - 1, 0),
           started_at = null,
+          finished_at = null,
           last_error = ${JSON.stringify({ message: reason, deferred: true })}::jsonb,
           updated_at = now()
       where id = ${id}
+        and status = 'running'
     `);
   }
 

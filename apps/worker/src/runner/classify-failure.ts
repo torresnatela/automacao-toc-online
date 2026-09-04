@@ -57,10 +57,10 @@ function estruturalPorEtapa(stage: IvaStage): IvaOutcome {
     case "precondition":
       return "payload_invalid";
     case "persist":
-      // Não `persist_failed`: esse código é retentável e este erro não é (um
-      // bucket inexistente ou um 4xx do Storage não passa a existir à terceira).
-      // `unknown_error` diz o que é — inesperado — e a regra única corta o retry.
-      return "unknown_error";
+      // Não `persist_failed`: esse é o par retentável (o Storage não respondeu).
+      // Aqui a escrita foi **recusada** — 4xx, bucket inexistente, linha de
+      // outra equipa — e repetir não a faz passar.
+      return "persist_rejected";
   }
 }
 

@@ -1,3 +1,4 @@
+import { StructuralError } from "../errors";
 import { sleep as sleepPadrao } from "../support/sleep";
 import type { ClaimedJob, JobQueue } from "./job-queue";
 
@@ -78,12 +79,14 @@ export class WorkerLoop {
       try {
         outcome = await handler.run(job);
       } catch (err) {
-        // Um handler bem comportado não deixa escapar exceções; se escapar,
-        // trata-se como transitório para não perder o job em silêncio.
+        // Um handler bem comportado não deixa escapar exceções; se escapar, o
+        // job não pode desaparecer em silêncio. Mas a regra única vale aqui
+        // como em todo o lado — um `AtAuthError` que escape seria retentado, e
+        // cada tentativa gasta o contador da senha na AT até a bloquear.
         outcome = {
           status: "failed",
           message: err instanceof Error ? err.message : "erro desconhecido",
-          retry: true,
+          retry: !(err instanceof StructuralError),
         };
       }
 
@@ -118,6 +121,13 @@ export class WorkerLoop {
           { retry: outcome.retry },
         );
         return;
+      default: {
+        // Um `status` novo em `JobOutcome` sem ramo aqui deixaria o job em
+        // `running` para sempre — invisível para o claim e a segurar a
+        // idempotência da empresa. Falha na compilação, não em produção.
+        const naoTratado: never = outcome;
+        throw new Error(`Desfecho de job não tratado: ${JSON.stringify(naoTratado)}`);
+      }
     }
   }
 
