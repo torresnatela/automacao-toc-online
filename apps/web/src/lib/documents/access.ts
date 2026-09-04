@@ -11,7 +11,11 @@ import { AT_ACCESS_MODES, type AtAccessMode } from "@toc/core/domain";
  *
  * Sem valor (ou com valor desconhecido) a rota é `at_direct_login`: é a que não
  * depende de nada configurado no TOConline, portanto a que falha de forma
- * legível em vez de silenciosa.
+ * legível em vez de silenciosa. O worker é mais severo — um valor desconhecido
+ * lança no arranque —, e é essa a assimetria correta: o dashboard tem de
+ * conseguir listar as guias para o operador ler o que já se buscou, mesmo com a
+ * variável mal escrita; quem não pode agir sobre uma rota que ninguém escolheu
+ * é quem vai abrir o browser.
  */
 export function getAtAccessMode(): AtAccessMode {
   const raw = process.env.AT_ACCESS_MODE;
