@@ -10,6 +10,10 @@ import { getTeamCredential } from "@/lib/integrations/service";
 
 export const dynamic = "force-dynamic";
 
+interface PageProps {
+  searchParams: Promise<{ team?: string }>;
+}
+
 interface Integration {
   provider: string;
   label: string;
@@ -30,14 +34,21 @@ const INTEGRATIONS: Integration[] = [
   { provider: "efatura", label: "e-Fatura", description: "Faturação eletrónica" },
 ];
 
-export default async function IntegracoesPage() {
+export default async function IntegracoesPage({ searchParams }: PageProps) {
   // O layout do dashboard já redireciona quem não tem sessão; aqui ela serve só
   // para saber de que equipa é o estado que se mostra.
   const user = await getSessionUser();
-  const teams = user?.role === "admin" ? await listTeams() : [];
-  // O admin é global (team_id nulo): vê a primeira equipa, que é a mesma que as
-  // páginas de integração escolhem por omissão.
-  const teamId = user?.teamId ?? teams[0]?.id ?? "";
+  const isAdmin = user?.role === "admin";
+  const teams = isAdmin ? await listTeams() : [];
+
+  // O admin é global (team_id nulo) e escolhe a equipa pela query string, como
+  // em `/integracoes/at` e `/documentos/iva`: sem isto, esta página falava
+  // sempre da primeira equipa e contradizia o ecrã para onde manda o operador.
+  // O pedido só vale se for mesmo uma equipa existente — um `?team=` inventado
+  // cairia numa leitura vazia indistinguível de "não configurado".
+  const { team: requestedTeam } = await searchParams;
+  const pedida = teams.find((team) => team.id === requestedTeam)?.id;
+  const teamId = isAdmin ? (pedida ?? teams[0]?.id ?? "") : (user?.teamId ?? "");
   const atCredential = teamId === "" ? null : await getTeamCredential("at", teamId);
 
   // Sem equipa não há nada que se possa afirmar — e "Não configurado" seria uma

@@ -144,7 +144,10 @@ test("NIF com dígito de controlo errado é recusado antes de tocar no portal", 
 
 test("a AT tem entrada na sidebar e a tela inicial liga-lhe com o estado real", async () => {
   const page = sessao.page;
-  await page.goto("/");
+  // Com `?team=`: o admin é global e a tela inicial escolheria `teams[0]` — a
+  // primeira por nome, que outra suíte pode ter deixado de ser a do seed. O
+  // estado que se afirma aqui é o da credencial que estes casos configuraram.
+  await page.goto(`/?team=${DEMO_TEAM}`);
 
   // `exact` porque a linha da tabela abaixo chama-se "Autoridade Tributária (AT)".
   await expect(

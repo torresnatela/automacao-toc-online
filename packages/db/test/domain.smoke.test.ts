@@ -1,20 +1,29 @@
 import { describe, it, expect, afterAll } from "vitest";
 import { createDb } from "../src/index";
 import { teams, companies, obligations, obligationPeriods } from "../src/schema/index";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 const db = createDb(
   process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54422/postgres",
 );
 
+// Ver a nota em tenancy.smoke.test.ts: os inserts commitam, e uma equipa
+// deixada para trás muda a listagem que o dashboard ordena por nome.
+const criadas: string[] = [];
+
 afterAll(async () => {
-  await (db.$client as { end: () => Promise<void> }).end();
+  try {
+    if (criadas.length > 0) await db.delete(teams).where(inArray(teams.id, criadas));
+  } finally {
+    await (db.$client as { end: () => Promise<void> }).end();
+  }
 });
 
 // Ver nota em backbone.smoke.test.ts sobre SKIP_DB_TESTS.
 describe.skipIf(process.env.SKIP_DB_TESTS === "1")("domain skeleton", () => {
   it("equipe → empresa → obrigação → período, com unicidade por (obligation, period)", async () => {
     const [team] = await db.insert(teams).values({ name: "Gabinete Teste" }).returning();
+    criadas.push(team!.id);
     // NISS é UNIQUE global e o insert commita; valor único por execução (Date.now).
     const [c] = await db
       .insert(companies)

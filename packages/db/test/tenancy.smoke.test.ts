@@ -1,7 +1,7 @@
 import { describe, it, expect, afterAll } from "vitest";
 import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { createDb } from "../src/index";
 import {
   teams,
@@ -17,8 +17,26 @@ const url = process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.
 const db = createDb(url);
 const pool = db.$client as unknown as Pool;
 
+// Tudo o que o ficheiro cria é apagado no fim. Sem isto cada execução deixava
+// equipas para trás — e a listagem que o dashboard ordena por nome passava a
+// depender de quantas vezes os testes já tinham corrido (foi o que partiu o e2e
+// da tela inicial). Apagar a equipa cascateia empresas → obrigações → períodos
+// → documentos; os `profiles` ficam por `set null` e apagam-se à parte.
+const criadas: { teamIds: string[]; userIds: string[] } = { teamIds: [], userIds: [] };
+
 afterAll(async () => {
-  await pool.end();
+  // O `finally` garante que uma limpeza falhada não deixa o pool aberto — a
+  // suíte ficaria pendurada em vez de falhar.
+  try {
+    if (criadas.userIds.length > 0) {
+      await db.delete(profiles).where(inArray(profiles.id, criadas.userIds));
+    }
+    if (criadas.teamIds.length > 0) {
+      await db.delete(teams).where(inArray(teams.id, criadas.teamIds));
+    }
+  } finally {
+    await pool.end();
+  }
 });
 
 // Impersona `authenticated` com auth.uid() = userId; rollback ao final.
@@ -47,6 +65,8 @@ async function makeTeamWithUser(role: "viewer" | "admin" = "viewer") {
     role,
     teamId: role === "admin" ? null : team!.id,
   });
+  criadas.teamIds.push(team!.id);
+  criadas.userIds.push(userId);
   return { teamId: team!.id, userId };
 }
 

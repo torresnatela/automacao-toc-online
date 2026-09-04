@@ -101,6 +101,12 @@ pnpm --filter web test:e2e    # só Playwright do dashboard
 
 - **Testes de DB** exigem o Supabase local a correr (`pnpm db:start` + `.env` carregado).
   `SKIP_DB_TESTS=1` pula-os — é o que o CI faz quando não sobe o Supabase.
+- **`pnpm test` corre os pacotes em série** (`turbo run test --concurrency=1`). Não é lentidão a
+  corrigir: a base de dados local é **uma só**, partilhada por `packages/db`, pelos testes de
+  integração do worker e pelos e2e do dashboard. Em paralelo, os smoke tests de `packages/db`
+  criam e apagam equipas enquanto o Playwright lê a listagem de equipas do dashboard — e o e2e
+  vê um estado que ninguém pediu. Para iterar depressa num pacote só, use o filtro
+  (`pnpm --filter web test:unit`), que não partilha nada.
 - **Testes de browser** do worker (`*.browser.test.ts`) sobem um Chromium real contra fixtures
   em `localhost`, zero rede externa. `SKIP_BROWSER_TESTS=1` pula-os localmente quando não há
   browser instalado; no CI correm sempre (que instala o Chromium).

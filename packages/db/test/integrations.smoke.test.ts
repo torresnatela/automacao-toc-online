@@ -1,7 +1,7 @@
 import { describe, it, expect, afterAll } from "vitest";
 import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { createDb } from "../src/index";
 import { teams, companies, profiles, integrationCredentials, jobs } from "../src/schema/index";
 
@@ -10,8 +10,22 @@ const url = process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.
 const db = createDb(url);
 const pool = db.$client as unknown as Pool;
 
+// Ver a nota em tenancy.smoke.test.ts: os inserts commitam, por isso o que o
+// ficheiro cria tem de sair no fim. Apagar a equipa cascateia empresas,
+// credenciais e jobs; os `profiles` ficam por `set null` e apagam-se à parte.
+const criadas: { teamIds: string[]; userIds: string[] } = { teamIds: [], userIds: [] };
+
 afterAll(async () => {
-  await pool.end();
+  try {
+    if (criadas.userIds.length > 0) {
+      await db.delete(profiles).where(inArray(profiles.id, criadas.userIds));
+    }
+    if (criadas.teamIds.length > 0) {
+      await db.delete(teams).where(inArray(teams.id, criadas.teamIds));
+    }
+  } finally {
+    await pool.end();
+  }
 });
 
 async function asUser<T>(userId: string, fn: (c: PoolClient) => Promise<T>) {
@@ -38,6 +52,8 @@ async function makeTeamWithUser(role: "viewer" | "admin" = "viewer") {
     role,
     teamId: role === "admin" ? null : team!.id,
   });
+  criadas.teamIds.push(team!.id);
+  criadas.userIds.push(userId);
   return { teamId: team!.id, userId };
 }
 
