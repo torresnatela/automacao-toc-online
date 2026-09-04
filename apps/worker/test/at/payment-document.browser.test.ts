@@ -3,7 +3,8 @@ import { chromium, type Browser } from "playwright";
 import { AtPaymentDocumentFetcher } from "../../src/at/payment-document";
 import { AcessoGovAtSessions } from "../../src/at/session-acesso-gov";
 import { PlaywrightBrowser, type BrowserProvider } from "../../src/browser/browser";
-import { AtAuthError, AtIntegrityError } from "../../src/errors";
+import { capturePdf } from "../../src/at/pdf-capture";
+import { AtAuthError, AtIntegrityError, AtTransientError } from "../../src/errors";
 import { InMemoryStorageStateStore, type StorageState } from "../../src/toconline/storage-state";
 import type { AtCompanyHandle, AuthenticatedAtSession } from "../../src/runner/ports";
 import {
@@ -110,6 +111,8 @@ beforeEach(() => {
   fixture.state.mode = "attachment";
   fixture.state.periodForm = false;
   fixture.state.ultimoPeriodo = null;
+  fixture.state.semCampos = false;
+  fixture.state.semBotao = false;
 });
 
 afterEach(async () => {
@@ -174,16 +177,73 @@ describe.skipIf(skip)("AtPaymentDocumentFetcher (browser + Portal das Finanças 
     expect(bytes[1]?.equals(bytes[2] ?? Buffer.alloc(0))).toBe(true);
   }, 60_000);
 
-  it("acceptDownloads vem da classe real PlaywrightBrowser", async () => {
+  it("a classe real PlaywrightBrowser traz a guia de ponta a ponta", async () => {
     const session = await abrirSessao(true);
 
     const obtido = await fetcher().fetch(session, { period: "2026-07", company: empresa() });
 
-    // Sem `acceptDownloads`, o Chromium cancela o ficheiro e esta captura
-    // esgotaria o tempo em vez de trazer a guia.
     if (obtido.kind !== "document") throw new Error(`esperava documento, veio ${obtido.kind}`);
     expect(obtido.via).toBe("download");
+    expect(obtido.pdf.equals(fixture.state.pdf)).toBe(true);
   }, 60_000);
+
+  it("PlaywrightBrowser repassa acceptDownloads: a false, o ficheiro é cancelado", async () => {
+    // O controlo NEGATIVO do wiring. O Playwright aceita downloads por omissão,
+    // portanto um teste que só descarregue prova pouco; o que prova é que a
+    // opção **chega** ao contexto — e o único sítio onde isso se vê de fora é
+    // no que acontece quando ela vem a `false`.
+    const real = new PlaywrightBrowser({ headless: true });
+    providersReais.push(real);
+    const contexto = await real.newContext({ acceptDownloads: false });
+    await contexto.addCookies([{ name: "sessao", value: "1", url: fixture.baseUrl }]);
+    const pagina = await contexto.newPage();
+    await pagina.goto(`${fixture.baseUrl}/dpiva/portal/cc/obter-doc-pagamento`);
+
+    const erro = await capturePdf(
+      pagina,
+      () => pagina.click('button:has-text("Obter documento de pagamento")'),
+      { timeoutMs: 6_000 },
+    )
+      .then(() => null)
+      .catch((e: unknown) => e as AtTransientError);
+
+    expect(erro).toBeInstanceOf(AtTransientError);
+    expect(erro?.outcome).toBe("document_capture_failed");
+    await contexto.close();
+  }, 60_000);
+
+  it("layout sem o contentor dos campos: guia guardada, campos por ler", async () => {
+    fixture.state.semCampos = true;
+    const session = await abrirSessao();
+
+    const obtido = await fetcher().fetch(session, { period: "2026-07", company: empresa() });
+
+    // Recusar uma guia boa por causa de um `<main>` renomeado deixaria o IVA
+    // por pagar. O desfecho é `fetched_without_fields`, não falha.
+    if (obtido.kind !== "document") throw new Error(`esperava documento, veio ${obtido.kind}`);
+    expect(obtido.fields.source).toBe("none");
+    expect(obtido.fields.entity).toBeNull();
+    // O período pedido é a rede de segurança: o ficheiro sabe sempre a que mês
+    // pertence, mesmo quando o portal não o disse.
+    expect(obtido.fields.period).toBe("2026-07");
+    expect(obtido.pdf.equals(fixture.state.pdf)).toBe(true);
+  }, 40_000);
+
+  it("botão de obter documento em falta → AtIntegrityError, não um timeout cru", async () => {
+    fixture.state.semBotao = true;
+    const session = await abrirSessao();
+
+    const erro = await fetcher()
+      .fetch(session, { period: "2026-07", company: empresa() })
+      .then(() => null)
+      .catch((e: unknown) => e as AtIntegrityError);
+
+    // Um `TimeoutError` do Playwright seria retentável, sem código de desfecho
+    // e sem assinatura da página: três martelos no portal e nenhuma pista.
+    expect(erro).toBeInstanceOf(AtIntegrityError);
+    expect(erro?.outcome).toBe("at_unexpected_page");
+    expect(erro?.fingerprint).toBeDefined();
+  }, 40_000);
 
   it("preenche ano e período quando o portal os pede antes de mostrar a guia", async () => {
     fixture.state.periodForm = true;

@@ -1,5 +1,5 @@
 import { taxIdMatches } from "@toc/core/domain";
-import type { BrowserContext, Page } from "playwright";
+import type { BrowserContext, Page, Response } from "playwright";
 import type { BrowserProvider } from "../browser/browser";
 import { AtAuthError, AtIntegrityError, AtTransientError } from "../errors";
 import type {
@@ -109,7 +109,7 @@ export class AcessoGovAtSessions implements AtSessionFactory {
       // A seleção do cliente é POR ABERTURA, não por login: a sessão
       // reaproveitada está autenticada, não está no cliente certo.
       if (input.scope.companyId === null) {
-        await this.selecionarCliente(aberta.page, aberta.origin, input.company);
+        await this.selecionarCliente(key, aberta.page, aberta.origin, input.company);
       }
       return {
         session: this.wrap(aberta.context, aberta.page, aberta.host, aberta.origin, input.scope),
@@ -142,8 +142,11 @@ export class AcessoGovAtSessions implements AtSessionFactory {
       storageState: saved.state,
       acceptDownloads: true,
     });
-    const page = await context.newPage();
+    let page: Page | null = null;
     try {
+      // `newPage()` dentro do `try`: falhar a abrir a página deixaria o
+      // contexto (e o Chromium por trás dele) sem ninguém para o fechar.
+      page = await context.newPage();
       const response = await page.goto(`${saved.origin}${caminhos.consultarDeclaracao}`, {
         waitUntil: "domcontentloaded",
         timeout: this.timeout,
@@ -173,9 +176,13 @@ export class AcessoGovAtSessions implements AtSessionFactory {
 
   private async login(key: string, credentials: PortalCredentials): Promise<SessaoAberta> {
     const context = await this.deps.browser.newContext({ acceptDownloads: true });
-    const page = await context.newPage();
+    let page: Page | null = null;
 
     try {
+      // Idem `tryReuse`: dentro do `try`, para o contexto nunca ficar órfão.
+      page = await context.newPage();
+      const documento = seguirODocumento(page);
+
       await page.goto(this.options.loginUrl ?? AT.loginUrl, {
         waitUntil: "domcontentloaded",
         timeout: this.timeout,
@@ -193,7 +200,9 @@ export class AcessoGovAtSessions implements AtSessionFactory {
           timeout: this.timeout,
         });
       } catch {
-        throw await this.erroDeLogin(page);
+        throw await this.erroDeLogin(page, documento.ultima);
+      } finally {
+        documento.parar();
       }
 
       const host = assertAtHost(page.url(), this.portalHostPattern);
@@ -224,8 +233,15 @@ export class AcessoGovAtSessions implements AtSessionFactory {
    * é estrutural, com a assinatura redigida da página para se perceber o que
    * mudou sem guardar o portal.
    */
-  private async erroDeLogin(page: Page): Promise<Error> {
-    const snapshot = await snapshotPage(page);
+  private async erroDeLogin(page: Page, resposta: Response | null): Promise<Error> {
+    // O `status` é o que separa "o portal está em baixo" de "a página é
+    // estranha": um 5xx pode vir com qualquer corpo, incluindo um sem palavra
+    // nenhuma que a redação reconheça. Sem ele, uma avaria da AT era
+    // classificada como `unknown` — estrutural — e matava o lote inteiro.
+    const snapshot: AtPageSnapshot = {
+      ...(await snapshotPage(page)),
+      ...(resposta === null ? {} : { status: resposta.status() }),
+    };
     const pagina = classifyAtPage(snapshot, this.padroes);
     switch (pagina.kind) {
       case "login_rejected":
@@ -270,41 +286,96 @@ export class AcessoGovAtSessions implements AtSessionFactory {
    * **afirmam** NIFs diferentes — um NIF ausente ou ilegível não prova nada.
    */
   private async selecionarCliente(
+    key: string,
     page: Page,
     origin: string,
     company: AtCompanyHandle,
   ): Promise<void> {
-    await page.goto(`${origin}${AT.paths.cc.listaClientes}`, {
-      waitUntil: "domcontentloaded",
-      timeout: this.timeout,
-    });
-    await page.fill(AT.clientSelect.nifInput, company.nif ?? "", { timeout: this.timeout });
-    // O submit é uma navegação: sem esperar por ela, o snapshot a seguir tanto
-    // podia fotografar a página nova como a antiga.
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: this.timeout }),
-      page.click(AT.clientSelect.submit, { timeout: this.timeout }),
-    ]);
+    const documento = seguirODocumento(page);
+    try {
+      const chegada = await page.goto(`${origin}${AT.paths.cc.listaClientes}`, {
+        waitUntil: "domcontentloaded",
+        timeout: this.timeout,
+      });
+      // Classificar ANTES de escrever: se a sessão morreu pelo caminho, o que
+      // está à frente é o formulário de autenticação — e escrever um NIF no
+      // campo errado só daria um timeout que não explica nada.
+      await this.exigirPortal(key, page, chegada);
 
-    const snapshot = await snapshotPage(page);
+      await page.fill(AT.clientSelect.nifInput, company.nif ?? "", { timeout: this.timeout });
+      // O submit é uma navegação: sem esperar por ela, o snapshot a seguir tanto
+      // podia fotografar a página nova como a antiga.
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: this.timeout }),
+        page.click(AT.clientSelect.submit, { timeout: this.timeout }),
+      ]);
+
+      const snapshot = await this.fotografar(page, documento.ultima);
+      await this.exigirPortal(key, page, null, snapshot);
+
+      const mostrado = NIF_NO_TEXTO.exec(snapshot.text)?.[1] ?? null;
+      if (mostrado !== null && taxIdMatches(mostrado, company.nif ?? "") === false) {
+        // Nem a mensagem nem o fingerprint levam NIFs: este erro acaba num
+        // `last_error` que o dashboard mostra a quem estiver a olhar.
+        throw new AtIntegrityError(
+          "at_session_mismatch",
+          "A sessão aberta no portal não é a do contribuinte pedido.",
+          {},
+        );
+      }
+    } finally {
+      documento.parar();
+    }
+  }
+
+  /** O snapshot com o `status` da resposta que serviu o documento, quando o há. */
+  private async fotografar(page: Page, resposta: Response | null): Promise<AtPageSnapshot> {
+    return {
+      ...(await snapshotPage(page)),
+      ...(resposta === null ? {} : { status: resposta.status() }),
+    };
+  }
+
+  /**
+   * "Ainda estou num sítio do portal onde possa continuar?" — e lança já com o
+   * desfecho certo quando não estou.
+   *
+   * A separação que importa é entre o que se retenta e o que não se retenta.
+   * Uma avaria do portal (5xx, manutenção) e uma sessão que expirou são
+   * passageiras: um `AtTransientError` devolve o job à fila com backoff. Uma
+   * página que ninguém reconhece é estrutural e para o lote — e é por isso que
+   * o 5xx tem de ser visto pelo **código HTTP** e não só pela redação, que a AT
+   * nem sempre escreve.
+   */
+  private async exigirPortal(
+    key: string,
+    page: Page,
+    resposta: Response | null,
+    jaFotografado?: AtPageSnapshot,
+  ): Promise<void> {
+    const snapshot = jaFotografado ?? (await this.fotografar(page, resposta));
     const pagina = classifyAtPage(snapshot, this.padroes);
     if (pagina.kind === "authorization_missing") throw new AtAuthError("authorization_missing");
+    if (pagina.kind === "maintenance" || pagina.kind === "server_error") {
+      throw new AtTransientError(
+        "at_unavailable",
+        "O Portal das Finanças está indisponível de momento.",
+      );
+    }
+    if (FAMILIA_DE_LOGIN.has(pagina.kind)) {
+      // O estado guardado já não vale: deitá-lo fora aqui evita que a tentativa
+      // seguinte gaste a mesma navegação para descobrir o mesmo.
+      await this.deps.state.clear(key);
+      throw new AtTransientError(
+        "at_unavailable",
+        "A sessão da AT expirou a meio da escolha do contribuinte.",
+      );
+    }
     if (pagina.kind === "unknown") {
       throw new AtIntegrityError(
         "at_unexpected_page",
         "O Portal das Finanças respondeu com uma página inesperada ao escolher o contribuinte.",
         fingerprint(snapshot),
-      );
-    }
-
-    const mostrado = NIF_NO_TEXTO.exec(snapshot.text)?.[1] ?? null;
-    if (mostrado !== null && taxIdMatches(mostrado, company.nif ?? "") === false) {
-      // Nem a mensagem nem o fingerprint levam NIFs: este erro acaba num
-      // `last_error` que o dashboard mostra a quem estiver a olhar.
-      throw new AtIntegrityError(
-        "at_session_mismatch",
-        "A sessão aberta no portal não é a do contribuinte pedido.",
-        {},
       );
     }
   }
@@ -331,6 +402,36 @@ export class AcessoGovAtSessions implements AtSessionFactory {
       },
     };
   }
+}
+
+/**
+ * Guarda a última resposta do **documento principal** enquanto uma navegação
+ * decorre, para o classificador poder ver o código HTTP.
+ *
+ * Um `Page` não sabe com que status foi servido, e nem toda a navegação passa
+ * por um `goto` que devolva a `Response` — o submit de um formulário, por
+ * exemplo. Sem isto, um 503 com um corpo que a redação não reconhece era
+ * classificado como página desconhecida, ou seja, estrutural: uma avaria de
+ * minutos na AT gastava a fila inteira sem retentativa nenhuma.
+ *
+ * O estado vive num objeto e não numa variável solta de propósito: o
+ * TypeScript não vê as atribuições feitas dentro do ouvinte e estreitaria uma
+ * variável `let` para `null` no ponto de leitura.
+ */
+function seguirODocumento(page: Page): { readonly ultima: Response | null; parar(): void } {
+  const registo: { ultima: Response | null } = { ultima: null };
+  const ouvinte = (resposta: Response): void => {
+    if (!resposta.request().isNavigationRequest()) return;
+    if (resposta.frame() !== page.mainFrame()) return;
+    registo.ultima = resposta;
+  };
+  page.on("response", ouvinte);
+  return {
+    get ultima(): Response | null {
+      return registo.ultima;
+    },
+    parar: () => page.removeListener("response", ouvinte),
+  };
 }
 
 type CaminhosDoPortal = { consultarDeclaracao: string; obterDocumentoPagamento: string };

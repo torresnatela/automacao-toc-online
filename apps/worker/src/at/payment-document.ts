@@ -12,6 +12,11 @@ import { parseFieldsFromText } from "./parse-fields";
 import { capturePdf } from "./pdf-capture";
 import { AT, type AtOptions } from "./selectors";
 
+/** Quanto se espera por uma peça de layout já dada por presente pela classificação. */
+const ESPERA_ESTRUTURAL_MS = 2_000;
+/** O botão vale mais paciência: é ele que traz o documento. */
+const ESPERA_DO_BOTAO_MS = 5_000;
+
 /**
  * A guia de pagamento: a página, os campos e o PDF.
  *
@@ -87,12 +92,9 @@ export class AtPaymentDocumentFetcher implements PaymentDocumentFetcher {
     }
 
     // Antes do clique: a captura pode levar a página para o visor de PDF.
-    const texto = await page
-      .locator(AT.paymentDocument.fieldsContainer)
-      .first()
-      .innerText({ timeout: this.timeout });
-    const fields = parseFieldsFromText(texto);
+    const fields = parseFieldsFromText(await this.textoDosCampos(page));
 
+    await this.exigirBotao(page, snapshot);
     const capturado = await capturePdf(
       page,
       () => page.click(AT.paymentDocument.obtainButton, { timeout: this.timeout }),
@@ -108,6 +110,52 @@ export class AtPaymentDocumentFetcher implements PaymentDocumentFetcher {
       fields: { ...fields, period: fields.period ?? target.period },
       via: capturado.via,
     };
+  }
+
+  /**
+   * O texto de onde saem os campos da guia — ou `""` se o contentor não estiver
+   * lá.
+   *
+   * **Não falha de propósito.** Um `<main>` renomeado é uma mudança de layout,
+   * não um documento errado: a guia continua a ser a certa e continua a poder
+   * ser guardada. O desfecho `fetched_without_fields` (`source: "none"`) diz ao
+   * gabinete que a entidade e a referência têm de ser lidas do PDF à mão —
+   * muito melhor do que recusar uma guia boa e deixar o IVA por pagar.
+   *
+   * A espera é curta: a página já está classificada como a do documento, e se o
+   * contentor não apareceu em dois segundos não vai aparecer.
+   */
+  private async textoDosCampos(page: Page): Promise<string> {
+    const contentor = page.locator(AT.paymentDocument.fieldsContainer).first();
+    await contentor
+      .waitFor({ state: "attached", timeout: ESPERA_ESTRUTURAL_MS })
+      .catch(() => undefined);
+    if ((await contentor.count()) === 0) return "";
+    try {
+      return await contentor.innerText({ timeout: ESPERA_ESTRUTURAL_MS });
+    } catch {
+      return "";
+    }
+  }
+
+  /**
+   * O botão tem de existir **antes** de a corrida começar.
+   *
+   * Sem esta verificação, um seletor partido chegava lá fora como um
+   * `TimeoutError` cru do Playwright — retentável, sem código de desfecho e sem
+   * assinatura da página. Três retentativas depois, o portal tinha sido
+   * martelado três vezes e ninguém sabia porquê. Um botão que não existe é uma
+   * mudança de contrato: falha alto, uma vez, com a página assinada.
+   */
+  private async exigirBotao(page: Page, snapshot: AtPageSnapshot): Promise<void> {
+    const botao = page.locator(AT.paymentDocument.obtainButton).first();
+    await botao.waitFor({ state: "attached", timeout: ESPERA_DO_BOTAO_MS }).catch(() => undefined);
+    if ((await botao.count()) > 0) return;
+    throw new AtIntegrityError(
+      "at_unexpected_page",
+      "O botão de obter documento de pagamento não existe na página do portal.",
+      fingerprint(snapshot),
+    );
   }
 
   /**

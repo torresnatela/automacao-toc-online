@@ -67,6 +67,18 @@ export interface AtFixtureState {
   reorderColumns: boolean;
   /** Faz o `obter-doc-pagamento` exigir ano+período antes de mostrar a guia. */
   periodForm: boolean;
+  /**
+   * Faz o portal responder 503 com um corpo NEUTRO — sem uma palavra que
+   * `wording.ts` reconheça. Só o código HTTP denuncia a avaria, que é o caso
+   * que apanha um classificador que ignore o `status`.
+   */
+  serverError: boolean;
+  /** A sessão morre entre a reutilização e a escolha do cliente. */
+  sessaoMorreNaSelecao: boolean;
+  /** A guia vem sem o contentor `<main>` dos campos (layout mudado). */
+  semCampos: boolean;
+  /** A guia vem sem o botão de obter documento (seletor partido). */
+  semBotao: boolean;
   /** O PDF servido em `/doc.pdf`. Gerado no `beforeAll` do teste, nunca no repo. */
   pdf: Buffer;
   /** O que o último POST do formulário de período trouxe. */
@@ -219,19 +231,30 @@ const paginaSemDeclaracoes = (nif: string): string =>
  * `window.open` para a janela nova. // TODO(recon): confirmar na Fase 0 qual
  * deles o portal usa de verdade e com que cabeçalhos.
  */
-const paginaDocumento = (aoClicar: string): string =>
-  pagina(
-    "Obter documento de pagamento",
-    `<h1>Documento de pagamento</h1>
-    <main>
-      <p>Entidade: 11111</p>
+const paginaDocumento = (
+  aoClicar: string,
+  opcoes: { semCampos?: boolean; semBotao?: boolean } = {},
+): string => {
+  const campos = `<p>Entidade: 11111</p>
       <p>Referência: 123 456 789 012 345</p>
       <p>Valor: 1.234,56 €</p>
       <p>NIF: ${NIFS.bom}</p>
-      <p>Período: 2026/07</p>
-    </main>
-    <button type="button" onclick="${aoClicar}">Obter documento de pagamento</button>`,
+      <p>Período: 2026/07</p>`;
+  return pagina(
+    "Obter documento de pagamento",
+    `<h1>Documento de pagamento</h1>
+    ${
+      // Sem `<main>` os campos continuam à vista — muda só o contentor, que é
+      // exatamente como um redesenho do portal se apresenta.
+      opcoes.semCampos === true ? `<div>${campos}</div>` : `<main>${campos}</main>`
+    }
+    ${
+      opcoes.semBotao === true
+        ? "<p>Entidade emissora: Autoridade Tributária</p>"
+        : `<button type="button" onclick="${aoClicar}">Obter documento de pagamento</button>`
+    }`,
   );
+};
 
 const PAGINA_FORMULARIO_PERIODO = pagina(
   "Obter documento de pagamento",
@@ -245,6 +268,16 @@ const PAGINA_FORMULARIO_PERIODO = pagina(
     </select>
     <button type="submit">Consultar</button>
   </form>`,
+);
+
+/**
+ * O 503 sem pistas: nem "em manutenção", nem "temporariamente indisponível",
+ * nem "erro interno do servidor". Nada aqui casa com `wording.ts` — a única
+ * prova de que o portal está em baixo é o código HTTP.
+ */
+const PAGINA_503 = pagina(
+  "Serviço indisponível",
+  `<h1>Serviço indisponível</h1><p>Por favor tente novamente mais tarde.</p>`,
 );
 
 const PAGINA_SEM_DOCUMENTO = pagina(
@@ -312,6 +345,10 @@ export async function startAtFixtureServer(): Promise<AtFixtureServer> {
     mode: "attachment",
     reorderColumns: false,
     periodForm: false,
+    serverError: false,
+    sessaoMorreNaSelecao: false,
+    semCampos: false,
+    semBotao: false,
     pdf: Buffer.alloc(0),
     ultimoPeriodo: null,
     visitas: { login: 0, listaClientes: 0, consultarDeclaracao: 0, obterDocumento: 0, pdf: 0 },
@@ -330,6 +367,11 @@ export async function startAtFixtureServer(): Promise<AtFixtureServer> {
     // --- acesso.gov.pt ------------------------------------------------------
     if (caminho === "/loginForm") {
       if (req.method === "POST") {
+        if (state.serverError) {
+          res.writeHead(503, { "content-type": "text/html; charset=utf-8" });
+          res.end(PAGINA_503);
+          return;
+        }
         const corpo = await lerCorpo(req);
         const senha = corpo.get("password");
         switch (senha) {
@@ -375,6 +417,14 @@ export async function startAtFixtureServer(): Promise<AtFixtureServer> {
     }
 
     if (caminho === "/pagantiva/listaClientesToc/entrar") {
+      // A sessão morre DEPOIS de a reutilização ter passado: o cookie ainda
+      // servia para consultar a declaração e já não serve para escolher.
+      if (state.sessaoMorreNaSelecao) return redireciona(res, `${origens.login}/loginForm`);
+      if (state.serverError) {
+        res.writeHead(503, { "content-type": "text/html; charset=utf-8" });
+        res.end(PAGINA_503);
+        return;
+      }
       if (req.method === "POST") {
         const corpo = await lerCorpo(req);
         const nif = corpo.get("nif") ?? "";
@@ -415,6 +465,7 @@ export async function startAtFixtureServer(): Promise<AtFixtureServer> {
         if (state.periodForm) return html(res, PAGINA_FORMULARIO_PERIODO);
       }
       const modo = (url.searchParams.get("mode") as AtFixtureMode | null) ?? state.mode;
+      const degradacao = { semCampos: state.semCampos, semBotao: state.semBotao };
       switch (modo) {
         case "none":
           return html(res, PAGINA_SEM_DOCUMENTO);
@@ -423,11 +474,11 @@ export async function startAtFixtureServer(): Promise<AtFixtureServer> {
         case "notready":
           return html(res, PAGINA_NAO_PRONTO);
         case "popup":
-          return html(res, paginaDocumento("window.open('/doc.pdf')"));
+          return html(res, paginaDocumento("window.open('/doc.pdf')", degradacao));
         case "inline":
-          return html(res, paginaDocumento("fetch('/doc.pdf')"));
+          return html(res, paginaDocumento("fetch('/doc.pdf')", degradacao));
         default:
-          return html(res, paginaDocumento("location.href='/doc.pdf'"));
+          return html(res, paginaDocumento("location.href='/doc.pdf'", degradacao));
       }
     }
 

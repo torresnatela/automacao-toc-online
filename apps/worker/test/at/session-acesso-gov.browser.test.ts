@@ -30,6 +30,8 @@ let fixture: AtFixtureServer;
 /** Todas as URLs pedidas pelo browser, para provar que a senha não vai em nenhuma. */
 let pedidos: string[] = [];
 let contextos: BrowserContext[] = [];
+/** As opções com que o adaptador pediu cada contexto — é o que prova o wiring. */
+let opcoesDeContexto: { storageState?: StorageState; acceptDownloads?: boolean }[] = [];
 
 function empresa(nif: string | null = NIFS.bom): AtCompanyHandle {
   return { id: "emp-1", nif, tocCompanyId: null, tocCluster: null };
@@ -42,6 +44,7 @@ const ESCOPO_EMPRESA: CredentialScope = { teamId: EQUIPA, companyId: "emp-1" };
 function provider(): BrowserProvider {
   return {
     async newContext(options: { storageState?: StorageState; acceptDownloads?: boolean } = {}) {
+      opcoesDeContexto.push(options);
       const context = await browser.newContext({
         storageState: options.storageState,
         acceptDownloads: options.acceptDownloads,
@@ -98,8 +101,11 @@ beforeEach(() => {
   if (skip) return;
   pedidos = [];
   contextos = [];
+  opcoesDeContexto = [];
   fixture.state.cookieValido = "1";
   fixture.state.reorderColumns = false;
+  fixture.state.serverError = false;
+  fixture.state.sessaoMorreNaSelecao = false;
   fixture.state.visitas = {
     login: 0,
     listaClientes: 0,
@@ -305,6 +311,67 @@ describe.skipIf(skip)("AcessoGovAtSessions (browser + Portal das Finanças local
     for (const url of pedidos) expect(url).not.toContain(SENHAS.boa);
     expect(aberta.session.page.url()).not.toContain(SENHAS.boa);
     await aberta.session.close();
+  }, 30_000);
+
+  it("pede sempre o contexto com acceptDownloads, no login e na reutilização", async () => {
+    const { factory } = sessions();
+
+    const primeira = await abrir(factory);
+    await primeira.session.close();
+    const segunda = await abrir(factory);
+    await segunda.session.close();
+
+    // A asserção é sobre o WIRING, não sobre o comportamento do Chromium: o
+    // Playwright já liga os downloads por omissão, portanto um teste que só
+    // descarregue um ficheiro passa na mesma com a opção perdida pelo caminho.
+    expect(segunda.reused).toBe(true);
+    expect(opcoesDeContexto).toHaveLength(2);
+    for (const opcoes of opcoesDeContexto) expect(opcoes.acceptDownloads).toBe(true);
+    // A reutilização é a que leva estado; o login abre um contexto limpo.
+    expect(opcoesDeContexto[0]?.storageState).toBeUndefined();
+    expect(opcoesDeContexto[1]?.storageState).toBeDefined();
+  }, 30_000);
+
+  it("503 no login → AtTransientError de indisponibilidade, não uma página desconhecida", async () => {
+    fixture.state.serverError = true;
+    const { factory } = sessions(new InMemoryStorageStateStore(), 4_000);
+
+    const erro = await erroDe(abrir(factory));
+
+    // O corpo do 503 não tem uma palavra que `wording.ts` reconheça: só o
+    // código HTTP o denuncia. Sem ele, uma avaria da AT viria classificada
+    // como formulário de login — ou, no portal, como página desconhecida.
+    expect(erro).toBeInstanceOf(AtTransientError);
+    expect((erro as AtTransientError).outcome).toBe("at_unavailable");
+    expect(erro?.message).toContain("indisponível");
+  }, 30_000);
+
+  it("503 na escolha do cliente → retentável, e nunca estrutural", async () => {
+    const { factory } = sessions();
+    const primeira = await abrir(factory);
+    await primeira.session.close();
+
+    fixture.state.serverError = true;
+    const erro = await erroDe(abrir(factory));
+
+    // Estrutural aqui queimava as 182 empresas do lote contra um portal que
+    // estaria de pé dez minutos depois.
+    expect(erro).toBeInstanceOf(AtTransientError);
+    expect(erro).not.toBeInstanceOf(StructuralError);
+    expect((erro as AtTransientError).outcome).toBe("at_unavailable");
+  }, 30_000);
+
+  it("sessão que morre a meio da escolha → retentável e estado deitado fora", async () => {
+    const { factory, state } = sessions();
+    const primeira = await abrir(factory);
+    await primeira.session.close();
+
+    fixture.state.sessaoMorreNaSelecao = true;
+    const erro = await erroDe(abrir(factory));
+
+    expect(erro).toBeInstanceOf(AtTransientError);
+    expect((erro as AtTransientError).outcome).toBe("at_unavailable");
+    expect(await state.load(`at:team:${EQUIPA}`)).toBeNull();
   }, 30_000);
 
   it("uma falha a meio do open não deixa contextos abertos", async () => {
