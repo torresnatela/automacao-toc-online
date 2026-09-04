@@ -8,6 +8,8 @@ const OPERATOR_PASSWORD = "operator123";
 // Do seed (supabase/seed.sql).
 const DEMO_TEAM = "22222222-2222-2222-2222-222222222222";
 const DOC_DEMO = "77777777-7777-7777-7777-777777777777";
+// A empresa dona do DOC_DEMO — é a linha da listagem que tem de oferecer o PDF.
+const LIGADA = "Empresa Ligada Demo";
 const DOC_OUTRO = "88888888-8888-8888-8888-888888888888";
 const PATH_DEMO = `${DEMO_TEAM}/33333333-3333-3333-3333-333333333333/iva/2026-07.pdf`;
 const PATH_OUTRO =
@@ -39,6 +41,11 @@ const PDF_MINIMO = `%PDF-1.4\n${"% padding ".repeat(120)}\n%%EOF\n`;
  * concedido. Vive no `beforeAll` porque a fixture `request` do Playwright é de
  * âmbito *test* e não existe aqui — daí o contexto avulso a partir da fixture
  * `playwright`, essa de âmbito *worker*.
+ *
+ * Não há `afterAll` a apagá-los, e é de propósito: o caminho é determinístico e
+ * o `x-upsert` torna a recorrida idempotente, portanto nada se acumula. E como
+ * `has_file` vem da linha `documents` e não do objeto, deixar os ficheiros no
+ * bucket não muda o que qualquer outro spec vê na listagem.
  */
 test.beforeAll(async ({ playwright }) => {
   if (SEM_STORAGE) return;
@@ -74,6 +81,11 @@ async function login(page: Page, email: string, password: string) {
 /** O 302 cru: sem `maxRedirects: 0` o Playwright seguiria já para o storage. */
 function baixar(page: Page, documentId: string, query = "") {
   return page.request.get(`/api/documents/${documentId}/download${query}`, { maxRedirects: 0 });
+}
+
+/** A linha da tabela de uma empresa, pelo nome (como em `documentos-iva.spec.ts`). */
+function linha(page: Page, empresa: string) {
+  return page.getByRole("row").filter({ hasText: empresa });
 }
 
 /**
@@ -166,7 +178,10 @@ test.describe("como admin global", () => {
     await page.goto(`/documentos/iva?team=${DEMO_TEAM}`);
     await expect(page.getByRole("heading", { name: "Guias de IVA" })).toBeVisible();
 
-    const pdf = page.getByRole("link", { name: "PDF" }).first();
+    // Escopado à linha da empresa dona do DOC_DEMO: um `.first()` solto casaria
+    // o link de qualquer empresa e deixaria de provar que É esta guia que a
+    // linha desta empresa oferece.
+    const pdf = linha(page, LIGADA).getByRole("link", { name: "PDF" });
     await expect(pdf).toHaveAttribute("href", `/api/documents/${DOC_DEMO}/download`);
 
     const html = await page.content();

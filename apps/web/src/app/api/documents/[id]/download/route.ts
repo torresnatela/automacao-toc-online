@@ -51,11 +51,20 @@ export async function GET(
   // Cliente RLS de propósito: a visibilidade da linha É a autorização. Guia de
   // outra equipa simplesmente não existe para este utilizador.
   const supabase = await getSupabaseServerClient();
-  const { data: documento } = await supabase
+  const { data: documento, error: erroLeitura } = await supabase
     .from("documents")
-    .select("id, storage_path, obligation_period_id")
+    .select("id, storage_path")
     .eq("id", id)
     .maybeSingle();
+
+  // Uma falha de infraestrutura e uma guia invisível dão a MESMA resposta — o
+  // 404 é o que resiste à enumeração de ids —, mas não podem dar o mesmo
+  // silêncio: sem esta linha uma base em baixo passaria por "não encontrado" e
+  // não deixaria rasto em lado nenhum. O `code` do PostgREST não traz nada
+  // sensível.
+  if (erroLeitura) {
+    console.error("[documents] falha ao ler a linha", { documentId: id, code: erroLeitura.code });
+  }
 
   if (!documento) return naoEncontrado("Documento não encontrado.");
 
