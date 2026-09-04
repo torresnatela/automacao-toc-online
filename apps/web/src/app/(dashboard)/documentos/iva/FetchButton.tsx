@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { Download } from "lucide-react";
 import { fetchIvaDocumentAction, type FetchState } from "./actions";
+import { FORCE_FLAG } from "@/lib/documents/bulk";
 import { Button } from "@/components/ui/button";
 
 export interface FetchButtonProps {
@@ -21,6 +22,9 @@ export function FetchButton({
   disabledReason,
   fetchLabel,
 }: FetchButtonProps) {
+  // O verbo é a decisão de `presentIvaRow` (houve job terminal), e é a mesma
+  // que decide se se força — daí lê-lo dele em vez de a repetir aqui.
+  const refetch = fetchLabel === "Buscar novamente";
   const [state, formAction, pending] = useActionState<FetchState, FormData>(
     fetchIvaDocumentAction,
     {},
@@ -30,6 +34,11 @@ export function FetchButton({
     <form action={formAction} className="flex flex-col items-end gap-1">
       <input type="hidden" name="companyId" value={companyId} />
       <input type="hidden" name="teamId" value={teamId} />
+      {/* Re-busca é sempre forçada. Sem isto o botão «Buscar novamente» seria um
+          beco: a guia já está guardada, e o worker fecharia o job como
+          `already_fetched` sem sequer abrir o portal — o operador clicaria e
+          nada mudaria no ecrã. */}
+      {refetch && <input type="hidden" name="force" value={FORCE_FLAG} />}
 
       <Button
         type="submit"

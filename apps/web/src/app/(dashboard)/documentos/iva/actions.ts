@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { enqueueIvaFetch, enqueueIvaFetchAll } from "@/lib/documents/service";
+import { forceFromForm, onlyMissingFromForm } from "@/lib/documents/bulk";
 
 // O tempo máximo destas ações é `maxDuration` em `page.tsx`: um ficheiro
 // "use server" só pode exportar funções assíncronas, e a configuração de
@@ -22,7 +23,8 @@ export async function fetchIvaDocumentAction(
   const result = await enqueueIvaFetch(
     String(formData.get("companyId") ?? ""),
     String(formData.get("teamId") ?? ""),
-    { force: formData.get("force") === "on" },
+    // `force` é o campo escondido que o botão «Buscar novamente» acrescenta.
+    { force: forceFromForm(formData.get("force")) },
   );
   if (!result.ok) return { error: result.error };
 
@@ -42,11 +44,10 @@ export async function fetchAllIvaDocumentsAction(
   formData: FormData,
 ): Promise<FetchAllState> {
   const result = await enqueueIvaFetchAll(String(formData.get("teamId") ?? ""), {
-    // Hoje quem envia isto é um `<input type="hidden" value="on">` — na versão
-    // mínima o lote é sempre conservador. A comparação com `"on"` está escrita
-    // para o checkbox que a Task 14 vai pôr no lugar: um checkbox só chega ao
-    // `FormData` quando está marcado, e ausente tem de significar `false`.
-    onlyMissing: formData.get("onlyMissing") === "on",
+    // Checkbox real do diálogo de confirmação: marcado chega como `"on"`,
+    // desmarcado não chega de todo — e a ausência TEM de valer `false`, senão o
+    // lote saltaria as empresas que o operador acabou de mandar rebuscar.
+    onlyMissing: onlyMissingFromForm(formData.get("onlyMissing")),
   });
   if (!result.ok) return { error: result.error };
 
