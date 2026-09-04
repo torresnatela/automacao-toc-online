@@ -65,6 +65,12 @@ export const AT = {
     table: "table",
     rows: "table tbody tr",
     headerCells: "table thead th",
+    /**
+     * As células de uma linha. `th` também, porque há tabelas da AT com a
+     * primeira coluna marcada como cabeçalho de linha — e perdê-la desalinhava
+     * a linha inteira em relação ao cabeçalho.
+     */
+    cells: "td, th",
   },
   paymentDocument: {
     obtainButton:

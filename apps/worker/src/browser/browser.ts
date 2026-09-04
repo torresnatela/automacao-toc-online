@@ -16,7 +16,17 @@ import type { StorageState } from "../toconline/storage-state";
  * sem reescrever quem a usa.
  */
 export interface BrowserProvider {
-  newContext(options?: { storageState?: StorageState }): Promise<BrowserContext>;
+  /**
+   * `acceptDownloads` separa "o portal mandou um ficheiro" de "o Chromium
+   * ignorou-o": sem ele o evento `download` nunca chega, e a captura da guia da
+   * AT perderia uma das três estratégias sem dizer porquê. Fica **sem valor por
+   * omissão nosso** — passa-se exatamente o que vier, e quem precisa dele
+   * (o adaptador da AT) pede-o explicitamente.
+   */
+  newContext(options?: {
+    storageState?: StorageState;
+    acceptDownloads?: boolean;
+  }): Promise<BrowserContext>;
   close(): Promise<void>;
 }
 
@@ -41,10 +51,13 @@ export class PlaywrightBrowser implements BrowserProvider {
     return this.browser;
   }
 
-  async newContext(options: { storageState?: StorageState } = {}): Promise<BrowserContext> {
+  async newContext(
+    options: { storageState?: StorageState; acceptDownloads?: boolean } = {},
+  ): Promise<BrowserContext> {
     const browser = await this.ensure();
     return browser.newContext({
       storageState: options.storageState,
+      acceptDownloads: options.acceptDownloads,
       // Viewport largo: a grelha do TOConline virtualiza por altura visível, e
       // uma janela minúscula reduz o que é renderizado sem necessidade.
       viewport: { width: 1600, height: 1000 },
