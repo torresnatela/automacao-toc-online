@@ -62,6 +62,25 @@ describe("validateCredentialInput", () => {
     expect(validateCredentialInput(input({ password: "a" }), { requirePassword: true })).toBeNull();
   });
 
+  // A credencial da AT identifica-se pelo NIF do Contabilista Certificado, e o
+  // portal gasta uma tentativa por cada login errado (e bloqueia a conta ao fim
+  // de poucas). Um NIF mal escrito custa uma tentativa que não se recupera —
+  // por isso valida-se aqui, antes de sair da nossa casa.
+  it("exige NIF válido no utilizador quando o provider é a AT", () => {
+    const bad = validateCredentialInput(input({ provider: "at", username: "gabinete@example.pt" }));
+    expect(bad?.username).toBe("NIF do Contabilista Certificado inválido.");
+    // Dígito de controlo errado: estrutura certa, NIF inválido.
+    expect(validateCredentialInput(input({ provider: "at", username: "501442601" }))?.username).toBe(
+      "NIF do Contabilista Certificado inválido.",
+    );
+    expect(validateCredentialInput(input({ provider: "at", username: "501442600" }))).toBeNull();
+  });
+
+  // A regra é só da AT: o TOConline identifica-se por email.
+  it("não exige NIF nos outros providers", () => {
+    expect(validateCredentialInput(input({ provider: "toconline" }))).toBeNull();
+  });
+
   it("nunca ecoa o valor da senha nas mensagens", () => {
     const errors = validateCredentialInput(input({ password: "" }), { requirePassword: true });
     expect(JSON.stringify(errors)).not.toContain(SENHA);

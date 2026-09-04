@@ -1,3 +1,4 @@
+import { isValidNif } from "../validate-pt";
 import { INTEGRATION_PROVIDERS, type CredentialInput, type IntegrationProvider } from "./types";
 
 export type CredentialField = "teamId" | "provider" | "username" | "password";
@@ -19,6 +20,11 @@ export interface ValidateCredentialOptions {
  * Note-se a ausência de regra de força para a senha: é a senha de um terceiro
  * num portal de terceiro, não uma senha nossa. Impor um mínimo rejeitaria
  * credenciais legítimas por uma regra que o TOConline não tem.
+ *
+ * O `username`, esse, tem forma por provider: na AT é o NIF do Contabilista
+ * Certificado, e cada login errado gasta uma das poucas tentativas que o portal
+ * concede antes de bloquear a conta por dias. Um NIF mal escrito é o erro mais
+ * barato de apanhar aqui e o mais caro de descobrir lá.
  */
 export function validateCredentialInput(
   input: CredentialInput,
@@ -35,6 +41,9 @@ export function validateCredentialInput(
   const username = (input.username ?? "").trim();
   if (!username) errors.username = "Utilizador é obrigatório.";
   else if (username.length > MAX_USERNAME) errors.username = "Utilizador demasiado longo.";
+  else if (input.provider === "at" && !isValidNif(username)) {
+    errors.username = "NIF do Contabilista Certificado inválido.";
+  }
 
   const password = input.password ?? "";
   if (options.requirePassword && !password) {
