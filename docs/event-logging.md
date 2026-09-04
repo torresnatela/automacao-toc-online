@@ -39,23 +39,42 @@ ficam ligados pelo mesmo trace. Mapeia para: `trace(rootTrigger: "schedule" | "s
   events/logs decorrentes carregam esse `traceId`. É assim que "sabemos que aquele evento ocorreu
   dentro de um contexto próprio".
 - **`parent_event_id`** = ligação causal DENTRO de um trace (request → response → chamadas seguintes).
-- **`correlation_key`** = agrupamento de negócio ENTRE traces distintos (ex.: vários disparos do mesmo
-  cliente/período). Convenção: `client:<uuid>:period:YYYY-MM`. Opcional; passe em `startTrace`.
+- **`correlation_key`** = agrupamento de negócio ENTRE traces distintos (várias tentativas da
+  mesma obrigação, ou vários jobs do mesmo lote). Opcional; passe em `startTrace`. Três formas
+  convivem, por granularidade:
+  - `client:<uuid>:period:YYYY-MM` — convenção genérica original: cliente e período já
+    conhecidos ao abrir o trace.
+  - `company:<uuid>:iva` (Módulo 1) — todas as tentativas de obter a guia de IVA de uma
+    empresa, independentemente do período: ao enfileirar ainda não se sabe que período o
+    portal vai devolver (é sempre "a declaração mais recente"), então o período não pode entrar
+    na chave.
+  - `team:<uuid>:iva` (Módulo 1) — o lote "Buscar todas" de uma equipe. O trace do lote
+    (`job.batch_enqueued`) usa esta chave, mas **cada job que ele enfileira abre o seu próprio
+    trace** com `company:<uuid>:iva` — um trace partilhado por todos os jobs do lote seria
+    fechado pelo primeiro a terminar, e os restantes pendurariam eventos num trace já fechado.
 
 ## Taxonomia de `type` (`namespace.action`, dot.case)
 
 Sempre nomeie eventos por namespace para manter os logs consultáveis:
 
-| Namespace       | Uso                                                         | `rootTrigger` típico     |
-| --------------- | ---------------------------------------------------------- | ------------------------ |
-| `user.*`        | `user.login`, `user.logout`, `user.change_password`, `user.document_downloaded` | `manual` |
-| `integration.*` | passo de alto nível (`integration.fetch_company`)          | `schedule` / `system`    |
-| `http.*`        | chamada HTTP externa (`http.request`, `http.response`)     | herda do trace           |
-| `rpa.*`         | passos de crawler/Playwright (`rpa.navigate`, `rpa.extract`) | herda do trace         |
-| `job.*`         | fila (`job.enqueued`, `job.started`, `job.completed`)      | herda do trace           |
-| `webhook.*`     | recebimento de webhook (`webhook.received`)                | `webhook`                |
+| Namespace       | Uso                                                                                                                                                                                                                                             | `rootTrigger` típico  |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| `user.*`        | `user.login`, `user.logout`, `user.change_password`, `user.document_downloaded`                                                                                                                                                                 | `manual`              |
+| `integration.*` | passo de alto nível (`integration.fetch_company`); Módulo 1: `integration.document_stored` (PDF gravado no Storage), `integration.obligation_recorded` (ledger atualizado)                                                                      | `schedule` / `system` |
+| `http.*`        | chamada HTTP externa (`http.request`, `http.response`)                                                                                                                                                                                          | herda do trace        |
+| `rpa.*`         | passos de crawler/Playwright (`rpa.navigate`, `rpa.extract`); Módulo 1: `rpa.at.session`, `rpa.at.iva_declaration`, `rpa.at.payment_document`, e `rpa.toconline.direct_access` (só rota A — Acesso Direto do TOConline, ainda não implementada) | herda do trace        |
+| `job.*`         | fila (`job.enqueued`, `job.started`, `job.completed`); `job.batch_enqueued` (Módulo 1: o lote "Buscar todas")                                                                                                                                   | herda do trace        |
+| `webhook.*`     | recebimento de webhook (`webhook.received`)                                                                                                                                                                                                     | `webhook`             |
 
 `source` = componente emissor (`web`, `worker`).
+
+**Trace aberto entre tentativas (Módulo 1):** quando um job de IVA falha de forma retentável
+(`retry: true`) e ainda tem tentativas por gastar (`job.attempts < job.max_attempts`), o worker
+**não fecha o trace** — a próxima tentativa da fila continua-o com `child()` a partir do mesmo
+`job.started`. Só uma falha sem mais tentativas, ou não retentável, chama `trace.fail(...)`.
+Fechar a cada tentativa partiria a cadeia causal da mesma obrigação em pedaços soltos, um por
+tentativa, e o dashboard mostraria um trace "falhado" a meio de um trabalho que ainda está a
+correr. Ver `IvaDocumentRunner.run` (`apps/worker/src/runner/iva-document-runner.ts`).
 
 `user.document_downloaded` — payload `{ documentId }` — é emitido por
 `GET /api/documents/:id/download` **antes** do 302 para a signed URL. Existe por dever de
@@ -126,4 +145,7 @@ const tracer = createTracer(new DbStore(createDb(process.env.DATABASE_URL!)));
 (`test/user-events.test.ts`). O `SupabaseStore` é testado com um fake client
 (`test/supabase-store.test.ts`); o `DbStore` é exercido por testes de integração com Supabase local.
 No app web, o fluxo ponta a ponta (login → trace visível em `/logs`) é coberto por Playwright (`apps/web/e2e`).
+
+```
+
 ```

@@ -178,9 +178,12 @@ verdades do domínio que qualquer solução precisa respeitar.
 - **"Documento inexistente" é um estado válido, não um erro.** Exemplo: quando o
   imposto a entregar é zero (ex.: IVA a recuperar), o portal informa que não há
   documento de pagamento a gerar. É um resultado esperado.
-- **A guia da Segurança Social tem prazo de validade.** É a **única** guia com
-  entidade + referência **e** data de validade associada (tipicamente ~5 dias
-  úteis). As demais guias não têm essa restrição.
+- **A guia da Segurança Social tem prazo de validade.** É a guia com entidade + referência
+  **e** data de validade _impressa no próprio documento_ (tipicamente ~5 dias úteis).
+  _(Atualizado em 2026-09-03 — Módulo 1: a guia da AT/IVA não traz validade impressa, mas tem
+  um prazo de pagamento **derivável** do período — dia 25 do 2.º mês seguinte, CIVA art. 41.º,
+  ver §8 — logo "a única guia com validade" estava incorreto; a distinção certa é impressa vs.
+  derivável.)_
 - **Definição de "atraso" e lembretes.** Se o cliente não paga após o envio da
   guia, cabe um lembrete — respeitando a validade da guia e os prazos legais. O
   que exatamente conta como atraso ainda precisa ser definido com o cliente.
@@ -199,12 +202,19 @@ O ritmo do sistema é ditado pelo calendário mensal de obrigações:
 - **~Dia 10:** submissão em lote da DMR / comunicação de ordenados (AT e SS).
 - **~Dia 17–18:** guia da retenção na fonte de IRS; e, na prática, o gabinete
   costuma **enviar as guias por volta do dia 18** para dar tempo ao cliente.
-- **Até o dia 20:** prazo de pagamento das obrigações da Autoridade Tributária.
-- **Até o dia 25:** prazo de pagamento das contribuições da Segurança Social.
+- **Até o dia 20:** prazo de **entrega** da declaração periódica de IVA (2.º mês seguinte ao
+  fim do período; CIVA art. 41.º). _(Corrigido em 2026-09-03 — Módulo 1: o dia 20 é a entrega
+  da declaração, não o pagamento, como este documento dizia antes.)_
+- **Até o dia 25:** prazo de **pagamento** do IVA (mesmo 2.º mês seguinte) **e** das
+  contribuições da Segurança Social. _(Módulo 1)_ Em agosto a entrega desliza para setembro
+  ("extensão de verão"); se o dia 20/25 cair a sábado, domingo ou feriado nacional, o prazo
+  passa para o próximo dia útil. Ver `packages/core/src/domain/at/due-date.ts`.
 
-A maioria das obrigações é **mensal**. Exceções: empresas sem trabalhadores têm
-menos obrigações. Pode haver documentos com frequência diferente da mensal — isso
-ainda será confirmado no mapeamento completo com o cliente.
+A maioria das obrigações é **mensal**. Exceção do IVA: empresas com volume de negócios abaixo
+do limiar legal (atualmente ~€650.000/ano) estão no regime **trimestral** — provavelmente a
+maioria da carteira do gabinete. _(Confirmado em 2026-09-03 — Módulo 1; substitui a frase
+antiga "isso ainda será confirmado".)_ Para outras obrigações pode haver frequência diferente
+da mensal — isso continua a confirmar-se no mapeamento completo com o cliente.
 
 ---
 

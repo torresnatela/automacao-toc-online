@@ -35,6 +35,11 @@ O `apps/web` expõe uma **API REST** em `src/app/api/*` (route handlers Node) al
 
 - `GET/POST /api/companies`, `GET/PATCH/DELETE /api/companies/[id]`
 - `GET/POST /api/teams`, `GET/PATCH/DELETE /api/teams/[id]`
+- `GET /api/documents/[id]/download` (Módulo 1) — não devolve JSON: confirma com o cliente RLS
+  que a linha `documents` pedida é visível ao utilizador, assina uma signed URL de 60 s no
+  bucket privado e responde **302** com `Location` para ela (a URL nunca entra no corpo nem no
+  DOM). 401 sem sessão; 404 para id inexistente **ou** de outra equipe — nunca 403, que
+  revelaria que a guia existe.
 
 Convenção de resposta: `{ ok: true, data }` / `{ ok: false, error, fieldErrors? }` com status
 `200/201/400/401/403/404`. A **regra de negócio é compartilhada**: validação/normalização
@@ -57,6 +62,37 @@ middleware deixa `/api/*` passar (o handler responde 401/403 JSON em vez de redi
 
 A tabela `jobs` no Postgres é a fila. O worker consumirá com `SELECT … FOR UPDATE SKIP
 LOCKED`. Simples e suficiente para a cadência de RPA; trocável por fila dedicada depois.
+
+## Storage
+
+O bucket `documents` (privado, só PDF, 10 MiB) guarda as guias em
+`<team>/<company>/iva/<period>.pdf`. Quem **escreve** é sempre o worker, com a service role
+(bypassa RLS, como as outras escritas de RPA); quem **lê** é sempre a rota
+`GET /api/documents/[id]/download` do `apps/web` — nunca o browser diretamente contra o
+Storage. `storage.objects` não tem policy para `authenticated`: a autorização vive na linha
+`documents` (RLS por equipe), e a rota só assina a URL depois de confirmar essa visibilidade
+com o cliente RLS. Ver `docs/database.md` §§ "Documentos e Storage" / "View
+`iva_documents_overview`".
+
+## Módulo 1 — guia de pagamento do IVA
+
+Fluxo: o dashboard enfileira a busca **por empresa** (botão "Buscar") ou **em lote** por equipe
+("Buscar todas", um job por empresa) → job `rpa.fetch_iva_document` entra na fila `jobs` →
+`IvaDocumentRunner` (worker) abre sessão no Portal das Finanças → lê a declaração de IVA mais
+recente → obtém o documento de pagamento (PDF + entidade/referência/valor) → grava o PDF no
+Storage → regista `obligations → obligation_periods → documents` → a listagem
+(`/documentos/iva`, view `iva_documents_overview`) mostra o resultado de cada tentativa, com
+orientação do que fazer a seguir.
+
+A rota de acesso ao Portal das Finanças é uma **porta trocável**: `AtSessionFactory`
+(`apps/worker/src/runner/ports.ts`), selecionada pela env `AT_ACCESS_MODE` — a mesma variável
+lida pelo web (`apps/web/src/lib/documents/access.ts`) e pelo worker
+(`apps/worker/src/config/env.ts`), porque é o dashboard que escolhe a credencial e escreve o
+`access` no `jobs.payload` que o worker depois executa. Valores: `at_direct_login` (omissão —
+login do gabinete no `acesso.gov.pt`, implementado) e `toconline_direct_access` (Acesso Direto
+por dentro do TOConline, a decidir na Fase 0 de reconhecimento). O runner não sabe qual rota
+está ligada: só confirma que a credencial resolvida é a que o adaptador declara consumir
+(`credentialProvider`).
 
 ## Deploy
 

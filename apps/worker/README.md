@@ -1,10 +1,11 @@
-# @toc/worker (scaffold)
+# @toc/worker
 
-Worker persistente de RPA (Node + Playwright). Ainda **não implementado**.
+Worker persistente de RPA (Node + Playwright). Módulo 0 (varredura de empresas do TOConline) e
+Módulo 1 (guia de pagamento do IVA na Autoridade Tributária) estão implementados — ver a
+secção abaixo; Segurança Social e e-Fatura entram pelo mesmo molde, por feature.
 
-Consumirá a fila `jobs`, executará a automação dos portais (TOConline, AT, Segurança
-Social, e-Fatura) e registrará cada passo via `@toc/core` (Tracer/Logger), ligado ao
-trace de origem.
+Consome a fila `jobs`, executa a automação dos portais e regista cada passo via `@toc/core`
+(Tracer/Logger), ligado ao trace de origem.
 
 Roda **fora da Vercel** (Fly.io / Railway / container), pois exige processo de longa
 duração e um browser real — incompatível com o modelo serverless.

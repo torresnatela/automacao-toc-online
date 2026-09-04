@@ -42,7 +42,7 @@ Mais detalhes em [`docs/local-development.md`](docs/local-development.md) e
 
 ```
 apps/web       Dashboard + API + Auth (Next.js → Vercel)
-apps/worker    Worker de RPA (Node + Playwright) — scaffold
+apps/worker    Worker de RPA (Node + Playwright) — Módulo 0: varredura; Módulo 1: guias de IVA
 packages/db    Schema Drizzle + client (Postgres)
 packages/core  Observabilidade (Tracer/Logger) + tipos de domínio
 packages/config Config compartilhada (tsconfig, eslint)

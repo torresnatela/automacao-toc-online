@@ -6,7 +6,9 @@ ciclo mensal de guias fiscais de um gabinete de contabilidade português.
 ## Estrutura
 
 - `apps/web` — Next.js (App Router) → dashboard + rotas de API + auth. Deploy na **Vercel**.
-- `apps/worker` — worker de RPA (Node + Playwright). **Scaffold** (implementado por feature). Roda fora da Vercel.
+- `apps/worker` — worker de RPA (Node + Playwright): Módulo 0 (varredura de empresas do TOConline)
+  e Módulo 1 (guias de pagamento do IVA na AT) implementados; próximos módulos entram pelo mesmo
+  molde. Roda fora da Vercel.
 - `packages/db` — schema Drizzle (fonte da verdade), client tipado (driver `pg`), migrations.
 - `packages/core` — tipos de domínio + biblioteca de observabilidade (Tracer/Logger).
 - `packages/config` — tsconfig base + preset de ESLint compartilhados.
@@ -63,6 +65,8 @@ Supabase = Postgres (fonte da verdade) + Auth + Storage (PDFs). Ambos os apps fa
 - `docs/database.md` — schema, migrations e fluxo Drizzle→Supabase.
 - `docs/local-development.md` — setup local passo a passo.
 - `docs/conventions.md` — convenções de código, commits e branches.
+- `docs/superpowers/specs/2026-09-03-modulo-1-iva-guia-design.md` — desenho do Módulo 1 (guia de
+  pagamento do IVA): mapa de desfechos, contrato de domínio, Storage/RLS, worker e web.
 - `docs/superpowers/specs/` e `docs/superpowers/plans/` — specs e planos de implementação.
 
 ## graphify
@@ -70,6 +74,7 @@ Supabase = Postgres (fonte da verdade) + Auth + Storage (PDFs). Ambos os apps fa
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
 
 Rules:
+
 - For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
