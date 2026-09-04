@@ -1,6 +1,5 @@
 import { IVA_OUTCOMES, type IvaDocumentJobPayload, type IvaOutcome, type IvaOutcomeDetails } from "@toc/core/domain";
 import type { AtCredentialSource } from "./ports";
-import type { JobOutcome } from "./worker-loop";
 
 /**
  * O que um desfecho **faz**: que estado deixa no job e que marca deixa na
@@ -30,6 +29,23 @@ const RAZAO_POR_DESFECHO: Partial<Record<IvaOutcome, string>> = {
 };
 
 /**
+ * O que `desfechoDoJob` devolve de facto: nunca `succeeded` (tem caminho
+ * próprio, com o resultado completo) nem `deferred` (precisa do `untilMs` que
+ * só a trava sabe). Um tipo à parte — e não `JobOutcome` inteiro — é o que
+ * deixa o `catch` do runner estreitar `desfecho` para o ramo `failed` depois
+ * de despachar o `skipped`, sem `retry` sobrar num desfecho que não o leva.
+ */
+export type DesfechoDoJob =
+  | { status: "skipped"; reason: IvaOutcome; details: Record<string, unknown> }
+  | {
+      status: "failed";
+      message: string;
+      retry: boolean;
+      code: IvaOutcome;
+      details: Record<string, unknown>;
+    };
+
+/**
  * Traduz um desfecho no `JobOutcome` que a fila grava.
  *
  * A tradução vem de `IVA_OUTCOMES[outcome].jobStatus`, e não de um `if` por
@@ -44,7 +60,7 @@ export function desfechoDoJob(
   outcome: IvaOutcome,
   details: IvaOutcomeDetails,
   message: string,
-): JobOutcome {
+): DesfechoDoJob {
   const spec = IVA_OUTCOMES[outcome];
   if (spec.jobStatus === "skipped") {
     return { status: "skipped", reason: outcome, details: { ...details } };

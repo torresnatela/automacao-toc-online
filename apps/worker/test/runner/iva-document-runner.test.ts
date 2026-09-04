@@ -314,6 +314,11 @@ describe("IvaDocumentRunner", () => {
         },
       });
       expect(documents.calls).toBe(0);
+      // A obrigação em falta fica registada — não é um vazio, é um `pending`.
+      expect(ledger.begun).toEqual([
+        { period: PERIODO, dueDate: prazos.ok ? prazos.dueDate : null, frequency: "monthly" },
+      ]);
+      expect(ledger.marked).toEqual([{ periodId: `period-${PERIODO}`, status: "pending" }]);
     });
 
     it("período anterior por guardar não é `declaration_not_submitted` — vai buscá-lo", async () => {
@@ -552,9 +557,10 @@ describe("IvaDocumentRunner", () => {
       expect(credentials.companyMarkers).toHaveLength(0);
     });
 
-    it("`toconline_unavailable` é retentável e não marca credencial nenhuma", async () => {
+    it("`toconline_unavailable` é retentável, não marca credencial nenhuma e dispara a trava do portal", async () => {
       const credentials = new FakeCredentials(CREDENCIAL_TOCONLINE);
-      const { runner } = build({ sessions: rotaA(new Error("ECONNRESET")), credentials });
+      const gate = new FakeGate();
+      const { runner } = build({ sessions: rotaA(new Error("ECONNRESET")), credentials, gate });
 
       const outcome = await runner.run(jobRotaA());
 
@@ -564,6 +570,9 @@ describe("IvaDocumentRunner", () => {
         code: "toconline_unavailable",
       });
       expect(credentials.todasAsMarcas).toHaveLength(0);
+      // Mesma trava do `at_unavailable`: o TOConline também é um portal de
+      // terceiro, e 182 jobs não podem martelá-lo em fila.
+      expect(gate.tripped).toEqual(["toconline_unavailable"]);
     });
 
     it("`toconline_unexpected_page`: página irreconhecível não se retenta", async () => {
@@ -615,6 +624,36 @@ describe("IvaDocumentRunner", () => {
         retry: true,
         code: "direct_access_failed",
       });
+    });
+
+    it("`direct_access_not_configured`: a tabela diz `skipped`, não `failed` — e marca a empresa", async () => {
+      // A tabela (`IVA_OUTCOMES`) manda no `status`, não a origem (exceção) do
+      // desfecho: este código nasce de um `throw`, mas é `skipped` na tabela.
+      const credentials = new FakeCredentials(CREDENCIAL_TOCONLINE);
+      const { runner } = build({
+        sessions: rotaA(
+          new AtIntegrityError(
+            "direct_access_not_configured",
+            "A senha da AT da empresa não está configurada.",
+          ),
+        ),
+        credentials,
+      });
+
+      const outcome = await runner.run(jobRotaA());
+
+      expect(outcome).toMatchObject({
+        status: "skipped",
+        reason: "direct_access_not_configured",
+      });
+      // Rota A: a senha da AT vive no TOConline — o marcador é da empresa, a
+      // credencial do TOConline (a que abriu a sessão) fica intacta.
+      expect(credentials.companyMarkers).toEqual([
+        { teamId: TEAM, companyId: COMPANY, reason: "senha_nao_configurada" },
+      ]);
+      expect(credentials.invalidated).toHaveLength(0);
+      expect(credentials.expired).toHaveLength(0);
+      expect(estadoDoTrace()).toBe("completed");
     });
   });
 
@@ -1179,6 +1218,32 @@ describe("IvaDocumentRunner", () => {
         outcome,
       });
       for (const proibido of [SENHA, NIF, NOME_EMPRESA, "cookie"]) {
+        expect(tudo).not.toContain(proibido);
+      }
+    });
+
+    it("erro genérico (ex.: timeout do Playwright) não leva o URL nem o NIF que traz embutidos", async () => {
+      // Um `TimeoutError` real grava o URL que estava a navegar na própria
+      // mensagem — e esse URL pode levar o NIF na query string. A mensagem
+      // que fica em `last_error`/`outcome.message` tem de ser sempre a
+      // etiqueta PT do desfecho, nunca o texto do erro original.
+      const { runner } = build({
+        documents: new FakeDocuments(
+          new Error(
+            `Timeout 30000ms exceeded navigating to https://sitfiscal.portaldasfinancas.example/pagamentos?nif=${NIF}`,
+          ),
+        ),
+      });
+
+      const outcome = await runner.run(job());
+
+      expect(outcome.status).toBe("failed");
+      const tudo = JSON.stringify({
+        eventos: [...store.events.values()],
+        logs: [...store.logs.values()],
+        outcome,
+      });
+      for (const proibido of [NIF, "https://"]) {
         expect(tudo).not.toContain(proibido);
       }
     });

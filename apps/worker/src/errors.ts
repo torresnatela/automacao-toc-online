@@ -67,6 +67,7 @@ export type AtIntegrityOutcome =
   | "document_type_unexpected"
   | "document_fields_mismatch"
   | "direct_access_extension_missing"
+  | "direct_access_not_configured"
   | "at_unexpected_page"
   | "toconline_unexpected_page";
 

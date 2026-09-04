@@ -18,11 +18,17 @@ import {
   type IvaOutcomeDetails,
   type IvaStage,
 } from "@toc/core/domain";
-import { AtIntegrityError } from "../errors";
+import { assertDocumentBelongsTo, assertPdfIntegrity, assertPeriodMatches } from "../at/guards";
+import {
+  AtAuthError,
+  AtIntegrityError,
+  AtTransientError,
+  InvalidCredentialsError,
+  StructuralError,
+} from "../errors";
 import { sleep as dormirDeVerdade } from "../support/sleep";
 import { classifyFailure } from "./classify-failure";
 import { desfechoDoJob, markByOutcome } from "./iva-outcome-effects";
-import { assertDocumentBelongsTo, assertPdfIntegrity, assertPeriodMatches } from "./document-guards";
 import type { ClaimedJob } from "./job-queue";
 import type { JobHandler, JobOutcome } from "./worker-loop";
 import type {
@@ -278,9 +284,30 @@ export class IvaDocumentRunner implements JobHandler {
       const emFalta = await this.periodoEmFalta(payload, period, frequency);
       if (emFalta !== null) {
         await declEvent.succeed();
+        // Não há guia para buscar, mas a obrigação existe: abre o período
+        // esperado como `pending`, para o dashboard mostrar uma entrega em
+        // falta e não um vazio indistinguível de "ainda nem perguntámos".
+        const begunEsperado = await this.deps.ledger.beginPeriod(
+          payload.teamId,
+          payload.companyId,
+          emFalta.expectedPeriod,
+          emFalta.dueDate,
+          frequency,
+        );
+        await this.deps.ledger.markPeriod(payload.teamId, begunEsperado.periodId, "pending");
         await started.skip("declaration_not_submitted");
         await trace.complete();
-        return { status: "skipped", reason: "declaration_not_submitted", details: { ...emFalta } };
+        return {
+          status: "skipped",
+          reason: "declaration_not_submitted",
+          details: {
+            // O período que FALTA, não o que o portal mostrou.
+            period: emFalta.expectedPeriod,
+            ...(emFalta.filingDeadline === undefined
+              ? {}
+              : { filingDeadline: emFalta.filingDeadline }),
+          },
+        };
       }
 
       await declEvent.log.info("declaração lida", {
@@ -334,8 +361,8 @@ export class IvaDocumentRunner implements JobHandler {
       // As guardas antes de guardar: uma guia do contribuinte errado no Storage
       // do gabinete é o pior desfecho possível deste módulo.
       assertPdfIntegrity(fetched.pdf);
-      assertDocumentBelongsTo(fetched.fields, company.nif);
-      assertPeriodMatches(fetched.fields, period);
+      assertDocumentBelongsTo(company.nif, fetched.fields.nif);
+      assertPeriodMatches(period, fetched.fields.period);
 
       const norm = normalizeDocumentFields(fetched.fields);
       await docEvent.log.info("guia capturada", {
@@ -406,9 +433,29 @@ export class IvaDocumentRunner implements JobHandler {
       await trace.complete();
       return { status: "succeeded", result };
     } catch (err) {
-      const message = err instanceof Error ? err.message : "erro desconhecido";
       const { outcome, retry, details } = classifyFailure(err, stage);
       const periodoAberto = periodId;
+      const conhecido =
+        err instanceof AtAuthError ||
+        err instanceof AtIntegrityError ||
+        err instanceof AtTransientError ||
+        err instanceof InvalidCredentialsError ||
+        err instanceof StructuralError;
+      // Um erro que não é nosso (ex.: `TimeoutError` do Playwright) traz no
+      // próprio texto o URL que estava a navegar — e esse URL pode levar o NIF
+      // na query string. O que fica em `last_error` é sempre a etiqueta PT do
+      // desfecho; a classe do erro original vai só para o log, nunca a
+      // mensagem.
+      const message =
+        conhecido && err instanceof Error ? err.message : IVA_OUTCOMES[outcome].label;
+      if (!conhecido) {
+        await this.safely(() =>
+          started.log.warn("erro não classificado durante a captura da guia", {
+            errorClass: err instanceof Error ? err.name : typeof err,
+            stage,
+          }),
+        );
+      }
 
       await markByOutcome(this.deps.credentials, outcome, details, payload);
       if (periodoAberto !== null) {
@@ -421,6 +468,16 @@ export class IvaDocumentRunner implements JobHandler {
         await this.safely(() => this.deps.gate.trip(outcome));
       }
 
+      // O estado do job vem sempre da tabela, nunca de um `if` local: alguns
+      // desfechos lançados como exceção (`direct_access_not_configured`) são
+      // `skipped` para a tabela, não `failed`.
+      const desfecho = desfechoDoJob(outcome, details, message);
+      if (desfecho.status === "skipped") {
+        await this.safely(() => started.skip(outcome));
+        await this.safely(() => trace.complete());
+        return desfecho;
+      }
+
       await this.safely(() => started.fail({ message, outcome, retry, stage }));
       // O trace fica ABERTO quando a próxima tentativa o vai continuar: fechá-lo
       // aqui partiria a cadeia da mesma obrigação em pedaços soltos, um por
@@ -429,7 +486,10 @@ export class IvaDocumentRunner implements JobHandler {
       if (!(retry && job.attempts < job.maxAttempts)) {
         await this.safely(() => trace.fail({ message }));
       }
-      return { status: "failed", message, retry, code: outcome, details: { ...details } };
+      // `retry` vem de `classifyFailure` (a regra única, ligada à classe do
+      // erro), não de `IVA_OUTCOMES[outcome].retry`: a tabela descreve o
+      // desfecho em geral, a classificação sabe o que aconteceu agora.
+      return { ...desfecho, retry };
     } finally {
       // A sessão fecha sempre: um contexto de browser deixado aberto vaza
       // memória e, pior, deixa cookies do contribuinte vivos.
@@ -470,7 +530,7 @@ export class IvaDocumentRunner implements JobHandler {
     payload: IvaDocumentJobPayload,
     period: string,
     frequency: IvaFrequency,
-  ): Promise<IvaOutcomeDetails | null> {
+  ): Promise<{ expectedPeriod: string; dueDate: string | null; filingDeadline?: string } | null> {
     if (payload.period !== undefined) return null;
     const esperado = nextDuePeriod(this.agora(), frequency);
     if (comparePeriods(period, esperado) >= 0) return null;
@@ -480,7 +540,8 @@ export class IvaDocumentRunner implements JobHandler {
 
     const prazos = derivePaymentDueDate(esperado);
     return {
-      period: esperado,
+      expectedPeriod: esperado,
+      dueDate: prazos.ok ? prazos.dueDate : null,
       ...(prazos.ok ? { filingDeadline: prazos.filingDeadline } : {}),
     };
   }
