@@ -1,9 +1,14 @@
 import { describe, it, expect } from "vitest";
 import {
+  NOT_READY_BULK_COPY,
   NOT_READY_COPY,
+  batchProgress,
+  credentialBanner,
+  credentialLinkFor,
   deriveState,
   formatDatePt,
   formatEur,
+  formatNotReadyReasons,
   isPeakDay,
   notReadyCopy,
   presentIvaRow,
@@ -263,5 +268,161 @@ describe("formatDatePt", () => {
   it("sem data mostra travessão", () => {
     expect(formatDatePt(null)).toBe("—");
     expect(formatDatePt("")).toBe("—");
+  });
+});
+
+describe("formatNotReadyReasons", () => {
+  it("junta os motivos com empresas, na ordem em que se resolvem", () => {
+    expect(
+      formatNotReadyReasons({ nif_missing: 3, credential_missing: 2, company_inactive: 1 }),
+    ).toBe("1 inativas, 2 sem credencial, 3 sem NIF");
+  });
+
+  it("ignora motivos a zero e devolve vazio quando não há nenhum", () => {
+    expect(formatNotReadyReasons({ nif_missing: 0 })).toBe("");
+    expect(formatNotReadyReasons({})).toBe("");
+  });
+
+  it("tem um sintagma para cada motivo", () => {
+    for (const [reason, copy] of Object.entries(NOT_READY_BULK_COPY)) {
+      expect(copy.trim(), reason).not.toBe("");
+    }
+  });
+});
+
+describe("batchProgress", () => {
+  const LOTE = "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee";
+  const ANTIGO = "ffffffff-ffff-ffff-ffff-ffffffffffff";
+
+  /** Uma linha de lote: empresa distinta (a view dá uma linha por empresa). */
+  function loteRow(company: string, over: Partial<IvaDocumentRow>): IvaDocumentRow {
+    return withJob({
+      company_id: company,
+      job_batch_id: LOTE,
+      job_created_at: "2026-09-10T09:00:00Z",
+      ...over,
+    });
+  }
+
+  it("sem nenhuma linha em curso não há lote a mostrar", () => {
+    expect(batchProgress([row()])).toBeNull();
+    expect(
+      batchProgress([loteRow("a", { job_status: "succeeded", job_outcome: "fetched" })]),
+    ).toBeNull();
+  });
+
+  it("conta a fila, a execução, as concluídas e as que precisam de atenção", () => {
+    const progress = batchProgress([
+      loteRow("a", { job_status: "pending" }),
+      loteRow("b", { job_status: "running" }),
+      loteRow("c", { job_status: "succeeded", job_outcome: "fetched" }),
+      loteRow("d", { job_status: "skipped", job_outcome: "already_paid" }),
+      loteRow("e", { job_status: "failed", job_outcome: "at_login_rejected" }),
+      loteRow("f", { job_status: "failed", job_outcome: "at_unexpected_page" }),
+    ]);
+
+    expect(progress).toEqual({ batchId: LOTE, queued: 1, running: 1, done: 2, attention: 2 });
+  });
+
+  it("«aguardar» não é conclusão nem atenção — o sistema ainda vai tentar", () => {
+    const progress = batchProgress([
+      loteRow("a", { job_status: "pending" }),
+      loteRow("b", { job_status: "failed", job_outcome: "at_unavailable" }),
+    ]);
+    expect(progress).toEqual({ batchId: LOTE, queued: 1, running: 0, done: 0, attention: 0 });
+  });
+
+  it("um desfecho que este build não conhece pede atenção, não silêncio", () => {
+    const progress = batchProgress([
+      loteRow("a", { job_status: "running" }),
+      loteRow("b", { job_status: "failed", job_outcome: "codigo_do_futuro" }),
+    ]);
+    expect(progress?.attention).toBe(1);
+  });
+
+  it("agrupa pelo lote mais recente e ignora as linhas dos outros", () => {
+    const progress = batchProgress([
+      withJob({
+        company_id: "velha",
+        job_batch_id: ANTIGO,
+        job_status: "pending",
+        job_created_at: "2026-09-09T09:00:00Z",
+      }),
+      loteRow("a", { job_status: "pending", job_created_at: "2026-09-10T09:00:00Z" }),
+      loteRow("b", { job_status: "succeeded", job_outcome: "fetched" }),
+    ]);
+
+    expect(progress).toEqual({ batchId: LOTE, queued: 1, running: 0, done: 1, attention: 0 });
+  });
+
+  it("uma busca avulsa (sem lote) em curso não inventa um lote", () => {
+    expect(batchProgress([withJob({ job_status: "pending" })])).toBeNull();
+  });
+});
+
+describe("credentialBanner", () => {
+  it("sem credencial manda configurar a AT na rota B", () => {
+    expect(credentialBanner("at_direct_login", null)).toEqual({
+      message: "Configure o acesso à AT antes de buscar guias.",
+      href: "/integracoes/at",
+      linkLabel: "Configurar acesso à AT",
+    });
+  });
+
+  it("um marcador sem segredo continua «por configurar»", () => {
+    expect(credentialBanner("at_direct_login", { hasSecret: false, status: "active" })?.message).toBe(
+      "Configure o acesso à AT antes de buscar guias.",
+    );
+  });
+
+  it("credencial marcada diz o estado por extenso e pede senha nova", () => {
+    expect(credentialBanner("at_direct_login", { hasSecret: true, status: "invalid" })).toEqual({
+      message: "O acesso à AT está marcado como inválida — guarde uma palavra-passe nova.",
+      href: "/integracoes/at",
+      linkLabel: "Configurar acesso à AT",
+    });
+  });
+
+  it("na rota A o texto e o link são os do TOConline", () => {
+    expect(credentialBanner("toconline_direct_access", null)).toEqual({
+      message: "Configure a ligação ao TOConline antes de buscar guias.",
+      href: "/integracoes/toconline",
+      linkLabel: "Configurar ligação ao TOConline",
+    });
+    expect(
+      credentialBanner("toconline_direct_access", { hasSecret: true, status: "expired" })?.message,
+    ).toBe("A ligação ao TOConline está marcada como expirada — guarde uma palavra-passe nova.");
+  });
+
+  it("credencial ativa não mostra banner nenhum", () => {
+    expect(credentialBanner("at_direct_login", { hasSecret: true, status: "active" })).toBeNull();
+  });
+});
+
+describe("credentialLinkFor", () => {
+  it("os desfechos da senha da AT levam ao ecrã da rota", () => {
+    expect(credentialLinkFor("at_login_rejected", "at_direct_login")).toEqual({
+      href: "/integracoes/at",
+      label: "Configurar acesso à AT",
+    });
+    // Na rota A a senha da AT vive no TOConline — mandar ao ecrã da AT custaria
+    // uma volta inteira ao operador.
+    expect(credentialLinkFor("at_password_blocked", "toconline_direct_access")?.href).toBe(
+      "/integracoes/toconline",
+    );
+  });
+
+  it("os desfechos do TOConline levam sempre ao TOConline", () => {
+    expect(credentialLinkFor("toconline_login_rejected", "at_direct_login")?.href).toBe(
+      "/integracoes/toconline",
+    );
+    expect(credentialLinkFor("direct_access_not_configured", "at_direct_login")?.href).toBe(
+      "/integracoes/toconline",
+    );
+  });
+
+  it("um desfecho que não é de credencial não sugere ecrã nenhum", () => {
+    expect(credentialLinkFor("document_not_ready", "at_direct_login")).toBeNull();
+    expect(credentialLinkFor(null, "at_direct_login")).toBeNull();
   });
 });

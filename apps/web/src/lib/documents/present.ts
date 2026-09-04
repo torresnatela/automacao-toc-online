@@ -1,6 +1,9 @@
 import {
+  IVA_OUTCOMES,
   IVA_OUTCOME_CODES,
+  credentialStatusLabel,
   ivaFetchReadiness,
+  providerForAccess,
   renderGuidance,
   type AtAccessMode,
   type IvaNotReadyReason,
@@ -250,4 +253,194 @@ export function formatDatePt(iso: string | null): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
   if (!match) return EMPTY;
   return `${match[3]}/${match[2]}/${match[1]}`;
+}
+
+/**
+ * Motivo de não-prontidão → o sintagma que o resumo do lote usa.
+ *
+ * Diferente de `NOT_READY_COPY` de propósito: ali é uma frase sobre UMA empresa
+ * ("Configure o acesso à AT."), aqui é um sintagma que se conta ("2 sem
+ * credencial"). Neutro quanto à rota: quem lê o resumo do lote quer o número,
+ * e a instrução (com o ecrã certo) está no banner logo acima.
+ */
+export const NOT_READY_BULK_COPY: Record<IvaNotReadyReason, string> = {
+  in_flight: "em curso",
+  company_inactive: "inativas",
+  credential_missing: "sem credencial",
+  credential_invalid: "com credencial inválida",
+  company_not_linked: "sem ligação ao TOConline",
+  nif_missing: "sem NIF",
+};
+
+/**
+ * `{ nif_missing: 3, credential_missing: 2 }` → `"2 sem credencial, 3 sem NIF"`.
+ *
+ * A ordem é a de declaração do mapa acima (a ordem por que se resolvem os
+ * problemas, como em `ivaFetchReadiness`), lida das chaves e não de uma segunda
+ * lista — uma lista à parte ficaria para trás no dia em que houver mais um
+ * motivo. Motivos a zero não aparecem: um resumo não mostra zeros.
+ */
+export function formatNotReadyReasons(
+  counts: Partial<Record<IvaNotReadyReason, number>>,
+): string {
+  const parts: string[] = [];
+  for (const reason of Object.keys(NOT_READY_BULK_COPY) as IvaNotReadyReason[]) {
+    const n = counts[reason];
+    if (n === undefined || n === 0) continue;
+    parts.push(`${n} ${NOT_READY_BULK_COPY[reason]}`);
+  }
+  return parts.join(", ");
+}
+
+export interface BatchProgressCounts {
+  batchId: string;
+  queued: number;
+  running: number;
+  /** Terminou e não pede nada a ninguém (severidade `ok`). */
+  done: number;
+  /** Terminou e pede uma ação ou o suporte (severidade `action`/`support`). */
+  attention: number;
+}
+
+/** `job_created_at` comparável; uma data ilegível fica no fim da fila. */
+function createdAtMs(iso: string | null): number {
+  if (iso === null) return 0;
+  const time = Date.parse(iso);
+  return Number.isNaN(time) ? 0 : time;
+}
+
+function isInFlight(status: string | null): boolean {
+  return status === "pending" || status === "running";
+}
+
+/**
+ * O progresso do lote que está a decorrer, a partir das linhas da listagem.
+ *
+ * Não há tabela de lotes: o que junta 182 jobs é o `batchId` que o serviço põe
+ * no `payload` de cada um, e a view devolve-o em `job_batch_id`. Daí o lote «em
+ * curso» ser definido pelo que ainda se move — o `batchId` do job em curso mais
+ * recente — e não pelo lote com mais linhas ou pelo último criado: um lote já
+ * todo terminado não tem progresso nenhum para mostrar.
+ *
+ * Contadas as linhas desse lote **todas**, não só as em curso: é a diferença
+ * entre "faltam 4" e "4 de 182". `wait` (o portal não respondeu, o sistema
+ * volta a tentar) não conta como concluída nem como atenção — ninguém tem de
+ * agir sobre ela. Um desfecho que este build não reconhece conta como atenção:
+ * é literalmente o que a linha diz ao operador ("veja o trace").
+ */
+export function batchProgress(rows: readonly IvaDocumentRow[]): BatchProgressCounts | null {
+  let batchId: string | null = null;
+  let newest = -1;
+  for (const row of rows) {
+    if (!isInFlight(row.job_status) || row.job_batch_id === null) continue;
+    const at = createdAtMs(row.job_created_at);
+    if (at > newest) {
+      newest = at;
+      batchId = row.job_batch_id;
+    }
+  }
+  if (batchId === null) return null;
+
+  const counts: BatchProgressCounts = { batchId, queued: 0, running: 0, done: 0, attention: 0 };
+  for (const row of rows) {
+    if (row.job_batch_id !== batchId) continue;
+    if (row.job_status === "pending") {
+      counts.queued += 1;
+      continue;
+    }
+    if (row.job_status === "running") {
+      counts.running += 1;
+      continue;
+    }
+    const { outcome } = deriveState(row);
+    const severity = outcome === null ? "support" : IVA_OUTCOMES[outcome].severity;
+    if (severity === "ok") counts.done += 1;
+    else if (severity === "action" || severity === "support") counts.attention += 1;
+  }
+  return counts;
+}
+
+/** O ecrã onde se resolve a credencial de cada rota, e como lhe chamar. */
+const ACCESS_TARGET: Record<
+  "at" | "toconline",
+  { href: string; label: string; missing: string; blocked: (status: string) => string }
+> = {
+  at: {
+    href: "/integracoes/at",
+    label: "Configurar acesso à AT",
+    missing: "Configure o acesso à AT antes de buscar guias.",
+    blocked: (status) => `O acesso à AT está marcado como ${status} — guarde uma palavra-passe nova.`,
+  },
+  toconline: {
+    href: "/integracoes/toconline",
+    label: "Configurar ligação ao TOConline",
+    missing: "Configure a ligação ao TOConline antes de buscar guias.",
+    blocked: (status) =>
+      `A ligação ao TOConline está marcada como ${status} — guarde uma palavra-passe nova.`,
+  },
+};
+
+export interface CredentialBanner {
+  message: string;
+  href: string;
+  linkLabel: string;
+}
+
+/**
+ * O aviso no topo da listagem quando a credencial da rota não serve.
+ *
+ * É a mesma informação que cada botão desativado já dá no seu `title`, dita uma
+ * vez e com o caminho para a resolver: 182 botões desligados pelo mesmo motivo
+ * são um problema do gabinete, não de 182 empresas. `null` quando não há nada a
+ * dizer — a ausência de banner é o estado normal.
+ */
+export function credentialBanner(
+  access: AtAccessMode,
+  credential: { hasSecret: boolean; status: string } | null,
+): CredentialBanner | null {
+  const target = ACCESS_TARGET[providerForAccess(access)];
+  const link = { href: target.href, linkLabel: target.label };
+
+  if (credential === null || !credential.hasSecret) {
+    return { message: target.missing, ...link };
+  }
+  if (credential.status !== "active") {
+    return { message: target.blocked(credentialStatusLabel(credential.status)), ...link };
+  }
+  return null;
+}
+
+/**
+ * Desfechos cuja resolução é mexer numa credencial — e só esses.
+ *
+ * Escrito como `Record<IvaOutcome, boolean>` e não como lista: um desfecho novo
+ * no domínio obriga a decidir aqui se é (ou não) de credencial, em vez de cair
+ * silenciosamente no "não é" e deixar o operador sem o link que lhe resolve o
+ * problema.
+ */
+const CREDENTIAL_OUTCOME_TARGET: Partial<Record<IvaOutcome, "at" | "toconline" | "route">> = {
+  // A senha da AT: onde se corrige depende da rota (na rota A vive no TOConline).
+  at_credential_missing: "route",
+  at_credential_invalid: "route",
+  at_login_rejected: "route",
+  at_password_blocked: "route",
+  at_password_expired: "route",
+  at_2fa_required: "route",
+  // Estes são do TOConline em qualquer rota.
+  toconline_credential_missing: "toconline",
+  toconline_credential_invalid: "toconline",
+  toconline_login_rejected: "toconline",
+  direct_access_not_configured: "toconline",
+};
+
+/** O ecrã que resolve este desfecho, quando existe um. */
+export function credentialLinkFor(
+  outcome: IvaOutcome | null,
+  access: AtAccessMode,
+): { href: string; label: string } | null {
+  if (outcome === null) return null;
+  const target = CREDENTIAL_OUTCOME_TARGET[outcome];
+  if (target === undefined) return null;
+  const { href, label } = ACCESS_TARGET[target === "route" ? providerForAccess(access) : target];
+  return { href, label };
 }

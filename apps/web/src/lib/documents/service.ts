@@ -10,6 +10,7 @@ import {
   planBulkFetch,
   providerForAccess,
   selectAccessCredential,
+  type CredentialCandidate,
   type IvaDocumentJobPayload,
   type IvaNotReadyReason,
 } from "@toc/core/domain";
@@ -22,11 +23,13 @@ import {
   resolveJobInsert,
   tallyBulk,
   toCredentialCandidates,
+  toSafeCredentialCandidates,
   type BulkCompany,
   type CredentialRow,
   type EnqueueOutcome,
   type IvaEnqueueResult,
   type ReadResult,
+  type SafeCredentialRow,
   type TraceClosure,
 } from "./bulk";
 
@@ -76,6 +79,39 @@ async function readIvaDocuments(teamId: string): Promise<ReadResult<IvaDocumentR
 export async function listIvaDocuments(teamId: string): Promise<IvaDocumentRow[]> {
   const { data } = await readIvaDocuments(teamId);
   return data ?? [];
+}
+
+/**
+ * As credenciais que servem esta equipa, como a prontidão as quer ver.
+ *
+ * A **página** também precisa disto, e não só o serviço: sem os candidatos por
+ * empresa ela resolveria a prontidão pela credencial de equipa apenas, e
+ * divergiria de `enqueueIvaFetch` — o botão diria "pronta" numa empresa cujo
+ * marcador de senha recusada a bloqueia (`credentialForReadiness`), e o clique
+ * seria recusado logo a seguir.
+ *
+ * Lê a view segura com o cliente **RLS** (o ciphertext não existe nela por
+ * construção) e devolve o erro por tratar: uma leitura falhada daria
+ * `candidates = []`, e daí "Configure o acesso à AT" em 182 linhas que estão
+ * perfeitamente configuradas — mandar corrigir o que não está partido é pior do
+ * que dizer que não se conseguiu ler.
+ */
+export async function listAccessCredentials(
+  teamId: string,
+): Promise<{ candidates: CredentialCandidate[]; failed: boolean }> {
+  if (!teamId) return { candidates: [], failed: false };
+  const supabase = await getSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("integration_credentials_safe")
+    .select("id, provider, company_id, status, has_secret, metadata")
+    .eq("team_id", teamId)
+    .in("provider", ACCESS_PROVIDERS);
+
+  if (error) return { candidates: [], failed: true };
+  return {
+    candidates: toSafeCredentialCandidates((data ?? []) as SafeCredentialRow[]),
+    failed: false,
+  };
 }
 
 export interface IvaBatchResult {

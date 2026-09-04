@@ -1,12 +1,17 @@
 import { describe, it, expect } from "vitest";
 import { ivaFetchReadiness, selectAccessCredential, type AtAccessMode } from "@toc/core/domain";
 import {
+  FORCE_FLAG,
   buildBulkRows,
   bulkRowsFromReads,
   credentialForReadiness,
+  forceFromForm,
+  onlyMissingFromForm,
   resolveJobInsert,
+  summarizeBulkPlan,
   tallyBulk,
   toCredentialCandidates,
+  toSafeCredentialCandidates,
   type CredentialRow,
 } from "@/lib/documents/bulk";
 import type { IvaDocumentRow } from "@/lib/documents/present";
@@ -349,5 +354,100 @@ describe("resolveJobInsert", () => {
     const resolution = await resolveJobInsert({ data: null, error: null }, nunca);
     expect(resolution.trace.close).toBe("failure");
     expect(resolution.result).toEqual({ ok: false, status: 500, error: "Erro interno." });
+  });
+});
+
+describe("toSafeCredentialCandidates", () => {
+  // A página lê a view `integration_credentials_safe` (sem ciphertext): o que
+  // lá está é `has_secret`, e é dele que sai o mesmo candidato do domínio.
+  it("traduz a linha da view segura no mesmo candidato", () => {
+    expect(
+      toSafeCredentialCandidates([
+        {
+          id: TEAM_CRED,
+          provider: "at",
+          company_id: null,
+          status: "active",
+          has_secret: true,
+          metadata: null,
+        },
+      ]),
+    ).toEqual([
+      { id: TEAM_CRED, provider: "at", companyId: null, status: "active", hasSecret: true },
+    ]);
+  });
+
+  it("mantém o marcador (sem segredo) e a sua causa", () => {
+    const [candidate] = toSafeCredentialCandidates([
+      {
+        id: COMPANY_CRED,
+        provider: "at",
+        company_id: LIGADA,
+        status: "invalid",
+        has_secret: false,
+        metadata: { invalidReason: "login_rejeitado" },
+      },
+    ]);
+    expect(candidate?.hasSecret).toBe(false);
+    expect(candidate?.invalidReason).toBe("login_rejeitado");
+  });
+
+  it("descarta o que este build não conhece, tal como a leitura da tabela", () => {
+    expect(
+      toSafeCredentialCandidates([
+        {
+          id: TEAM_CRED,
+          provider: "mainframe",
+          company_id: null,
+          status: "active",
+          has_secret: true,
+          metadata: null,
+        },
+      ]),
+    ).toEqual([]);
+  });
+});
+
+describe("summarizeBulkPlan", () => {
+  const plan = {
+    toEnqueue: ["a", "b", "c"],
+    skipped: {
+      alreadyRunning: ["d"],
+      notReady: {
+        in_flight: [],
+        company_inactive: ["e"],
+        company_not_linked: [],
+        nif_missing: ["f", "g"],
+        credential_missing: [],
+        credential_invalid: [],
+      },
+      alreadyFetched: ["h", "i"],
+    },
+  };
+
+  it("dá ao diálogo os números que ele anuncia antes de enfileirar", () => {
+    expect(summarizeBulkPlan(plan)).toEqual({
+      ready: 3,
+      inFlight: 1,
+      notReady: 3,
+      alreadyFetched: 2,
+      notReadyReasons: { company_inactive: 1, nif_missing: 2 },
+    });
+  });
+});
+
+describe("leitura das opções do formulário", () => {
+  // O `force` é um `<input type="hidden">` (valor fixo `"1"`), o `onlyMissing`
+  // um checkbox (o browser só o envia marcado, e ausente TEM de valer `false`).
+  it("força a re-busca só com o valor exato do campo escondido", () => {
+    expect(forceFromForm(FORCE_FLAG)).toBe(true);
+    expect(forceFromForm("on")).toBe(false);
+    expect(forceFromForm(null)).toBe(false);
+  });
+
+  it("o checkbox ausente significa «não ignorar nada»", () => {
+    expect(onlyMissingFromForm("on")).toBe(true);
+    expect(onlyMissingFromForm(null)).toBe(false);
+    expect(onlyMissingFromForm("1")).toBe(false);
   });
 });

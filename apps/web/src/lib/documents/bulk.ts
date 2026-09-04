@@ -44,6 +44,22 @@ function knownStatus(value: string): CredentialStatus | null {
 }
 
 /**
+ * Linha de `integration_credentials_safe` — a view que o dashboard pode ler.
+ *
+ * A view **não tem** `secret_encrypted` (o ciphertext não chega ao browser por
+ * construção); da existência do segredo só chega `has_secret`, que é a mesma
+ * pergunta que o domínio faz.
+ */
+export interface SafeCredentialRow {
+  id: string;
+  provider: string;
+  company_id: string | null;
+  status: string;
+  has_secret: boolean;
+  metadata: Record<string, unknown> | null;
+}
+
+/**
  * Linhas da BD → candidatos do domínio.
  *
  * Um provider ou estado que este build não conhece é **descartado**, não
@@ -54,7 +70,9 @@ function knownStatus(value: string): CredentialStatus | null {
  * escreve quando o portal recusa a senha. É precisamente ele que tem de chegar
  * ao domínio, porque é ele que impede a próxima tentativa.
  */
-export function toCredentialCandidates(rows: readonly CredentialRow[]): CredentialCandidate[] {
+export function toSafeCredentialCandidates(
+  rows: readonly SafeCredentialRow[],
+): CredentialCandidate[] {
   const out: CredentialCandidate[] = [];
   for (const row of rows) {
     const provider = knownProvider(row.provider);
@@ -66,13 +84,33 @@ export function toCredentialCandidates(rows: readonly CredentialRow[]): Credenti
       provider,
       companyId: row.company_id,
       status,
-      hasSecret: row.secret_encrypted !== null,
+      hasSecret: row.has_secret,
     };
     const reason = row.metadata?.invalidReason;
     if (typeof reason === "string") candidate.invalidReason = reason;
     out.push(candidate);
   }
   return out;
+}
+
+/**
+ * O mesmo, a partir da tabela (service role, com o ciphertext à vista).
+ *
+ * Delega de propósito: a regra do que se descarta e do que significa "tem
+ * segredo" é uma só, e é a página e o serviço a lerem-na de sítios diferentes
+ * que a faria divergir.
+ */
+export function toCredentialCandidates(rows: readonly CredentialRow[]): CredentialCandidate[] {
+  return toSafeCredentialCandidates(
+    rows.map((row) => ({
+      id: row.id,
+      provider: row.provider,
+      company_id: row.company_id,
+      status: row.status,
+      has_secret: row.secret_encrypted !== null,
+      metadata: row.metadata,
+    })),
+  );
 }
 
 /**
@@ -167,6 +205,55 @@ export interface BulkCounts {
 }
 
 /**
+ * Quantas empresas não estão prontas, e por que motivos — só os que têm
+ * empresas: a interface não tem de mostrar zeros.
+ */
+function notReadyTally(plan: BulkPlan): {
+  notReady: number;
+  notReadyReasons: Partial<Record<IvaNotReadyReason, number>>;
+} {
+  const notReadyReasons: Partial<Record<IvaNotReadyReason, number>> = {};
+  let notReady = 0;
+  for (const [reason, ids] of Object.entries(plan.skipped.notReady) as [
+    IvaNotReadyReason,
+    string[],
+  ][]) {
+    if (ids.length === 0) continue;
+    notReadyReasons[reason] = ids.length;
+    notReady += ids.length;
+  }
+  return { notReady, notReadyReasons };
+}
+
+export interface BulkPlanSummary {
+  /** Quantas seriam enfileiradas se o lote saísse agora. */
+  ready: number;
+  inFlight: number;
+  notReady: number;
+  alreadyFetched: number;
+  notReadyReasons: Partial<Record<IvaNotReadyReason, number>>;
+}
+
+/**
+ * O plano em números, para o diálogo de confirmação anunciar o que vai fazer
+ * **antes** de o fazer.
+ *
+ * A página calcula o plano com a mesma `planBulkFetch` que o serviço vai
+ * correr: se os dois divergissem, o diálogo prometeria 40 empresas e o resumo
+ * de fim diria 12, sem ninguém saber qual dos dois mentiu.
+ */
+export function summarizeBulkPlan(plan: BulkPlan): BulkPlanSummary {
+  const { notReady, notReadyReasons } = notReadyTally(plan);
+  return {
+    ready: plan.toEnqueue.length,
+    inFlight: plan.skipped.alreadyRunning.length,
+    notReady,
+    alreadyFetched: plan.skipped.alreadyFetched.length,
+    notReadyReasons,
+  };
+}
+
+/**
  * O plano mais o que realmente aconteceu.
  *
  * As duas fontes somam-se porque o plano é uma fotografia: entre planear e
@@ -184,16 +271,7 @@ export function tallyBulk(plan: BulkPlan, outcomes: readonly EnqueueOutcome[]): 
     else refused += 1;
   }
 
-  const notReadyReasons: Partial<Record<IvaNotReadyReason, number>> = {};
-  let notReady = 0;
-  for (const [reason, ids] of Object.entries(plan.skipped.notReady) as [
-    IvaNotReadyReason,
-    string[],
-  ][]) {
-    if (ids.length === 0) continue;
-    notReadyReasons[reason] = ids.length;
-    notReady += ids.length;
-  }
+  const { notReady, notReadyReasons } = notReadyTally(plan);
 
   return {
     enqueued,
@@ -364,4 +442,33 @@ export async function resolveJobInsert(
     trace: { close: "handOff" },
     result: { ok: true, jobId: insert.data.id, alreadyRunning: false },
   };
+}
+
+// --- As opções que vêm do formulário ------------------------------------------
+
+/**
+ * Valor do campo escondido que pede a re-busca.
+ *
+ * Uma constante e não o literal em dois sítios porque quem o escreve
+ * (`FetchButton`) e quem o lê (a Server Action) estão em processos diferentes:
+ * uma divergência entre os dois não daria erro nenhum — o botão «Buscar
+ * novamente» ficaria a enfileirar jobs que o worker fecha como
+ * `already_fetched`, e a re-busca seria um beco sem saída silencioso.
+ */
+export const FORCE_FLAG = "1";
+
+/** `force=1` do formulário → o flag que o serviço passa ao payload do job. */
+export function forceFromForm(value: FormDataEntryValue | null): boolean {
+  return value === FORCE_FLAG;
+}
+
+/**
+ * O checkbox «ignorar as já obtidas» → a opção do lote.
+ *
+ * Um checkbox só chega ao `FormData` quando está marcado (com o valor `"on"`),
+ * e é por isso que a ausência **tem** de valer `false`: um `?? true` faria o
+ * lote saltar empresas que o operador acabou de mandar rebuscar.
+ */
+export function onlyMissingFromForm(value: FormDataEntryValue | null): boolean {
+  return value === "on";
 }
