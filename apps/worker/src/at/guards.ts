@@ -85,3 +85,28 @@ export function assertPeriodMatches(expected: string, found: string | null): voi
     "O período impresso na guia não é o período pedido.",
   );
 }
+
+/** O NIF que a página afirma estar a mostrar. Só dígitos, nunca guardado. */
+const NIF_NO_TEXTO = /NIF[:\s]+(\d{9})/;
+
+/**
+ * A sessão aberta no portal é mesmo a desta empresa?
+ *
+ * Partilhada pelas duas rotas: na B o portal reaproveita a sessão do último
+ * cliente escolhido; na A é a extensão que faz o login, e um guião que
+ * entrasse com a senha de outra empresa daria exatamente o mesmo sintoma. Só
+ * se acusa quando os dois lados **afirmam** NIFs diferentes — um NIF ausente ou
+ * ilegível na página não prova nada. Nem a mensagem nem o fingerprint levam
+ * NIFs: este erro acaba num `last_error` que o dashboard mostra.
+ */
+export function assertSessionBelongsTo(pageText: string, expectedNif: string | null): void {
+  if (expectedNif === null) return;
+  const mostrado = NIF_NO_TEXTO.exec(pageText)?.[1] ?? null;
+  if (mostrado !== null && taxIdMatches(mostrado, expectedNif) === false) {
+    throw new AtIntegrityError(
+      "at_session_mismatch",
+      "A sessão aberta no portal não é a do contribuinte pedido.",
+      {},
+    );
+  }
+}

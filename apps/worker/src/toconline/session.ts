@@ -1,76 +1,31 @@
 import type { BrowserContext, Page } from "playwright";
 import type { BrowserProvider } from "../browser/browser";
-import { InvalidCredentialsError, StructuralError } from "../errors";
 import type {
   AuthenticatedTocSession,
   OpenedSession,
   TocOnlineCredentials,
   TocSessionFactory,
 } from "../runner/ports";
+import { assertTocHost, loginOnPage, type TocLoginOptions } from "./login";
 import { TOCONLINE } from "./selectors";
 import type { StorageStateStore } from "./storage-state";
 
+export { assertTocHost };
+
 /**
- * Autenticação no TOConline e reutilização da sessão do gabinete.
+ * Autenticação no TOConline e reutilização da sessão do gabinete (Módulo 0:
+ * um contexto por job, `storageState` guardado entre jobs).
  *
- * O detalhe que molda tudo: **o login redireciona para um host shardado**
- * (`app5.toconline.pt`, `app11…`), e o número varia por conta. Fixar o host
- * seria garantir uma quebra silenciosa quando a conta migrasse de servidor —
- * por isso ele é *derivado do redirect* e guardado com a sessão.
- *
- * Reutilizar o `storageState` não é só velocidade: repetir o login a cada job
- * contra o portal de um terceiro é exatamente o padrão que dispara defesas
+ * O login em si vive em `login.ts`, partilhado com o adaptador do Acesso
+ * Direto (rota A). O que fica aqui é o ciclo de vida da sessão: reutilizar o
+ * `storageState` não é só velocidade — repetir o login a cada job contra o
+ * portal de um terceiro é exatamente o padrão que dispara defesas
  * anti-automação.
  */
 
-export interface TocOnlineOptions {
-  loginUrl?: string;
+export interface TocOnlineOptions extends TocLoginOptions {
   companiesPath?: string;
-  /** Injetável para o teste apontar a um servidor local. */
-  hostPattern?: RegExp;
-  timeoutMs?: number;
 }
-
-/** Valida e devolve o host efetivo. Lança se o redirect levou a sítio inesperado. */
-export function assertTocHost(url: string, pattern: RegExp = TOCONLINE.hostPattern): string {
-  let host: string;
-  try {
-    host = new URL(url).host;
-  } catch {
-    throw new StructuralError("URL inválida devolvida pelo TOConline após o login.");
-  }
-  if (!pattern.test(host)) {
-    throw new StructuralError(
-      `O TOConline redirecionou para um host inesperado (${host}). O fluxo de login mudou.`,
-    );
-  }
-  return host;
-}
-
-/**
- * Substantivos que a página de login usa **por natureza**: são rótulos do
- * próprio formulário ("Palavra-passe", "Credenciais de acesso"), não prova de
- * recusa. Sozinhos não classificam nada.
- */
-const CREDENCIAL =
-  "credenciai\\w*|credentials|palavra-passe|password|utilizador|username|e-?mail|login|dados de acesso";
-/** Adjetivos/verbos que afirmam a recusa. Sem um destes, não houve recusa. */
-const RECUSA =
-  "inv[aá]lid\\w*|invalid|incorret\\w*|incorrect|errad\\w*|wrong|n[aã]o (?:confere\\w*|coincide\\w*|corresponde\\w*)|failed|falhou";
-
-/**
- * Só se afirma "rejeitada" quando a página junta um substantivo de credencial a
- * uma afirmação de recusa, na mesma frase (sem `.` a separar).
- *
- * A versão anterior procurava os substantivos isolados e classificava como
- * recusa qualquer timeout com o formulário à vista — marcando inválida uma
- * credencial boa e fazendo todos os jobs seguintes serem ignorados. Um timeout
- * sem indício visível é erro retentável, e é esse o lado seguro de errar.
- */
-const REJECTION_NOTICE = new RegExp(
-  `(?:(?:${CREDENCIAL})[^.]{0,40}?(?:${RECUSA}))|(?:(?:${RECUSA})[^.]{0,40}?(?:${CREDENCIAL}))`,
-  "i",
-);
 
 export class PlaywrightTocSessions implements TocSessionFactory {
   constructor(
@@ -133,31 +88,7 @@ export class PlaywrightTocSessions implements TocSessionFactory {
     const page = await context.newPage();
 
     try {
-      await page.goto(this.options.loginUrl ?? TOCONLINE.loginUrl, {
-        waitUntil: "domcontentloaded",
-        timeout: this.timeout,
-      });
-
-      await page.fill(TOCONLINE.usernameInput, credentials.username, { timeout: this.timeout });
-      await page.fill(TOCONLINE.passwordInput, credentials.password, { timeout: this.timeout });
-      await page.click(TOCONLINE.submitButton, { timeout: this.timeout });
-
-      try {
-        await page.waitForURL((url) => !url.pathname.includes("/login"), {
-          timeout: this.timeout,
-        });
-      } catch {
-        // Continuar na página de login é quase sempre credencial rejeitada,
-        // mas não sempre — e classificar mal tem custo real: marcar inválida
-        // uma credencial boa faz todos os jobs seguintes serem ignorados. Por
-        // isso só se afirma "rejeitada" quando a página o diz.
-        throw (await this.looksRejected(page))
-          ? new InvalidCredentialsError()
-          : new Error("O TOConline não concluiu o login dentro do tempo previsto.");
-      }
-
-      const host = assertTocHost(page.url(), this.options.hostPattern);
-      const origin = new URL(page.url()).origin;
+      const { host, origin } = await loginOnPage(page, credentials, this.options);
 
       await page.goto(`${origin}${this.companiesPath}`, {
         waitUntil: "domcontentloaded",
@@ -175,20 +106,6 @@ export class PlaywrightTocSessions implements TocSessionFactory {
     } catch (err) {
       await context.close().catch(() => undefined);
       throw err;
-    }
-  }
-
-  /**
-   * Procura por uma indicação visível de credencial recusada. Baseado em texto
-   * e não num seletor porque o seletor exato é um achado da Fase 0 — e um
-   * seletor errado falharia silenciosamente para o lado perigoso.
-   */
-  private async looksRejected(page: Page): Promise<boolean> {
-    try {
-      const aviso = page.getByText(REJECTION_NOTICE);
-      return (await aviso.count()) > 0;
-    } catch {
-      return false;
     }
   }
 
