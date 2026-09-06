@@ -19,7 +19,6 @@ import { JobQueue } from "./runner/job-queue";
 import { CompanyScanRunner } from "./runner/company-scan-runner";
 import { IvaDocumentRunner } from "./runner/iva-document-runner";
 import { InMemoryPortalGate } from "./runner/portal-gate";
-import type { AtSessionFactory } from "./runner/ports";
 import { WorkerLoop } from "./runner/worker-loop";
 import { DbAttemptGuard } from "./sinks/attempt-guard";
 import { DbCompanyDirectory } from "./sinks/company-directory";
@@ -33,28 +32,6 @@ import { FileStorageStateStore } from "./toconline/storage-state";
 function log(message: string, data: Record<string, unknown> = {}) {
   // Linha JSON estruturada, como o Logger do @toc/core. Nunca inclui segredos.
   console.log(JSON.stringify({ ts: new Date().toISOString(), source: "worker", message, ...data }));
-}
-
-/**
- * Escolhe o adaptador de sessão da AT conforme a rota configurada.
- *
- * Falha **no arranque** e não a meio de um job: uma rota que ainda não existe
- * descoberta à 143.ª empresa deixaria um lote meio feito e um trace aberto por
- * empresa. Aqui o processo nem sobe, e a mensagem diz o que falta.
- */
-function criarSessoesAt(
-  env: ReturnType<typeof loadEnv>,
-  browser: PlaywrightBrowser,
-): AtSessionFactory {
-  if (env.atAccessMode === "at_direct_login") {
-    return new AcessoGovAtSessions({
-      browser,
-      state: new FileStorageStateStore(env.stateDir),
-    });
-  }
-  throw new Error(
-    "AT_ACCESS_MODE=toconline_direct_access ainda não está disponível neste worker (aguarda a Fase 0).",
-  );
 }
 
 async function main() {
@@ -100,7 +77,10 @@ async function main() {
     tracer,
     store,
     credentials,
-    sessions: criarSessoesAt(env, browser),
+    sessions: new AcessoGovAtSessions({
+      browser,
+      state: new FileStorageStateStore(env.stateDir),
+    }),
     declarations: new AtIvaDeclarationReader(),
     documents: new AtPaymentDocumentFetcher(),
     storage: new SupabaseDocumentStore(supabase, env.documentsBucket),
@@ -135,7 +115,6 @@ async function main() {
   log("worker no ar", {
     headless: env.headless,
     handles: [SCAN_JOB_TYPE, IVA_DOCUMENT_JOB_TYPE],
-    atAccessMode: env.atAccessMode,
   });
 
   await loop.start(controller.signal);

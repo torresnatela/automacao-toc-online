@@ -119,39 +119,6 @@ describe("loadEnv", () => {
   // Todas com valor por omissão: um worker que só faz varredura não pode
   // deixar de arrancar por causa da configuração de um módulo que não usa.
 
-  describe("AT_ACCESS_MODE", () => {
-    it("assume at_direct_login por omissão", () => {
-      expect(loadEnv(complete).atAccessMode).toBe("at_direct_login");
-    });
-
-    it("aceita toconline_direct_access", () => {
-      const env = loadEnv({ ...complete, AT_ACCESS_MODE: "toconline_direct_access" });
-      expect(env.atAccessMode).toBe("toconline_direct_access");
-    });
-
-    it("assume o valor por omissão quando a variável está vazia", () => {
-      expect(loadEnv({ ...complete, AT_ACCESS_MODE: "" }).atAccessMode).toBe("at_direct_login");
-    });
-
-    // Ao contrário dos números, um modo desconhecido NÃO cai no default: cair
-    // em silêncio levaria o worker a abrir sessões pela rota errada contra o
-    // portal do Estado, que é exatamente o erro que não se pode dar.
-    it("lança quando o valor não é um modo conhecido", () => {
-      expect(() => loadEnv({ ...complete, AT_ACCESS_MODE: "lixo" })).toThrow(/AT_ACCESS_MODE/);
-    });
-
-    it("nomeia os valores válidos na mensagem de erro", () => {
-      try {
-        loadEnv({ ...complete, AT_ACCESS_MODE: "lixo" });
-        throw new Error("devia ter lançado");
-      } catch (err) {
-        const message = (err as Error).message;
-        expect(message).toContain("at_direct_login");
-        expect(message).toContain("toconline_direct_access");
-      }
-    });
-  });
-
   describe("DOCUMENTS_BUCKET", () => {
     it("assume documents por omissão", () => {
       expect(loadEnv(complete).documentsBucket).toBe("documents");
@@ -214,12 +181,14 @@ describe("loadEnv", () => {
   });
 
   describe("RPA_CHROME_*", () => {
-    // Só a rota A (Acesso Direto) precisa de um Chrome real com a extensão do
-    // TOConline instalada. Ausentes é o caso normal.
-    it("ficam por definir quando não vêm no ambiente", () => {
+    // Rota A (Acesso Direto do TOConline): um perfil persistente do Chromium do
+    // Playwright com a extensão TOConline Connect descompactada. Têm sempre
+    // valor: a rota A está sempre registada no worker, e o que decide se ela
+    // funciona é a extensão estar (ou não) no diretório — não uma variável.
+    it("assumem o perfil e a extensão dentro de .rpa por omissão", () => {
       const env = loadEnv(complete);
-      expect(env.chromeUserDataDir).toBeUndefined();
-      expect(env.chromeExtensionDir).toBeUndefined();
+      expect(env.chromeUserDataDir).toBe(".rpa/chromium-profile");
+      expect(env.chromeExtensionDir).toBe(".rpa/extensions/toconline-connect");
     });
 
     it("são lidos quando presentes", () => {
@@ -230,6 +199,11 @@ describe("loadEnv", () => {
       });
       expect(env.chromeUserDataDir).toBe("/tmp/chrome-profile");
       expect(env.chromeExtensionDir).toBe("/tmp/toconline-extension");
+    });
+
+    it("uma variável vazia vale como ausente", () => {
+      const env = loadEnv({ ...complete, RPA_CHROME_EXTENSION_DIR: "" });
+      expect(env.chromeExtensionDir).toBe(".rpa/extensions/toconline-connect");
     });
   });
 });

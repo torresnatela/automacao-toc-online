@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "TOConline Connect (fixture)",
+  "version": "0.1",
+  "description": "Extensão de teste que fala o mesmo protocolo da TOConline Connect contra os servidores locais dos testes. Nunca sai daqui.",
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["http://127.0.0.1/*", "http://localhost/*"],
+      "js": ["contentScript.js"]
+    }
+  ],
+  "permissions": ["tabs", "scripting"],
+  "host_permissions": ["http://127.0.0.1/*", "http://localhost/*"]
+}
