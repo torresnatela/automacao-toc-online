@@ -45,6 +45,8 @@ export interface PersistentChromiumOptions {
   launchTimeoutMs?: number;
   /** Quanto se espera pelo service worker da extensão depois de arrancar. */
   extensionTimeoutMs?: number;
+  /** Vagar entre ações — só o reconhecimento headed o usa, para se ver o que o portal faz. */
+  slowMoMs?: number;
 }
 
 export class PersistentChromiumBrowser implements PersistentContextProvider {
@@ -100,6 +102,7 @@ export class PersistentChromiumBrowser implements PersistentContextProvider {
       channel: "chromium",
       headless: this.options.headless,
       timeout: this.options.launchTimeoutMs ?? 60_000,
+      ...(this.options.slowMoMs === undefined ? {} : { slowMo: this.options.slowMoMs }),
       acceptDownloads: true,
       viewport: { width: 1600, height: 1000 },
       locale: "pt-PT",
