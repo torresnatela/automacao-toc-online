@@ -1,4 +1,5 @@
 import {
+  AT_ACCESS_MODES,
   IVA_OUTCOMES,
   IVA_OUTCOME_CODES,
   credentialStatusLabel,
@@ -24,9 +25,15 @@ import {
  * Da linha da base de dados à linha do ecrã — e nada mais.
  *
  * Pura de propósito (sem `next/*`, sem Supabase, sem `Date.now()`): é aqui que
- * está a decisão de o botão «Buscar» estar ou não desligado e porquê, e essa
- * decisão vale a pena poder testar sem levantar a aplicação. O `now` entra por
- * parâmetro pela mesma razão.
+ * está a decisão de cada botão de busca estar ou não desligado e porquê, e essa
+ * decisão vale a pena poder testar sem levantar a aplicação.
+ *
+ * Duas funções porque são duas perguntas: `presentIvaRow` diz **em que estado
+ * está a linha** (não depende da rota — o último job é o que é), e
+ * `fetchAffordance` diz **se se pode buscar por uma dada rota** (depende dela:
+ * a rota A precisa da ligação ao TOConline, a B do NIF e da credencial da AT).
+ * A rota é a escolha do operador em cada clique, não uma configuração do
+ * sistema — por isso a linha tem um botão por rota, e cada um responde por si.
  */
 
 /**
@@ -73,6 +80,12 @@ export interface IvaDocumentRow {
    * porque ninguém lhe pegou ainda. `coalesce` na view: nunca `null`.
    */
   job_deferred: boolean;
+  /**
+   * Por que rota correu o último job (`payload->>'access'`), em texto cru: a
+   * view não valida nada, `deriveState` é que o traduz numa `AtAccessMode` (ou
+   * em nada). `null` sem job, ou num job anterior a esta coluna.
+   */
+  job_access: string | null;
 }
 
 export interface IvaRowView {
@@ -84,14 +97,15 @@ export interface IvaRowView {
   /** O que fazer, por extenso e com o período/prazo já preenchidos. */
   guidance: string;
   inFlight: boolean;
-  readiness: IvaReadiness;
-  canFetch: boolean;
-  /** Presente só quando `canFetch` é falso — vai para o `title` do botão. */
-  disabledReason?: string;
-  fetchLabel: "Buscar" | "Buscar novamente";
   /** `null` nos estados que não são desfecho do domínio. */
   outcome: IvaOutcome | null;
   details: IvaOutcomeDetails;
+  /**
+   * Por que rota correu o último job — o que a listagem mostra ao lado do
+   * estado e o que decide para que ecrã manda o link da credencial. `null`
+   * sem job, ou quando o job não gravou rota (anterior à coluna `job_access`).
+   */
+  lastAccess: AtAccessMode | null;
 }
 
 /** Estados em que ainda não há desfecho — a busca não terminou (ou nunca houve). */
@@ -121,7 +135,9 @@ function toOutcome(value: string | null): IvaOutcome | null {
  * leitor canónico continua a servir o worker, que tem a linha toda.
  *
  * O que a view **não** traz reconstrói-se do que traz: o período do job, ou o
- * do período da obrigação, e o prazo de pagamento.
+ * do período da obrigação, o prazo de pagamento e a rota por que o job correu
+ * (validada contra `AT_ACCESS_MODES`, como faz o leitor canónico — um texto que
+ * este build não conhece não é rota nenhuma).
  *
  * Um código que este build não conhece (linha antiga, worker mais recente) cai
  * em `failed_unknown` com `outcome: null`: sem desfecho não há orientação de
@@ -136,6 +152,8 @@ export function deriveState(row: IvaDocumentRow): {
   const period = row.job_period ?? row.period;
   if (period !== null) details.period = period;
   if (row.due_date !== null) details.dueDate = row.due_date;
+  const access = AT_ACCESS_MODES.find((mode) => mode === row.job_access);
+  if (access !== undefined) details.access = access;
 
   if (row.job_status === null) return { state: "never", outcome: null, details };
   if (row.job_status === "pending") {
@@ -196,23 +214,64 @@ export function notReadyCopy(reason: IvaNotReadyReason, access: AtAccessMode): s
   return NOT_READY_COPY[reason];
 }
 
-export function presentIvaRow(
-  row: IvaDocumentRow,
-  ctx: {
-    access: AtAccessMode;
-    /** A credencial do provider da rota (`providerForAccess`), já resolvida. */
-    credential: { hasSecret: boolean; status: string } | null;
-    now: Date;
-  },
-): IvaRowView {
+/** O estado da linha, tal como o ecrã o mostra — igual seja qual for a rota. */
+export function presentIvaRow(row: IvaDocumentRow): IvaRowView {
   const { state, outcome, details } = deriveState(row);
+  const meta = rowStateMeta(state);
+
+  return {
+    state,
+    label: meta.label,
+    tone: meta.tone,
+    short: meta.short,
+    // Nos estados de UI não há orientação de domínio — a linha curta é tudo o
+    // que há para dizer, e repeti-la é melhor do que uma orientação inventada.
+    // Fora deles o estado **é** um desfecho, e a orientação vem do domínio.
+    guidance: isUiState(state) ? UI_STATE_META[state].short : renderGuidance(state, details),
+    inFlight: isInFlight(row.job_status),
+    outcome,
+    details,
+    lastAccess: details.access ?? null,
+  };
+}
+
+/** O que um botão de busca precisa de saber sobre a SUA rota. */
+export interface FetchAffordance {
+  access: AtAccessMode;
+  readiness: IvaReadiness;
+  canFetch: boolean;
+  /** Presente só quando `canFetch` é falso — `title` + sr-only do botão. */
+  disabledReason?: string;
+  /** Nome acessível do botão (`fetchButtonLabel`). */
+  label: string;
+  /**
+   * Houve job terminal: o verbo é «novamente» e a busca força (`force`). É
+   * explícito, e não deduzido do rótulo, porque é ele que decide se o
+   * formulário força a re-busca — um rótulo novo não o pode desligar em
+   * silêncio.
+   */
+  refetch: boolean;
+}
+
+/**
+ * Se esta linha se pode buscar por esta rota, e porquê não.
+ *
+ * A credencial entra **já resolvida para a rota** (`credentialForReadiness`):
+ * a da AT na rota B, a do TOConline na rota A. É a mesma prontidão que o
+ * serviço recalcula ao receber o clique, com a mesma função do domínio — se as
+ * duas divergissem, o botão diria «pronta» e o clique seria recusado a seguir.
+ */
+export function fetchAffordance(
+  row: IvaDocumentRow,
+  ctx: { access: AtAccessMode; credential: { hasSecret: boolean; status: string } | null },
+): FetchAffordance {
+  const { state } = deriveState(row);
   // Lido do estado do JOB e não do estado derivado: um job adiado continua na
   // fila (`pending`, sem tentativa gasta) e a mesma execução retoma daqui a 15
   // minutos, por isso «Portal em pausa» é uma busca em curso — não uma
   // terminada. Derivá-lo do estado poria o botão a convidar a um segundo
   // pedido que o índice de idempotência recusaria de imediato.
   const inFlight = isInFlight(row.job_status);
-  const meta = rowStateMeta(state);
 
   const readiness = ivaFetchReadiness({
     access: ctx.access,
@@ -238,27 +297,71 @@ export function presentIvaRow(
 
   // Um job terminal é o que distingue «Buscar» de «Buscar novamente»: nunca
   // buscada ou ainda a correr, o verbo é o primeiro.
-  const terminal = !inFlight && state !== "never";
+  const refetch = !inFlight && state !== "never";
 
-  const view: IvaRowView = {
-    state,
-    label: meta.label,
-    tone: meta.tone,
-    short: meta.short,
-    // Nos estados de UI não há orientação de domínio — a linha curta é tudo o
-    // que há para dizer, e repeti-la é melhor do que uma orientação inventada.
-    // Fora deles o estado **é** um desfecho, e a orientação vem do domínio.
-    guidance: isUiState(state) ? UI_STATE_META[state].short : renderGuidance(state, details),
-    inFlight,
+  const affordance: FetchAffordance = {
+    access: ctx.access,
     readiness,
     canFetch,
-    fetchLabel: terminal ? "Buscar novamente" : "Buscar",
-    outcome,
-    details,
+    label: fetchButtonLabel(ctx.access, refetch),
+    refetch,
   };
-  if (reason !== null) view.disabledReason = notReadyCopy(reason, ctx.access);
-  return view;
+  if (reason !== null) affordance.disabledReason = notReadyCopy(reason, ctx.access);
+  return affordance;
 }
+
+/**
+ * A decisão de cada rota para esta linha — as duas, sempre.
+ *
+ * Objeto literal com uma chave por rota, e não um `reduce` sobre
+ * `AT_ACCESS_MODES`: uma rota nova no domínio tem de obrigar a decidir aqui
+ * (o `Record` deixa de compilar), em vez de aparecer na listagem sem botão.
+ */
+export function fetchAffordances(
+  row: IvaDocumentRow,
+  credentialFor: (access: AtAccessMode) => { hasSecret: boolean; status: string } | null,
+): Record<AtAccessMode, FetchAffordance> {
+  const forRoute = (access: AtAccessMode) =>
+    fetchAffordance(row, { access, credential: credentialFor(access) });
+  return {
+    at_direct_login: forRoute("at_direct_login"),
+    toconline_direct_access: forRoute("toconline_direct_access"),
+  };
+}
+
+/**
+ * O nome do botão: o verbo (houve job terminal?) e a rota.
+ *
+ * A rota B fica sem sufixo de propósito — «Buscar» é o botão que sempre
+ * existiu, e o que o gabinete já conhece; a rota A é a que se anuncia.
+ */
+export function fetchButtonLabel(access: AtAccessMode, refetch: boolean): string {
+  const verb = refetch ? "Buscar novamente" : "Buscar";
+  return access === "toconline_direct_access" ? `${verb} via TOConline` : verb;
+}
+
+/** Como se chama cada rota quando se diz por qual correu a última tentativa. */
+export const ACCESS_LABEL: Record<AtAccessMode, string> = {
+  at_direct_login: "login direto na AT",
+  toconline_direct_access: "via TOConline",
+};
+
+/** A rota da última tentativa por extenso, para a linha do estado; `null` sem rota. */
+export function accessHint(access: AtAccessMode | null): string | null {
+  return access === null ? null : ACCESS_LABEL[access];
+}
+
+/** O botão e o título do diálogo do «buscar todas» de cada rota. */
+export const BULK_COPY: Record<AtAccessMode, { button: string; title: string }> = {
+  at_direct_login: {
+    button: "Buscar todas",
+    title: "Buscar guias de IVA de todas as empresas?",
+  },
+  toconline_direct_access: {
+    button: "Buscar todas via TOConline",
+    title: "Buscar guias de IVA de todas as empresas via TOConline?",
+  },
+};
 
 /**
  * Dias 20 a 25 — o pico de entregas do IVA, em que o Portal das Finanças
@@ -429,7 +532,8 @@ export interface CredentialBanner {
  * É a mesma informação que cada botão desativado já dá no seu `title`, dita uma
  * vez e com o caminho para a resolver: 182 botões desligados pelo mesmo motivo
  * são um problema do gabinete, não de 182 empresas. `null` quando não há nada a
- * dizer — a ausência de banner é o estado normal.
+ * dizer — a ausência de banner é o estado normal. Com duas rotas na mesma
+ * listagem pode haver um banner por rota.
  */
 export function credentialBanner(
   access: AtAccessMode,
@@ -454,10 +558,10 @@ export function credentialBanner(
  * um `Partial`: um desfecho novo no domínio tem de obrigar a decidir aqui, e um
  * `Partial` deixá-lo-ia cair em silêncio no "não é de credencial" — o operador
  * ficaria sem o link que lhe resolve o problema e nada falharia a avisar.
- * `credential-links.test.ts` repete a verificação em execução.
+ * `present.test.ts` repete a verificação em execução.
  *
- * `"route"` = a senha da AT, que se corrige onde a rota a guarda (na rota A
- * vive no TOConline); `"toconline"` = do TOConline em qualquer rota.
+ * `"route"` = a senha da AT, que se corrige onde a rota **que correu** a guarda
+ * (na rota A vive no TOConline); `"toconline"` = do TOConline em qualquer rota.
  */
 export const CREDENTIAL_OUTCOME_TARGET: Record<IvaOutcome, "at" | "toconline" | "route" | null> = {
   // --- Sucesso e estados válidos ------------------------------------------
@@ -509,14 +613,23 @@ export const CREDENTIAL_OUTCOME_TARGET: Record<IvaOutcome, "at" | "toconline" | 
   unknown_error: null,
 };
 
-/** O ecrã que resolve este desfecho, quando existe um. */
+/**
+ * O ecrã que resolve este desfecho, quando existe um.
+ *
+ * `lastAccess` é a rota por que o job **correu** (`job_access`), não a que o
+ * operador vai escolher a seguir: o desfecho foi produzido por ela, e é lá que
+ * está a senha que o produziu. Sem rota gravada (jobs anteriores à coluna) os
+ * desfechos da senha da AT levam ao ecrã da AT — a rota B era a única.
+ */
 export function credentialLinkFor(
   outcome: IvaOutcome | null,
-  access: AtAccessMode,
+  lastAccess: AtAccessMode | null,
 ): { href: string; label: string } | null {
   if (outcome === null) return null;
   const target = CREDENTIAL_OUTCOME_TARGET[outcome];
   if (target === null) return null;
-  const { href, label } = ACCESS_TARGET[target === "route" ? providerForAccess(access) : target];
+  const provider =
+    target === "route" ? providerForAccess(lastAccess ?? "at_direct_login") : target;
+  const { href, label } = ACCESS_TARGET[provider];
   return { href, label };
 }

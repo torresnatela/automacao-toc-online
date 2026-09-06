@@ -1,4 +1,5 @@
 import {
+  AT_ACCESS_MODES,
   CREDENTIAL_STATUSES,
   INTEGRATION_PROVIDERS,
   ivaFetchReadiness,
@@ -492,4 +493,17 @@ export function forceFromForm(value: FormDataEntryValue | null): boolean {
  */
 export function onlyMissingFromForm(value: FormDataEntryValue | null): boolean {
   return value === "on";
+}
+
+/**
+ * O campo escondido `access` → o modo de acesso.
+ *
+ * Cada botão escreve a sua rota («Buscar» = `at_direct_login`, «Buscar via
+ * TOConline» = `toconline_direct_access`). Desconhecido ou ausente = rota B: é
+ * a que não depende de nada configurado no TOConline, e a que um formulário
+ * antigo (anterior a este campo) sempre quis dizer. Um valor forjado não pode
+ * escolher uma rota que ninguém pediu.
+ */
+export function accessFromForm(value: FormDataEntryValue | null): AtAccessMode {
+  return AT_ACCESS_MODES.find((mode) => mode === value) ?? "at_direct_login";
 }

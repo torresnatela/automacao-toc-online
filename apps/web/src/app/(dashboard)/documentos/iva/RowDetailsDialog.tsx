@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Building2, Info, KeyRound, ScrollText } from "lucide-react";
+import type { AtAccessMode } from "@toc/core/domain";
 import type { IvaRowState } from "@/lib/documents/outcomes";
 import { StatusBadge } from "@/components/patterns/status-badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -37,14 +38,16 @@ export interface RowDetailsDialogProps {
    * corre — "Concluído: —" seria uma resposta a uma pergunta que ninguém fez.
    */
   job?: { attempts: number; finishedAt?: string };
+  /** Por que rota correu o último job, já por extenso (`accessHint`). */
+  lastAccess?: string;
   /** Já formatados no servidor: o Intl do browser pode não ser o mesmo. */
   payment?: { entity: string; reference: string; amount: string; dueDate: string };
   traceHref?: string;
   companyHref: string;
   /** Só nos desfechos que se resolvem numa credencial (`credentialLinkFor`). */
   credentialLink?: { href: string; label: string };
-  /** O mesmo botão da linha — quem lê a orientação é quem quer voltar a tentar. */
-  fetch: FetchButtonProps;
+  /** Os mesmos botões da linha, um por rota — quem lê a orientação é quem quer voltar a tentar. */
+  fetch: Record<AtAccessMode, FetchButtonProps>;
 }
 
 /**
@@ -93,6 +96,7 @@ export function RowDetailsDialog(props: RowDetailsDialogProps) {
             <p className="text-muted-foreground text-xs">
               Tentativas: {job.attempts}
               {job.finishedAt === undefined ? "" : ` · Concluído: ${job.finishedAt}`}
+              {props.lastAccess === undefined ? "" : ` · ${props.lastAccess}`}
             </p>
           )}
 
@@ -141,7 +145,8 @@ export function RowDetailsDialog(props: RowDetailsDialogProps) {
               Fechar
             </Button>
           </DialogClose>
-          <FetchButton {...props.fetch} />
+          <FetchButton {...props.fetch.toconline_direct_access} variant="ghost" />
+          <FetchButton {...props.fetch.at_direct_login} />
         </DialogFooter>
       </DialogContent>
     </Dialog>
