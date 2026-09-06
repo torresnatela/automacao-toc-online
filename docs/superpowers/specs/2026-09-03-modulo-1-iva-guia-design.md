@@ -580,3 +580,15 @@ acompanhar**; nada é gravado fora da máquina.
 Envio por e-mail/WhatsApp, lembretes de atraso, IRS/DMR/Segurança Social (entram pelo mesmo molde: novo
 `kind`, novo adaptador em `at/` ou `ss/`, mesma listagem), agendamento automático (`trigger_kind: schedule`
 existe, o scheduler não), pool de browsers/concorrência > 1.
+
+---
+
+## Adenda (2026-09-06) — rota por pedido, rota A implementada
+
+Substitui o que acima se diz sobre `AT_ACCESS_MODE` (§8.7, §9.1, §13): a rota **deixou de ser
+uma variável de ambiente** e passou a ser a escolha do operador em cada botão («Buscar» = rota B,
+«Buscar via TOConline» = rota A). O worker regista as duas fábricas e escolhe por
+`jobs.payload.access`; a view ganhou `job_access`. A rota A foi implementada sobre o **Chromium
+do Playwright** (não o Google Chrome, que desde a versão 137 ignora `--load-extension`) com a
+extensão TOConline Connect descompactada. Desenho completo em
+`2026-09-06-modulo-1-rota-a-toconline-acesso-direto-design.md`.

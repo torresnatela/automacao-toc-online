@@ -31,8 +31,8 @@ Há **dois** ficheiros `.env`, porque há dois processos com necessidades difere
   Postgres/Supabase **e** as variáveis do RPA (`RPA_*`, `AT_*`).
 - **`apps/web/.env.local`** — é o que o **Next.js lê sozinho** (convenção `.env.local` dele).
   Leva só o que o dashboard precisa: as chaves públicas/serviço do Supabase, `DATABASE_URL` e
-  `CREDENTIALS_ENC_KEY`. As variáveis `RPA_*`/`AT_*` não têm efeito aqui — o web só lê
-  `AT_ACCESS_MODE` (a mesma variável, para escolher a rota junto com o worker).
+  `CREDENTIALS_ENC_KEY`. As variáveis `RPA_*`/`AT_*` não têm efeito aqui — a rota até à AT é
+  escolhida pelo operador em cada botão, não por variável de ambiente.
 
 Gere as duas a partir do Supabase local em vez de copiar valores à mão:
 
@@ -91,10 +91,25 @@ da raiz do repo:
 set -a && . ./.env && set +a && pnpm --filter @toc/worker dev
 ```
 
-O arranque loga uma linha JSON com os tipos de job (`handles`) e `atAccessMode`. `Ctrl+C`
-encerra limpo (fecha o Chromium). Detalhes das variáveis do Módulo 1 (`AT_ACCESS_MODE`,
-`AT_PACING_MS`, `AT_DAILY_ATTEMPT_CAP`, …) e dos scripts de reconhecimento/sessão assistida em
-[`apps/worker/README.md`](../apps/worker/README.md).
+O arranque loga uma linha JSON com os tipos de job (`handles`) e as rotas registadas
+(`accessModes`). `Ctrl+C` encerra limpo (fecha os dois Chromiums). Detalhes das variáveis do
+Módulo 1 (`AT_PACING_MS`, `AT_DAILY_ATTEMPT_CAP`, `RPA_CHROME_*`, …) e dos scripts de
+reconhecimento/sessão assistida em [`apps/worker/README.md`](../apps/worker/README.md).
+
+### Rota A — Acesso Direto do TOConline (extensão TOConline Connect)
+
+O «Buscar via TOConline» precisa da extensão **TOConline Connect** descompactada no diretório
+que o worker carrega (`RPA_CHROME_EXTENSION_DIR`, por omissão `apps/worker/.rpa/extensions/toconline-connect`).
+Instale-a uma vez (copia do Chrome deste utilizador; sem ele, descarrega da Web Store):
+
+```bash
+pnpm --filter @toc/worker exec tsx scripts/install-toconline-connect.ts
+```
+
+O worker arranca na mesma sem ela — os jobs da rota A terminam em «Extensão TOConline Connect
+em falta». O perfil persistente do Chromium (`RPA_CHROME_USER_DATA_DIR`, por omissão
+`apps/worker/.rpa/chromium-profile`) guarda a sessão do TOConline: é credencial, e é git-ignored.
+Na Fase 0 corra com `RPA_HEADLESS=false` para ver o Acesso Direto a abrir a AT.
 
 ## Testes
 
@@ -123,7 +138,8 @@ pnpm --filter web test:e2e    # só Playwright do dashboard
 
 ## Scripts de reconhecimento (Fase 0 do Módulo 1)
 
-`apps/worker/scripts/recon-at.ts` (reconhecimento headed do Portal das Finanças) e
+`apps/worker/scripts/recon-at.ts` (reconhecimento headed do Portal das Finanças, pelas duas
+rotas — a A com o Chromium persistente e a extensão) e
 `apps/worker/scripts/seed-at-session.ts` (login assistido para gravar uma sessão quando o 2FA
 da AT for obrigatório) abrem um browser **visível** e nunca gravam credenciais fora da máquina.
 Escrevem em `apps/worker/recon/<data>/`, que é git-ignored — os screenshots contêm dados reais

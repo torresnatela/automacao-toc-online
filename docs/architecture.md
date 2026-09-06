@@ -85,14 +85,24 @@ Storage → regista `obligations → obligation_periods → documents` → a lis
 orientação do que fazer a seguir.
 
 A rota de acesso ao Portal das Finanças é uma **porta trocável**: `AtSessionFactory`
-(`apps/worker/src/runner/ports.ts`), selecionada pela env `AT_ACCESS_MODE` — a mesma variável
-lida pelo web (`apps/web/src/lib/documents/access.ts`) e pelo worker
-(`apps/worker/src/config/env.ts`), porque é o dashboard que escolhe a credencial e escreve o
-`access` no `jobs.payload` que o worker depois executa. Valores: `at_direct_login` (omissão —
-login do gabinete no `acesso.gov.pt`, implementado) e `toconline_direct_access` (Acesso Direto
-por dentro do TOConline, a decidir na Fase 0 de reconhecimento). O runner não sabe qual rota
-está ligada: só confirma que a credencial resolvida é a que o adaptador declara consumir
+(`apps/worker/src/runner/ports.ts`), **escolhida pelo operador a cada pedido** e não por
+configuração. Em `/documentos/iva` há um botão por rota — «Buscar»/«Buscar todas» entram com a
+credencial do gabinete no `acesso.gov.pt` (`at_direct_login`, rota B); «Buscar via
+TOConline»/«Buscar todas via TOConline» usam o Acesso Direto por dentro do TOConline
+(`toconline_direct_access`, rota A). O dashboard escreve a rota em `jobs.payload.access`; o
+worker regista as duas fábricas e escolhe por esse campo (uma rota sem fábrica é
+`payload_invalid`). A listagem mostra por que rota correu a última tentativa (`job_access` na
+view), para as duas estratégias se compararem lado a lado. O runner não sabe nada de rotas
+além disso: só confirma que a credencial resolvida é a que o adaptador declara consumir
 (`credentialProvider`).
+
+A rota A corre num **Chromium persistente do Playwright** com a extensão **TOConline Connect**
+carregada descompactada (`apps/worker/src/browser/persistent-chromium.ts`,
+`scripts/install-toconline-connect.ts`): o TOConline entrega o guião de login à extensão, a
+extensão abre a AT num separador novo, e o adaptador (`at/session-toc-direct-access.ts`) só vê
+esse separador aterrar — a senha da AT da empresa nunca passa pelo worker. Desde o Chrome 137 as
+builds de marca do Chrome ignoram `--load-extension`; é por isso o Chromium bundled.
+Ver `docs/superpowers/specs/2026-09-06-modulo-1-rota-a-toconline-acesso-direto-design.md`.
 
 ## Deploy
 
