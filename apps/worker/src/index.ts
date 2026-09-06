@@ -15,6 +15,8 @@ import { PlaywrightBrowser } from "./browser/browser";
 import { AtIvaDeclarationReader } from "./at/iva-declaration";
 import { AtPaymentDocumentFetcher } from "./at/payment-document";
 import { AcessoGovAtSessions } from "./at/session-acesso-gov";
+import { TocDirectAccessAtSessions } from "./at/session-toc-direct-access";
+import { PersistentChromiumBrowser } from "./browser/persistent-chromium";
 import { JobQueue } from "./runner/job-queue";
 import { CompanyScanRunner } from "./runner/company-scan-runner";
 import { IvaDocumentRunner } from "./runner/iva-document-runner";
@@ -51,6 +53,14 @@ async function main() {
   const store = new DbStore(db);
   const tracer = createTracer(store);
   const browser = new PlaywrightBrowser({ headless: env.headless });
+  // Rota A: perfil persistente com a extensão TOConline Connect. Só arranca no
+  // primeiro job dessa rota — um worker que só faça varredura e rota B nunca
+  // paga por ele.
+  const persistent = new PersistentChromiumBrowser({
+    userDataDir: env.chromeUserDataDir,
+    extensionDir: env.chromeExtensionDir,
+    headless: env.headless,
+  });
   // Service role: o worker escreve no Storage por trás do RLS. Sem sessão
   // persistida nem refresh — é um processo, não um browser com utilizador.
   const supabase = createClient(env.supabaseUrl, env.supabaseServiceRoleKey, {
@@ -77,10 +87,15 @@ async function main() {
     tracer,
     store,
     credentials,
-    sessions: new AcessoGovAtSessions({
-      browser,
-      state: new FileStorageStateStore(env.stateDir),
-    }),
+    // As duas rotas ficam sempre registadas: é o `payload.access` de cada job
+    // (o botão que o operador carregou) que escolhe.
+    sessions: [
+      new AcessoGovAtSessions({
+        browser,
+        state: new FileStorageStateStore(env.stateDir),
+      }),
+      new TocDirectAccessAtSessions({ persistent }),
+    ],
     declarations: new AtIvaDeclarationReader(),
     documents: new AtPaymentDocumentFetcher(),
     storage: new SupabaseDocumentStore(supabase, env.documentsBucket),
@@ -105,6 +120,7 @@ async function main() {
     log("a encerrar", { signal });
     controller.abort();
     await browser.close().catch(() => undefined);
+    await persistent.close().catch(() => undefined);
     process.exit(0);
   };
   process.on("SIGINT", () => void shutdown("SIGINT"));
@@ -115,10 +131,12 @@ async function main() {
   log("worker no ar", {
     headless: env.headless,
     handles: [SCAN_JOB_TYPE, IVA_DOCUMENT_JOB_TYPE],
+    accessModes: ["at_direct_login", "toconline_direct_access"],
   });
 
   await loop.start(controller.signal);
   await browser.close().catch(() => undefined);
+  await persistent.close().catch(() => undefined);
 }
 
 main().catch((err) => {

@@ -50,6 +50,12 @@ export const AT = {
   loginHostPattern: /^www\.acesso\.gov\.pt$/,
   /** Hosts aceites depois de autenticar. O `$` é o que trava `…gov.pt.evil.com`. */
   portalHostPattern: /^(iva|www|sitfiscal)\.portaldasfinancas\.gov\.pt$/,
+  /**
+   * Domínios de cookie da AT — o que a rota A limpa entre empresas no perfil
+   * persistente. Login e portal, porque a sessão do `acesso.gov.pt` também é
+   * do contribuinte e sobreviveria à limpeza do portal sozinho.
+   */
+  cookieDomainPattern: /(^|\.)(portaldasfinancas\.gov\.pt|acesso\.gov\.pt)$/,
 
   // TODO(recon): tudo daqui para baixo é palpite até à Fase 0.
   login: {

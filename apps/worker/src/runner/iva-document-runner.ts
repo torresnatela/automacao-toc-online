@@ -71,7 +71,12 @@ export interface IvaRunnerDeps {
   /** Necessário para CONTINUAR o trace aberto pelo dashboard, não só para abrir novos. */
   store: ObservabilityStore;
   credentials: AtCredentialSource;
-  sessions: AtSessionFactory;
+  /**
+   * Uma fábrica por rota de acesso. O job diz por que rota quer ir
+   * (`payload.access`) e o runner escolhe a fábrica com esse `access`; uma
+   * rota sem fábrica registada é `payload_invalid`, antes de qualquer browser.
+   */
+  sessions: readonly AtSessionFactory[];
   declarations: IvaDeclarationReader;
   documents: PaymentDocumentFetcher;
   storage: DocumentStore;
@@ -140,7 +145,10 @@ export class IvaDocumentRunner implements JobHandler {
       access: payload.access,
       ...(payload.batchId === undefined ? {} : { batchId: payload.batchId }),
     };
-    if (payload.access !== this.deps.sessions.access) {
+    // A rota vem no pedido, não na configuração do worker: o operador escolheu
+    // «Buscar» ou «Buscar via TOConline», e cada botão tem a sua fábrica.
+    const sessions = this.deps.sessions.find((fabrica) => fabrica.access === payload.access);
+    if (sessions === undefined) {
       return sair(
         "payload_invalid",
         { stage: "precondition", access: payload.access },
@@ -169,7 +177,7 @@ export class IvaDocumentRunner implements JobHandler {
     if (company.status !== "active") return sair("company_inactive", { stage: "precondition" });
 
     // --- 5. Pré-condição do adaptador (pura, antes de qualquer browser) -----
-    const pre = this.deps.sessions.precondition(company);
+    const pre = sessions.precondition(company);
     if (!pre.ok) return sair(pre.outcome, { stage: "precondition" });
 
     // --- 6. Idempotência pré-browser (só com período pedido) ----------------
@@ -187,7 +195,7 @@ export class IvaDocumentRunner implements JobHandler {
     // --- 8. Credencial ------------------------------------------------------
     // Resolve-se ANTES de tocar no browser: uma credencial já marcada inválida
     // não deve fazer o worker martelar o portal a cada retentativa.
-    const provider = this.deps.sessions.credentialProvider;
+    const provider = sessions.credentialProvider;
     const lookup = await this.deps.credentials.load(payload.credentialId);
     if (!lookup.ok) {
       if (lookup.reason === "not_found") {
@@ -254,12 +262,24 @@ export class IvaDocumentRunner implements JobHandler {
       // se vê do outro lado; espalhá-lo é a diferença entre automatizar e
       // martelar.
       await this.dormir(Math.floor(Math.random() * this.jitterMs));
-      const opened = await this.deps.sessions.open({
+      // Na rota A a abertura passa pelo TOConline: fica um passo próprio no
+      // trace, filho da sessão, para se ver ONDE parou quando não abre.
+      const directAccess =
+        payload.access === "toconline_direct_access"
+          ? await sessionEvent.child({
+              type: "rpa.toconline.direct_access",
+              source: "worker",
+              payload: { companyId: payload.companyId },
+            })
+          : null;
+      const opened = await sessions.open({
         company,
         credentialId: payload.credentialId,
         credentials: lookup.credentials,
         scope: lookup.scope,
+        log: (directAccess ?? sessionEvent).log,
       });
+      if (directAccess !== null) await directAccess.succeed();
       session = opened.session;
       await this.deps.credentials.markVerified(payload.credentialId);
       await sessionEvent.log.info("sessão estabelecida", {

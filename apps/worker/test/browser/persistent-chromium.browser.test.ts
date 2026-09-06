@@ -70,13 +70,14 @@ describe.skipIf(skip)("PersistentChromiumBrowser", () => {
     expect((await browser.context()).pages().length).toBeGreaterThanOrEqual(0);
   }, 60_000);
 
-  it("um diretório de extensão sem manifest é recusado antes de abrir o browser", async () => {
+  it("um diretório de extensão sem manifest arranca SEM extensão — a rota B não pode pagar por isso", async () => {
     browser = new PersistentChromiumBrowser({
       userDataDir: join(perfil, "profile"),
       extensionDir: join(perfil, "nao-existe"),
       headless: true,
     });
 
-    await expect(browser.context()).rejects.toThrow(/manifest\.json/);
+    expect(await browser.extension()).toBeNull();
+    expect((await browser.context()).pages().length).toBeGreaterThanOrEqual(0);
   }, 60_000);
 });

@@ -84,10 +84,14 @@ export class PersistentChromiumBrowser implements PersistentContextProvider {
   }
 
   private async launch(): Promise<BrowserContext> {
-    const { userDataDir, extensionDir } = this.options;
-    // Valida-se ANTES de abrir o browser: um diretório errado faria o Chromium
-    // arrancar sem extensão e o erro só apareceria à primeira empresa.
-    const manifest = extensionDir === null ? null : await lerManifest(extensionDir);
+    const { userDataDir } = this.options;
+    // Sem manifest não há extensão a carregar: arranca-se sem ela e é
+    // `extension() === null` — que o adaptador traduz em
+    // `direct_access_extension_missing`, o desfecho que diz ao operador o que
+    // falta. Rebentar aqui derrubaria também a rota B, que não precisa disto.
+    const manifest =
+      this.options.extensionDir === null ? null : await lerManifest(this.options.extensionDir);
+    const extensionDir = manifest === null ? null : this.options.extensionDir;
 
     await mkdir(userDataDir, { recursive: true, mode: 0o700 });
     await chmod(userDataDir, 0o700);
@@ -114,15 +118,13 @@ export class PersistentChromiumBrowser implements PersistentContextProvider {
   }
 }
 
-async function lerManifest(extensionDir: string): Promise<{ version: string }> {
-  const caminho = join(extensionDir, "manifest.json");
+/** `null` quando não há `manifest.json` no diretório — a extensão não está instalada. */
+async function lerManifest(extensionDir: string): Promise<{ version: string } | null> {
   let raw: string;
   try {
-    raw = await readFile(caminho, "utf8");
+    raw = await readFile(join(extensionDir, "manifest.json"), "utf8");
   } catch {
-    throw new Error(
-      `A extensão não está em ${extensionDir} (sem manifest.json). Corra scripts/install-toconline-connect.ts.`,
-    );
+    return null;
   }
   const manifest = JSON.parse(raw) as { version?: unknown };
   return { version: typeof manifest.version === "string" ? manifest.version : "" };

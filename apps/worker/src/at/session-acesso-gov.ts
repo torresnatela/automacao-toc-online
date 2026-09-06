@@ -13,6 +13,7 @@ import type {
 } from "../runner/ports";
 import type { StorageStateStore } from "../toconline/storage-state";
 import { classifyAtPage, fingerprint, snapshotPage, type AtPageSnapshot } from "./classify-page";
+import { followDocument } from "./follow-document";
 import { assertSessionBelongsTo } from "./guards";
 import { loginErrorFrom } from "./login-errors";
 import { assertAtHost, AT, type AtOptions } from "./selectors";
@@ -177,7 +178,7 @@ export class AcessoGovAtSessions implements AtSessionFactory {
     try {
       // Idem `tryReuse`: dentro do `try`, para o contexto nunca ficar órfão.
       page = await context.newPage();
-      const documento = seguirODocumento(page);
+      const documento = followDocument(page);
 
       await page.goto(this.options.loginUrl ?? AT.loginUrl, {
         waitUntil: "domcontentloaded",
@@ -244,7 +245,7 @@ export class AcessoGovAtSessions implements AtSessionFactory {
     origin: string,
     company: AtCompanyHandle,
   ): Promise<void> {
-    const documento = seguirODocumento(page);
+    const documento = followDocument(page);
     try {
       const chegada = await page.goto(`${origin}${AT.paths.cc.listaClientes}`, {
         waitUntil: "domcontentloaded",
@@ -346,36 +347,6 @@ export class AcessoGovAtSessions implements AtSessionFactory {
       },
     };
   }
-}
-
-/**
- * Guarda a última resposta do **documento principal** enquanto uma navegação
- * decorre, para o classificador poder ver o código HTTP.
- *
- * Um `Page` não sabe com que status foi servido, e nem toda a navegação passa
- * por um `goto` que devolva a `Response` — o submit de um formulário, por
- * exemplo. Sem isto, um 503 com um corpo que a redação não reconhece era
- * classificado como página desconhecida, ou seja, estrutural: uma avaria de
- * minutos na AT gastava a fila inteira sem retentativa nenhuma.
- *
- * O estado vive num objeto e não numa variável solta de propósito: o
- * TypeScript não vê as atribuições feitas dentro do ouvinte e estreitaria uma
- * variável `let` para `null` no ponto de leitura.
- */
-function seguirODocumento(page: Page): { readonly ultima: Response | null; parar(): void } {
-  const registo: { ultima: Response | null } = { ultima: null };
-  const ouvinte = (resposta: Response): void => {
-    if (!resposta.request().isNavigationRequest()) return;
-    if (resposta.frame() !== page.mainFrame()) return;
-    registo.ultima = resposta;
-  };
-  page.on("response", ouvinte);
-  return {
-    get ultima(): Response | null {
-      return registo.ultima;
-    },
-    parar: () => page.removeListener("response", ouvinte),
-  };
 }
 
 type CaminhosDoPortal = { consultarDeclaracao: string; obterDocumentoPagamento: string };

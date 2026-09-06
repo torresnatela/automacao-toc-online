@@ -79,8 +79,8 @@ export async function looksRejected(page: Page): Promise<boolean> {
 }
 
 /**
- * Preenche e submete o formulário de login e espera por sair de `/login`.
- * Devolve o host shardado e a origem em que a aplicação aterrou.
+ * Navega para a página de login e entra. Devolve o host shardado e a origem em
+ * que a aplicação aterrou.
  */
 export async function loginOnPage(
   page: Page,
@@ -88,11 +88,24 @@ export async function loginOnPage(
   options: TocLoginOptions = {},
 ): Promise<{ host: string; origin: string }> {
   const timeout = options.timeoutMs ?? TOCONLINE.defaultTimeoutMs;
-
   await page.goto(options.loginUrl ?? TOCONLINE.loginUrl, {
     waitUntil: "domcontentloaded",
     timeout,
   });
+  return submitLogin(page, credentials, options);
+}
+
+/**
+ * Preenche e submete o formulário de login **já aberto** e espera por sair de
+ * `/login`. Separado do `goto` porque quem tem um perfil persistente só sabe
+ * que precisa de entrar depois de ver onde a aplicação o deixou.
+ */
+export async function submitLogin(
+  page: Page,
+  credentials: TocOnlineCredentials,
+  options: TocLoginOptions = {},
+): Promise<{ host: string; origin: string }> {
+  const timeout = options.timeoutMs ?? TOCONLINE.defaultTimeoutMs;
 
   await page.fill(TOCONLINE.usernameInput, credentials.username, { timeout });
   await page.fill(TOCONLINE.passwordInput, credentials.password, { timeout });

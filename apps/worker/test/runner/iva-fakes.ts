@@ -18,6 +18,7 @@ import type {
   PortalCredentials,
   PortalGate,
   RawPortalDocumentFields,
+  SessionLog,
 } from "../../src/runner/ports";
 
 /**
@@ -145,6 +146,7 @@ export class FakeSessions implements AtSessionFactory {
     company: AtCompanyHandle;
     credentialId: string;
     credentials: PortalCredentials;
+    log?: SessionLog;
   }[] = [];
 
   constructor(private readonly options: FakeSessionsOptions = {}) {
@@ -162,6 +164,7 @@ export class FakeSessions implements AtSessionFactory {
     company: AtCompanyHandle;
     credentialId: string;
     credentials: PortalCredentials;
+    log?: SessionLog;
   }): Promise<OpenedAtSession> {
     this.openInputs.push(input);
     if (this.options.failure) throw this.options.failure;

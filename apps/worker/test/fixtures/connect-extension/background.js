@@ -27,14 +27,20 @@ function executarGuiao(acoes) {
   }
 }
 
+// Por sondagem e não só por `onUpdated`: contra um servidor local a página
+// pode estar `complete` antes de o ouvinte existir, e o guião nunca correria.
 function esperarCarregado(tabId) {
-  return new Promise((resolve) => {
-    chrome.tabs.onUpdated.addListener(function ouvinte(id, info) {
-      if (id === tabId && info.status === "complete") {
-        chrome.tabs.onUpdated.removeListener(ouvinte);
-        resolve();
-      }
-    });
+  return new Promise((resolve, reject) => {
+    const inicio = Date.now();
+    const verifica = () => {
+      chrome.tabs.get(tabId, (tab) => {
+        if (chrome.runtime.lastError || !tab) return reject(new Error("tab desapareceu"));
+        if (tab.status === "complete" && tab.url && tab.url !== "about:blank") return resolve();
+        if (Date.now() - inicio > 5000) return reject(new Error("tab não carregou"));
+        setTimeout(verifica, 50);
+      });
+    };
+    verifica();
   });
 }
 
