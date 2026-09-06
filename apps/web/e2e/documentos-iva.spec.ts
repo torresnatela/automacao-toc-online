@@ -418,14 +418,16 @@ test("o lote via TOConline conta só as empresas ligadas", async () => {
   await botao(page, "Buscar todas via TOConline").click();
   const confirmacao = page.getByRole("dialog");
   await expect(confirmacao.getByRole("heading")).toContainText("via TOConline");
-  // Das três empresas da equipa só uma tem ligação ao TOConline — e o diálogo
-  // diz o número, e o motivo das outras, **antes** de enfileirar.
+  // Só UMA empresa da equipa tem ligação ao TOConline — e o diálogo diz o
+  // número, e o motivo das outras, **antes** de enfileirar. As não prontas não
+  // se contam ao certo: outros specs (empresas, API) deixam empresas sem ligação
+  // na equipa demo, e o que importa é que nenhuma delas entra no lote.
   await expect(confirmacao).toContainText(/Vai enfileirar\s*1\b/);
   await expect(confirmacao).toContainText("sem ligação ao TOConline");
   await confirmacao.getByRole("button", { name: /Enfileirar/ }).click();
 
   const resumo = page.getByRole("status").filter({ hasText: "enfileiradas" });
-  await expect(resumo).toHaveText(/1 enfileiradas · 0 já em curso · 2 não prontas/);
+  await expect(resumo).toHaveText(/1 enfileiradas · 0 já em curso · \d+ não prontas/);
   await expect(confirmacao).toHaveCount(0);
 
   await expect(
