@@ -231,6 +231,37 @@ describe("presentIvaRow", () => {
   });
 });
 
+describe("presentIvaRow × envio ao cliente (mock)", () => {
+  const guiaObtida = (over: Partial<IvaDocumentRow> = {}) =>
+    withJob({
+      job_status: "succeeded",
+      job_outcome: "fetched",
+      job_period: "2026-07",
+      document_id: "44444444-4444-4444-4444-444444444444",
+      document_status: "extracted",
+      has_file: true,
+      ...over,
+    });
+
+  it("uma guia capturada e com ficheiro pode ser enviada ao cliente", () => {
+    const view = presentIvaRow(guiaObtida());
+    expect(view.canSend).toBe(true);
+    expect(view.sent).toBe(false);
+  });
+
+  it("uma guia já enviada não se envia outra vez e mostra-se como enviada", () => {
+    const view = presentIvaRow(guiaObtida({ document_status: "sent" }));
+    expect(view.sent).toBe(true);
+    expect(view.canSend).toBe(false);
+  });
+
+  it("sem ficheiro (ou sem documento) não há nada a enviar", () => {
+    expect(presentIvaRow(guiaObtida({ has_file: false })).canSend).toBe(false);
+    expect(presentIvaRow(row()).canSend).toBe(false);
+    expect(presentIvaRow(row()).sent).toBe(false);
+  });
+});
+
 describe("presentIvaRow × rota da última tentativa", () => {
   it("lê de `job_access` por que rota correu o último job", () => {
     const view = presentIvaRow(

@@ -308,6 +308,34 @@ test("a listagem mostra a guia obtida com entidade, referência, valor e PDF", a
   await expect(linha(page, SEM_FICHEIRO).getByRole("link", { name: "PDF" })).toHaveCount(0);
 });
 
+test("«Enviar ao cliente» marca a guia como enviada e confirma (email simulado)", async () => {
+  const DOC_LIGADA = "77777777-7777-7777-7777-777777777777";
+  try {
+    const page = admin.page;
+    await page.goto(`/documentos/iva?team=${DEMO_TEAM}`);
+
+    const guia = linha(page, LIGADA);
+    await botao(guia, "Enviar ao cliente").click();
+
+    // A confirmação diz, com todas as letras, que é simulado — e a guia deixa
+    // de oferecer o envio outra vez.
+    await expect(guia.getByText("Enviada por email (simulado)")).toBeVisible();
+    await expect(botao(guia, "Enviar ao cliente")).toHaveCount(0);
+
+    // O estado ficou mesmo persistido como enviado.
+    const docs = await restGet<{ status: string }[]>(
+      `documents?id=eq.${DOC_LIGADA}&select=status`,
+    );
+    expect(docs[0]?.status).toBe("sent");
+  } finally {
+    // A guia do seed é partilhada por outros testes: repor o estado.
+    await rest(`documents?id=eq.${DOC_LIGADA}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: "extracted", sent_at: null }),
+    });
+  }
+});
+
 test("os detalhes de uma linha abrem num diálogo com a orientação completa", async () => {
   const page = admin.page;
   await page.goto(`/documentos/iva?team=${DEMO_TEAM}`);

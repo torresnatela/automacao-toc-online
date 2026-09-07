@@ -106,6 +106,14 @@ export interface IvaRowView {
    * sem job, ou quando o job não gravou rota (anterior à coluna `job_access`).
    */
   lastAccess: AtAccessMode | null;
+  /** A guia já foi «enviada ao cliente» (`documents.status = 'sent'`). */
+  sent: boolean;
+  /**
+   * Há guia capturada e com ficheiro, ainda por enviar: o botão «Enviar ao
+   * cliente» só aparece aqui. (O envio real por email é o passo seguinte; por
+   * agora marca a guia como enviada e mostra uma confirmação simulada.)
+   */
+  canSend: boolean;
 }
 
 /** Estados em que ainda não há desfecho — a busca não terminou (ou nunca houve). */
@@ -219,6 +227,12 @@ export function presentIvaRow(row: IvaDocumentRow): IvaRowView {
   const { state, outcome, details } = deriveState(row);
   const meta = rowStateMeta(state);
 
+  // Há guia para enviar quando existe documento COM ficheiro no Storage —
+  // `document_id` sozinho pode ser uma linha sem PDF (ex.: `fetched_without_fields`
+  // ainda guarda o PDF, mas uma linha de erro não). `has_file` é a prova.
+  const temGuia = row.document_id !== null && row.has_file;
+  const sent = temGuia && row.document_status === "sent";
+
   return {
     state,
     label: meta.label,
@@ -232,6 +246,8 @@ export function presentIvaRow(row: IvaDocumentRow): IvaRowView {
     outcome,
     details,
     lastAccess: details.access ?? null,
+    sent,
+    canSend: temGuia && !sent,
   };
 }
 

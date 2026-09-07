@@ -45,6 +45,7 @@ import {
 } from "@/components/patterns/data-table";
 import { BatchProgress } from "./BatchProgress";
 import { FetchButton, type FetchButtonProps } from "./FetchButton";
+import { SendButton } from "./SendButton";
 import { FetchAllButton } from "./FetchAllButton";
 import { RowDetailsDialog } from "./RowDetailsDialog";
 
@@ -314,6 +315,17 @@ export default async function GuiasIvaPage({ searchParams }: PageProps) {
                         >
                           <FileText aria-hidden /> PDF
                         </Link>
+                      )}
+
+                      {/* «Enviar ao cliente» (mock do envio por email) só quando
+                          há guia capturada; some quando já foi enviada. */}
+                      {row.document_id && (view.canSend || view.sent) && (
+                        <SendButton
+                          documentId={row.document_id}
+                          teamId={teamId}
+                          canSend={view.canSend}
+                          sent={view.sent}
+                        />
                       )}
 
                       <RowDetailsDialog

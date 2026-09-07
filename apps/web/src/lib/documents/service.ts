@@ -3,6 +3,7 @@ import { requireWriterOn } from "@/lib/auth";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { startAction } from "@/lib/observability";
+import { logUserEvent } from "@/lib/observability/tracer";
 import {
   IVA_DOCUMENT_JOB_TYPE,
   IVA_OUTCOMES,
@@ -427,4 +428,71 @@ export async function enqueueIvaFetchAll(
     await batch?.failure(message);
     return { ok: false, status: 500, error: "Erro interno." };
   }
+}
+
+/** Um id de documento malformado é 404, não 500 (o cast para uuid rebentaria). */
+const DOCUMENT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export type SendResult = { ok: true } | { ok: false; status: number; error: string };
+
+/**
+ * «Enviar ao cliente» — por agora um **mock**: marca a guia como enviada
+ * (`documents.status = 'sent'`, `sent_at`) e regista a intenção, sem mandar
+ * email nenhum. O envio real (anexar o PDF e disparar o email) é o passo
+ * seguinte; esta função existe para o fluxo ficar completo de ponta a ponta na
+ * interface.
+ *
+ * Autorização como na rota de download: lê-se a linha com o cliente **RLS** (a
+ * visibilidade É a autorização — guia de outra equipa é 404), só depois se
+ * escreve com a service role. Idempotente: reenviar não volta a marcar nem
+ * falha.
+ */
+export async function sendIvaDocument(
+  documentId: string,
+  requestedTeamId: string,
+): Promise<SendResult> {
+  const auth = await requireWriterOn(requestedTeamId);
+  if (!auth.ok) return { ok: false, status: enqueueStatus(auth.status), error: auth.error };
+  if (!DOCUMENT_ID.test(documentId)) {
+    return { ok: false, status: 404, error: "Guia não encontrada." };
+  }
+
+  // Cliente RLS: guia de outra equipa simplesmente não existe para este utilizador.
+  const supabase = await getSupabaseServerClient();
+  const { data: doc, error } = await supabase
+    .from("documents")
+    .select("id, storage_path, status")
+    .eq("id", documentId)
+    .maybeSingle();
+  if (error) {
+    console.error("[documents] falha ao ler a guia para enviar", {
+      documentId,
+      code: (error as { code?: string }).code,
+    });
+    return { ok: false, status: 500, error: "Erro interno." };
+  }
+  // Sem ficheiro no Storage não há guia para enviar — mesma resposta que invisível.
+  if (!doc || (doc as { storage_path: string | null }).storage_path === null) {
+    return { ok: false, status: 404, error: "Guia não encontrada." };
+  }
+
+  if ((doc as { status: string }).status !== "sent") {
+    const admin = getSupabaseAdminClient();
+    const { error: erroEscrita } = await admin
+      .from("documents")
+      .update({ status: "sent", sent_at: new Date().toISOString() })
+      .eq("id", documentId);
+    if (erroEscrita) {
+      console.error("[documents] falha ao marcar a guia como enviada", {
+        documentId,
+        code: (erroEscrita as { code?: string }).code,
+      });
+      return { ok: false, status: 500, error: "Erro interno." };
+    }
+  }
+
+  // Fail-open (como o resto da observabilidade do web): o registo do evento não
+  // pode derrubar a ação. Nunca leva PII — só o id da guia.
+  await logUserEvent({ action: "document_email_simulated", userId: auth.actor.id, data: { documentId } });
+  return { ok: true };
 }

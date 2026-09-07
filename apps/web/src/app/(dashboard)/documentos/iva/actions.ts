@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { enqueueIvaFetch, enqueueIvaFetchAll } from "@/lib/documents/service";
+import { enqueueIvaFetch, enqueueIvaFetchAll, sendIvaDocument } from "@/lib/documents/service";
 import { accessFromForm, forceFromForm, onlyMissingFromForm } from "@/lib/documents/bulk";
 
 // O tempo máximo destas ações é `maxDuration` em `page.tsx`: um ficheiro
@@ -61,4 +61,27 @@ export async function fetchAllIvaDocumentsAction(
 
   revalidatePath("/documentos/iva");
   return { ok: true, enqueued: result.enqueued, skipped: result.skipped };
+}
+
+export interface SendState {
+  ok?: boolean;
+  error?: string;
+}
+
+/**
+ * «Enviar ao cliente» — mock do passo seguinte: marca a guia como enviada e
+ * mostra uma confirmação, sem email real (ver `sendIvaDocument`).
+ */
+export async function sendIvaDocumentAction(
+  _prev: SendState,
+  formData: FormData,
+): Promise<SendState> {
+  const result = await sendIvaDocument(
+    String(formData.get("documentId") ?? ""),
+    String(formData.get("teamId") ?? ""),
+  );
+  if (!result.ok) return { error: result.error };
+
+  revalidatePath("/documentos/iva");
+  return { ok: true };
 }
