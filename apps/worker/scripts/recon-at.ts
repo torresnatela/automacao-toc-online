@@ -34,17 +34,24 @@ import { fileURLToPath } from "node:url";
 import { chromium, type BrowserContext, type Download, type Page, type Response } from "playwright";
 import { fingerprint, snapshotPage } from "../src/at/classify-page";
 import { installKeepNamesShim } from "../src/browser/keep-names-shim";
+import { PersistentChromiumBrowser } from "../src/browser/persistent-chromium";
 import { AT, TOC_DIRECT_ACCESS } from "../src/at/selectors";
 import { TOCONLINE } from "../src/toconline/selectors";
 
 /** Vagar deliberado: dá para ver o que o portal faz, e não parece um robô. */
 const SLOW_MO_MS = 250;
 /**
- * Perfil do Chrome quando a rota A precisa da extensão do TOConline carregada.
- * Resolvido a partir deste ficheiro (como a pasta dos artefactos): correr o
- * script de outra pasta não pode espalhar perfis de sessão pelo disco.
+ * Perfil do Chromium quando a rota A precisa da extensão do TOConline carregada
+ * — um perfil SÓ do reconhecimento, separado do do worker, para uma sessão
+ * observada à mão nunca ficar a valer num lote. Resolvido a partir deste
+ * ficheiro (como a pasta dos artefactos): correr o script de outra pasta não
+ * pode espalhar perfis de sessão pelo disco.
  */
-const PERFIL_CHROME_POR_OMISSAO = fileURLToPath(new URL("../.rpa/chrome-recon", import.meta.url));
+const PERFIL_CHROME_POR_OMISSAO = fileURLToPath(new URL("../.rpa/chromium-recon", import.meta.url));
+/** Onde `scripts/install-toconline-connect.ts` deixa a extensão por omissão. */
+const EXTENSAO_POR_OMISSAO = fileURLToPath(
+  new URL("../.rpa/extensions/toconline-connect", import.meta.url),
+);
 
 type Rota = "a" | "b";
 
@@ -66,7 +73,9 @@ Credenciais (só por ambiente, nunca por argumento):
   rota b → AT_RECON_USER, AT_RECON_PASSWORD
   rota a → TOCONLINE_USER, TOCONLINE_PASSWORD
 
-Opcional (rota a): RPA_CHROME_USER_DATA_DIR, RPA_CHROME_EXTENSION_DIR
+Opcional (rota a): RPA_CHROME_USER_DATA_DIR (perfil; omissão .rpa/chromium-recon),
+                   RPA_CHROME_EXTENSION_DIR (omissão .rpa/extensions/toconline-connect —
+                   instale com scripts/install-toconline-connect.ts)
 `.trim();
 
 /** Sai com uma mensagem. Nunca imprime valores de variáveis — só os NOMES. */
@@ -319,6 +328,24 @@ function escutarPagina(page: Page, registo: Registo): void {
       host: hostDe(page.url()),
     });
   });
+  // A sequência de hosts por que o separador passa (só o host, nunca a query,
+  // que na AT leva NIFs): na rota A é o que mostra se o login da extensão vai
+  // pelo acesso.gov.pt, se pára num desafio, e onde aterra.
+  page.on("framenavigated", (frame) => {
+    if (frame !== page.mainFrame()) return;
+    void registo.linha("pages.jsonl", {
+      ts: new Date().toISOString(),
+      event: "navigate",
+      host: hostDe(frame.url()),
+      path: (() => {
+        try {
+          return new URL(frame.url()).pathname;
+        } catch {
+          return null;
+        }
+      })(),
+    });
+  });
   // O ficheiro em si NÃO é guardado: é a guia real de um contribuinte. Só o
   // nome sugerido e o tamanho, que é o que diz como a AT entrega o PDF.
   page.on("download", (download: Download) => {
@@ -340,36 +367,38 @@ function escutarPagina(page: Page, registo: Registo): void {
   });
 }
 
-/** Abre o browser conforme a rota. A rota A pode precisar de um Chrome real. */
+/**
+ * Abre o browser conforme a rota.
+ *
+ * Rota A: o mesmo `PersistentChromiumBrowser` do worker (Chromium do Playwright
+ * com a extensão TOConline Connect descompactada — desde o Chrome 137 as builds
+ * de marca ignoram `--load-extension`), headed e com vagar. Rota B: um Chromium
+ * normal, que só precisa de um browser.
+ */
 async function abrirContexto(
   rota: Rota,
 ): Promise<{ context: BrowserContext; fechar: () => Promise<void> }> {
-  const extensao = process.env.RPA_CHROME_EXTENSION_DIR;
-
-  if (rota === "a" && extensao) {
-    // O Acesso Direto do TOConline passa por uma extensão do browser: sem um
-    // perfil persistente e sem a extensão carregada, não há o que observar.
-    const perfil = process.env.RPA_CHROME_USER_DATA_DIR || PERFIL_CHROME_POR_OMISSAO;
-    const context = await chromium.launchPersistentContext(perfil, {
-      channel: "chrome",
+  if (rota === "a") {
+    const persistent = new PersistentChromiumBrowser({
+      userDataDir: process.env.RPA_CHROME_USER_DATA_DIR || PERFIL_CHROME_POR_OMISSAO,
+      extensionDir: process.env.RPA_CHROME_EXTENSION_DIR || EXTENSAO_POR_OMISSAO,
       headless: false,
-      slowMo: SLOW_MO_MS,
-      acceptDownloads: true,
-      viewport: { width: 1600, height: 1000 },
-      locale: "pt-PT",
-      args: [`--disable-extensions-except=${extensao}`, `--load-extension=${extensao}`],
+      slowMoMs: SLOW_MO_MS,
     });
-    await installKeepNamesShim(context);
-    return { context, fechar: () => context.close() };
+    const context = await persistent.context();
+    const extensao = await persistent.extension();
+    if (extensao === null) {
+      console.error(
+        "[recon] AVISO: a extensão TOConline Connect NÃO carregou — o TOConline vai pedir para a instalar.\n" +
+          "[recon]        Corra scripts/install-toconline-connect.ts e confirme RPA_CHROME_EXTENSION_DIR.",
+      );
+    } else {
+      console.log(`[recon] extensão carregada: ${extensao.id} v${extensao.version}`);
+    }
+    return { context, fechar: () => persistent.close() };
   }
 
-  // `channel: "chrome"` na rota A (é o browser onde o gabinete tem o Acesso
-  // Direto); Chromium do Playwright na rota B, que só precisa de um browser.
-  const browser = await chromium.launch({
-    headless: false,
-    slowMo: SLOW_MO_MS,
-    ...(rota === "a" ? { channel: "chrome" } : {}),
-  });
+  const browser = await chromium.launch({ headless: false, slowMo: SLOW_MO_MS });
   const context = await browser.newContext({
     acceptDownloads: true,
     viewport: { width: 1600, height: 1000 },
@@ -481,9 +510,15 @@ async function rotaA(context: BrowserContext, registo: Registo, args: Argumentos
       // A troca de empresa ativa é uma função global da aplicação. Se ela mudou
       // de nome (ou deixou de existir), é exatamente isso que se veio descobrir
       // — daí o erro ser registado em vez de matar a sessão.
-      const chamada = `${TOC_DIRECT_ACCESS.switchEntityFn}(${args.tocCompanyId}, ${args.tocCluster})`;
+      const chamada = `${TOC_DIRECT_ACCESS.appElement}.${TOC_DIRECT_ACCESS.switchEntityFn}(${args.tocCompanyId}, "${TOC_DIRECT_ACCESS.vaultActionsPath}")`;
       try {
-        await page.evaluate(chamada);
+        await page
+          .evaluate(
+            ([appElement, fn, id, url]) =>
+              ((globalThis as unknown as { document: { querySelector: (s: string) => unknown } }).document.querySelector(appElement) as Record<string, (i: number, u: string) => unknown>)[fn]!(id, url),
+            [TOC_DIRECT_ACCESS.appElement, TOC_DIRECT_ACCESS.switchEntityFn, args.tocCompanyId ?? 0, TOC_DIRECT_ACCESS.vaultActionsPath] as const,
+          )
+          .catch(() => undefined);
         console.log(`[recon] switch de empresa executado: ${chamada}`);
       } catch (err) {
         console.error(`[recon] switch de empresa FALHOU (${chamada}): ${mensagemDe(err)}`);
@@ -497,21 +532,38 @@ async function rotaA(context: BrowserContext, registo: Registo, args: Argumentos
     },
   );
 
-  await irPara(page, new URL(TOC_DIRECT_ACCESS.summaryPath, page.url()).toString());
-  await etapa(registo, page, "summary", "SUMÁRIO: localize o menu 'Acesso Direto' e retome.");
+  // Navegação pela própria app: um `goto` depois do login derruba a sessão.
+  await page
+    .evaluate(
+      ([appElement, changeRoute, url]) =>
+        ((globalThis as unknown as { document: { querySelector: (s: string) => unknown } }).document.querySelector(appElement) as Record<string, (u: string) => void>)[changeRoute]!(url),
+      [TOC_DIRECT_ACCESS.appElement, TOC_DIRECT_ACCESS.changeRouteFn, TOC_DIRECT_ACCESS.vaultActionsPath] as const,
+    )
+    .catch((err) => console.error(`[recon] changeRoute falhou: ${mensagemDe(err)}`));
+  await etapa(
+    registo,
+    page,
+    "summary",
+    "SUMÁRIO: (a) o TOConline reconhece a extensão ou pede para a instalar? (b) localize o menu " +
+      "'Acesso Direto' e anote a estrutura (é Shadow DOM: seletores CSS, nunca XPath); (c) confira " +
+      "a redação quando a senha da AT da empresa NÃO está gravada (teste com uma empresa sem senha). Retome.",
+  );
 
   await etapa(
     registo,
     page,
     "direct_access",
-    "ACESSO DIRETO: clique em 'Portal das Finanças' e retome (repare no popup).",
+    "ACESSO DIRETO: clique em 'Portal das Finanças'. Observe: (d) aparece algum diálogo antes " +
+      "(escolha de senha/utilizador)? (e) abre um separador novo? por que hosts passa (pages.jsonl)? " +
+      "(f) a AT pede código por SMS/2FA? (g) a extensão fecha o separador? Retome com a AT aberta.",
   );
 
   await etapa(
     registo,
     page,
     "at_landing",
-    "ATERRAGEM NA AT: confirme o host e que a sessão é da empresa certa.",
+    "ATERRAGEM NA AT: confirme o host, que a sessão é da empresa certa (NIF no ecrã), e experimente " +
+      `os caminhos diretos ${AT.paths.direct.consultarDeclaracao} e ${AT.paths.direct.obterDocumentoPagamento}.`,
   );
 
   await etapa(

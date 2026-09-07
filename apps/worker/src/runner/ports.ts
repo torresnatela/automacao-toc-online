@@ -176,6 +176,16 @@ export interface OpenedAtSession {
 export type AtPrecondition =
   { ok: true } | { ok: false; outcome: "company_not_linked" | "company_nif_missing" };
 
+/**
+ * Onde o adaptador deixa os marcos da abertura da sessão — o `log` do evento
+ * `rpa.at.session` que o runner abriu. Só códigos, hosts e booleanos: nunca
+ * NIF, nome, senha ou texto do portal.
+ */
+export interface SessionLog {
+  info(message: string, data?: Record<string, unknown>): Promise<void>;
+  warn(message: string, data?: Record<string, unknown>): Promise<void>;
+}
+
 export interface AtSessionFactory {
   readonly access: AtAccessMode;
   /**
@@ -190,6 +200,7 @@ export interface AtSessionFactory {
     credentialId: string;
     credentials: PortalCredentials;
     scope: CredentialScope;
+    log?: SessionLog;
   }): Promise<OpenedAtSession>;
 }
 

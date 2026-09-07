@@ -1,4 +1,3 @@
-import { taxIdMatches } from "@toc/core/domain";
 import type { BrowserContext, Page, Response } from "playwright";
 import type { BrowserProvider } from "../browser/browser";
 import { AtAuthError, AtIntegrityError, AtTransientError } from "../errors";
@@ -14,6 +13,9 @@ import type {
 } from "../runner/ports";
 import type { StorageStateStore } from "../toconline/storage-state";
 import { classifyAtPage, fingerprint, snapshotPage, type AtPageSnapshot } from "./classify-page";
+import { followDocument } from "./follow-document";
+import { assertSessionBelongsTo } from "./guards";
+import { loginErrorFrom } from "./login-errors";
 import { assertAtHost, AT, type AtOptions } from "./selectors";
 
 /**
@@ -43,9 +45,6 @@ import { assertAtHost, AT, type AtOptions } from "./selectors";
  * redirect e um login na mesma — do que autenticar já.
  */
 const VALIDADE_DO_ESTADO_MS = 12 * 60 * 60 * 1000;
-
-/** O NIF que a página afirma estar a mostrar. Só dígitos, nunca guardado. */
-const NIF_NO_TEXTO = /NIF[:\s]+(\d{9})/;
 
 export class AcessoGovAtSessions implements AtSessionFactory {
   readonly access = "at_direct_login" as const;
@@ -179,7 +178,7 @@ export class AcessoGovAtSessions implements AtSessionFactory {
     try {
       // Idem `tryReuse`: dentro do `try`, para o contexto nunca ficar órfão.
       page = await context.newPage();
-      const documento = seguirODocumento(page);
+      const documento = followDocument(page);
 
       await page.goto(this.options.loginUrl ?? AT.loginUrl, {
         waitUntil: "domcontentloaded",
@@ -222,56 +221,13 @@ export class AcessoGovAtSessions implements AtSessionFactory {
     }
   }
 
-  /**
-   * O que a AT disse quando o login não chegou ao portal.
-   *
-   * Cada ramo tem um custo diferente e é por isso que nenhum é o `else` do
-   * outro: `AtAuthError` marca a credencial e mata os jobs seguintes na
-   * pré-condição; `AtTransientError` volta à fila com backoff; e o desconhecido
-   * é estrutural, com a assinatura redigida da página para se perceber o que
-   * mudou sem guardar o portal.
-   */
+  /** O que a AT disse quando o login não chegou ao portal (ver `login-errors.ts`). */
   private async erroDeLogin(page: Page, resposta: Response | null): Promise<Error> {
     // O `status` é o que separa "o portal está em baixo" de "a página é
     // estranha": um 5xx pode vir com qualquer corpo, incluindo um sem palavra
     // nenhuma que a redação reconheça. Sem ele, uma avaria da AT era
     // classificada como `unknown` — estrutural — e matava o lote inteiro.
-    const snapshot: AtPageSnapshot = {
-      ...(await snapshotPage(page)),
-      ...(resposta === null ? {} : { status: resposta.status() }),
-    };
-    const pagina = classifyAtPage(snapshot, this.padroes);
-    switch (pagina.kind) {
-      case "login_rejected":
-        return pagina.attemptsLeft === null
-          ? new AtAuthError("rejected")
-          : new AtAuthError("rejected", pagina.attemptsLeft);
-      case "password_blocked":
-        return new AtAuthError("blocked");
-      case "mfa_challenge":
-        return new AtAuthError("two_factor");
-      case "password_change":
-        return new AtAuthError("expired");
-      case "login_form":
-        // O formulário devolvido sem aviso nenhum é uma avaria do portal, não
-        // uma recusa. Tratá-lo como recusa marcaria uma credencial boa.
-        return new AtTransientError(
-          "at_unavailable",
-          "A AT não concluiu o login dentro do tempo previsto.",
-        );
-      case "maintenance":
-      case "server_error":
-        return new AtTransientError(
-          "at_unavailable",
-          "O Portal das Finanças está indisponível de momento.",
-        );
-      default:
-        return new AtIntegrityError(
-          "at_unexpected_page",
-          "O Portal das Finanças respondeu com uma página inesperada durante a autenticação.",
-          fingerprint(snapshot),
-        );
-    }
+    return loginErrorFrom(await this.fotografar(page, resposta), this.padroes);
   }
 
   /**
@@ -289,7 +245,7 @@ export class AcessoGovAtSessions implements AtSessionFactory {
     origin: string,
     company: AtCompanyHandle,
   ): Promise<void> {
-    const documento = seguirODocumento(page);
+    const documento = followDocument(page);
     try {
       const chegada = await page.goto(`${origin}${AT.paths.cc.listaClientes}`, {
         waitUntil: "domcontentloaded",
@@ -311,16 +267,7 @@ export class AcessoGovAtSessions implements AtSessionFactory {
       const snapshot = await this.fotografar(page, documento.ultima);
       await this.exigirPortal(key, page, null, snapshot);
 
-      const mostrado = NIF_NO_TEXTO.exec(snapshot.text)?.[1] ?? null;
-      if (mostrado !== null && taxIdMatches(mostrado, company.nif ?? "") === false) {
-        // Nem a mensagem nem o fingerprint levam NIFs: este erro acaba num
-        // `last_error` que o dashboard mostra a quem estiver a olhar.
-        throw new AtIntegrityError(
-          "at_session_mismatch",
-          "A sessão aberta no portal não é a do contribuinte pedido.",
-          {},
-        );
-      }
+      assertSessionBelongsTo(snapshot.text, company.nif);
     } finally {
       documento.parar();
     }
@@ -400,36 +347,6 @@ export class AcessoGovAtSessions implements AtSessionFactory {
       },
     };
   }
-}
-
-/**
- * Guarda a última resposta do **documento principal** enquanto uma navegação
- * decorre, para o classificador poder ver o código HTTP.
- *
- * Um `Page` não sabe com que status foi servido, e nem toda a navegação passa
- * por um `goto` que devolva a `Response` — o submit de um formulário, por
- * exemplo. Sem isto, um 503 com um corpo que a redação não reconhece era
- * classificado como página desconhecida, ou seja, estrutural: uma avaria de
- * minutos na AT gastava a fila inteira sem retentativa nenhuma.
- *
- * O estado vive num objeto e não numa variável solta de propósito: o
- * TypeScript não vê as atribuições feitas dentro do ouvinte e estreitaria uma
- * variável `let` para `null` no ponto de leitura.
- */
-function seguirODocumento(page: Page): { readonly ultima: Response | null; parar(): void } {
-  const registo: { ultima: Response | null } = { ultima: null };
-  const ouvinte = (resposta: Response): void => {
-    if (!resposta.request().isNavigationRequest()) return;
-    if (resposta.frame() !== page.mainFrame()) return;
-    registo.ultima = resposta;
-  };
-  page.on("response", ouvinte);
-  return {
-    get ultima(): Response | null {
-      return registo.ultima;
-    },
-    parar: () => page.removeListener("response", ouvinte),
-  };
 }
 
 type CaminhosDoPortal = { consultarDeclaracao: string; obterDocumentoPagamento: string };

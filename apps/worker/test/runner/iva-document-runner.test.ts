@@ -90,7 +90,8 @@ function job(over: Partial<ClaimedJob> = {}): ClaimedJob {
 
 interface BuildOptions {
   credentials?: FakeCredentials;
-  sessions?: FakeSessions;
+  /** Uma fábrica (o caso comum nos testes) ou a lista completa, uma por rota. */
+  sessions?: FakeSessions | FakeSessions[];
   declarations?: FakeDeclarations;
   documents?: FakeDocuments;
   storage?: FakeStorage;
@@ -102,7 +103,9 @@ interface BuildOptions {
 
 function build(opts: BuildOptions = {}) {
   const credentials = opts.credentials ?? new FakeCredentials();
-  const sessions = opts.sessions ?? new FakeSessions();
+  const registo = opts.sessions ?? new FakeSessions();
+  const fabricas = Array.isArray(registo) ? registo : [registo];
+  const sessions = fabricas[0]!;
   const declarations = opts.declarations ?? new FakeDeclarations();
   const documents = opts.documents ?? new FakeDocuments();
   const storage = opts.storage ?? new FakeStorage();
@@ -116,7 +119,7 @@ function build(opts: BuildOptions = {}) {
     tracer: createTracer(store),
     store,
     credentials,
-    sessions,
+    sessions: fabricas,
     declarations,
     documents,
     storage,
@@ -1341,6 +1344,80 @@ describe("IvaDocumentRunner", () => {
       for (const proibido of [NIF, "https://"]) {
         expect(tudo).not.toContain(proibido);
       }
+    });
+  });
+  describe("registo de fábricas de sessão (uma por rota)", () => {
+    const jobRotaA = () => job({ payload: payload({ access: "toconline_direct_access" }) });
+
+    it("um job de uma rota sem fábrica registada termina em payload_invalid sem tocar no browser", async () => {
+      const soRotaB = new FakeSessions({ access: "at_direct_login" });
+      const { runner } = build({
+        sessions: [soRotaB],
+        credentials: new FakeCredentials(CREDENCIAL_TOCONLINE),
+      });
+
+      const outcome = await runner.run(jobRotaA());
+
+      expect(outcome).toMatchObject({ status: "failed", retry: false, code: "payload_invalid" });
+      expect(soRotaB.opened).toBe(0);
+    });
+
+    it("com as duas fábricas registadas, cada job vai à da sua rota", async () => {
+      const rotaB = new FakeSessions({ access: "at_direct_login" });
+      const rotaA = new FakeSessions({ access: "toconline_direct_access" });
+
+      const b = build({ sessions: [rotaB, rotaA] });
+      await b.runner.run(job());
+      expect(rotaB.opened).toBe(1);
+      expect(rotaA.opened).toBe(0);
+
+      const a = build({
+        sessions: [rotaB, rotaA],
+        credentials: new FakeCredentials(CREDENCIAL_TOCONLINE),
+      });
+      await a.runner.run(jobRotaA());
+      expect(rotaA.opened).toBe(1);
+      expect(rotaB.opened).toBe(1);
+    });
+
+    it("o adaptador recebe um log do trace e o que lá escreve fica no trace", async () => {
+      const rotaA = new FakeSessions({ access: "toconline_direct_access" });
+      const { runner } = build({
+        sessions: [rotaA],
+        credentials: new FakeCredentials(CREDENCIAL_TOCONLINE),
+      });
+
+      await runner.run(jobRotaA());
+
+      const log = rotaA.openInputs[0]?.log;
+      expect(log).toBeDefined();
+      await log!.info("acesso direto aberto", { host: "sitfiscal.example" });
+      expect([...store.logs.values()].some((l) => l.message === "acesso direto aberto")).toBe(true);
+    });
+
+    it("na rota A o trace ganha o passo rpa.toconline.direct_access, filho de rpa.at.session", async () => {
+      const rotaA = new FakeSessions({ access: "toconline_direct_access" });
+      const { runner } = build({
+        sessions: [rotaA],
+        credentials: new FakeCredentials(CREDENCIAL_TOCONLINE),
+      });
+
+      await runner.run(jobRotaA());
+
+      const eventos = [...store.events.values()];
+      const sessao = eventos.find((e) => e.type === "rpa.at.session");
+      const direto = eventos.find((e) => e.type === "rpa.toconline.direct_access");
+      expect(direto).toBeDefined();
+      expect(direto?.parentEventId).toBe(sessao?.id);
+      expect(direto?.status).toBe("succeeded");
+    });
+
+    it("na rota B não há passo rpa.toconline.direct_access", async () => {
+      const { runner } = build({ sessions: [new FakeSessions({ access: "at_direct_login" })] });
+
+      await runner.run(job());
+
+      expect(tiposDosEventos()).not.toContain("rpa.toconline.direct_access");
     });
   });
 });

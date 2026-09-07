@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { ivaFetchReadiness, selectAccessCredential, type AtAccessMode } from "@toc/core/domain";
 import {
   FORCE_FLAG,
+  accessFromForm,
   buildBulkRows,
   bulkRowsFromReads,
   companyForEnqueue,
@@ -254,6 +255,7 @@ describe("bulkRowsFromReads", () => {
       period: null,
       due_date: null,
       job_period: null,
+      job_access: null,
       ...over,
     } as IvaDocumentRow;
   }
@@ -450,6 +452,16 @@ describe("leitura das opções do formulário", () => {
     expect(onlyMissingFromForm("on")).toBe(true);
     expect(onlyMissingFromForm(null)).toBe(false);
     expect(onlyMissingFromForm("1")).toBe(false);
+  });
+
+  it("lê o modo de acesso do campo escondido e cai na rota B com o que não conhece", () => {
+    // Cada botão escreve a sua rota; um formulário antigo (sem o campo) ou um
+    // valor forjado não podem escolher uma rota que ninguém pediu — e a B é a
+    // que não depende de nada configurado no TOConline.
+    expect(accessFromForm("toconline_direct_access")).toBe("toconline_direct_access");
+    expect(accessFromForm("at_direct_login")).toBe("at_direct_login");
+    expect(accessFromForm(null)).toBe("at_direct_login");
+    expect(accessFromForm("lixo")).toBe("at_direct_login");
   });
 });
 

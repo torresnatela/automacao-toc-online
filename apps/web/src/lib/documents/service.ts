@@ -3,6 +3,7 @@ import { requireWriterOn } from "@/lib/auth";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { startAction } from "@/lib/observability";
+import { logUserEvent } from "@/lib/observability/tracer";
 import {
   IVA_DOCUMENT_JOB_TYPE,
   IVA_OUTCOMES,
@@ -10,11 +11,11 @@ import {
   planBulkFetch,
   providerForAccess,
   selectAccessCredential,
+  type AtAccessMode,
   type CredentialCandidate,
   type IvaDocumentJobPayload,
   type IvaNotReadyReason,
 } from "@toc/core/domain";
-import { getAtAccessMode } from "./access";
 import { notReadyCopy, type IvaDocumentRow } from "./present";
 import {
   bulkRowsFromReads,
@@ -44,7 +45,7 @@ export type { IvaEnqueueResult, IvaEnqueueStatus } from "./bulk";
  * devia ir. É a mesma disciplina de `SAFE_COLUMNS` nas credenciais.
  */
 export const OVERVIEW_COLUMNS =
-  "company_id, team_id, company_name, nif, company_status, toconline_company_id, toconline_cluster, period_id, period, period_status, due_date, document_id, entity, reference, amount, valid_until, document_status, has_file, extracted_at, job_id, job_status, job_outcome, job_period, job_batch_id, job_error, job_trace_id, job_attempts, job_created_at, job_finished_at, job_deferred";
+  "company_id, team_id, company_name, nif, company_status, toconline_company_id, toconline_cluster, period_id, period, period_status, due_date, document_id, entity, reference, amount, valid_until, document_status, has_file, extracted_at, job_id, job_status, job_outcome, job_period, job_batch_id, job_error, job_trace_id, job_attempts, job_created_at, job_finished_at, job_deferred, job_access";
 
 /** Os providers que podem abrir a sessão do IVA, seja qual for a rota. */
 const ACCESS_PROVIDERS = ["at", "toconline"];
@@ -171,7 +172,12 @@ async function inFlightJobId(admin: Admin, companyId: string): Promise<string | 
 }
 
 /**
- * Enfileira a busca da guia de uma empresa.
+ * Enfileira a busca da guia de uma empresa, pela rota que o operador escolheu.
+ *
+ * A rota (`opts.access`) é a do botão em que se clicou — «Buscar» entra
+ * diretamente na AT, «Buscar via TOConline» usa o Acesso Direto — e não uma
+ * configuração do sistema: a credencial e a prontidão recalculam-se aqui para
+ * **ela**, com as mesmas funções do domínio que desenharam o botão.
  *
  * A ordem das verificações é a ordem por que se resolvem os problemas, e
  * termina no que só a base de dados sabe: o índice parcial
@@ -179,12 +185,13 @@ async function inFlightJobId(admin: Admin, companyId: string): Promise<string | 
  * empresa". A leitura do passo 4 é o caminho normal (dá uma mensagem honesta ao
  * primeiro clique repetido); o `23505` é a rede para a corrida que a leitura não
  * apanha — dois separadores abertos, dois operadores, o lote e o botão ao mesmo
- * tempo.
+ * tempo. As duas são deliberadamente cegas à rota: um job em curso é um job em
+ * curso, e o segundo clique pela OUTRA rota recebe o mesmo «já em curso».
  */
 export async function enqueueIvaFetch(
   companyId: string,
-  requestedTeamId = "",
-  opts: { batchId?: string; force?: boolean } = {},
+  requestedTeamId: string,
+  opts: { access: AtAccessMode; batchId?: string; force?: boolean },
 ): Promise<IvaEnqueueResult> {
   const auth = await requireWriterOn(requestedTeamId);
   if (!auth.ok) return { ok: false, status: enqueueStatus(auth.status), error: auth.error };
@@ -206,7 +213,7 @@ export async function enqueueIvaFetch(
   if (!resolved.ok) return { ok: false, status: resolved.status, error: resolved.error };
   const company = resolved.company;
 
-  const access = getAtAccessMode();
+  const access = opts.access;
   const provider = providerForAccess(access);
   const credentials = await accessCredentials(admin, teamId, companyId);
   // Sem esta guarda, uma leitura falhada daria `candidates = []`, a prontidão
@@ -263,6 +270,7 @@ export async function enqueueIvaFetch(
       payload: {
         teamId,
         companyId,
+        access,
         provider,
         jobType: IVA_DOCUMENT_JOB_TYPE,
         ...(opts.batchId === undefined ? {} : { batchId: opts.batchId }),
@@ -301,7 +309,12 @@ export async function enqueueIvaFetch(
 }
 
 /**
- * Enfileira a busca de todas as empresas da equipa.
+ * Enfileira a busca de todas as empresas da equipa, pela rota escolhida.
+ *
+ * Há um «buscar todas» por rota, e cada um planeia com a prontidão da SUA rota
+ * (`opts.access`): o da rota A conta só as empresas com ligação ao TOConline, o
+ * da rota B as que têm NIF. As empresas já em curso saltam-se seja qual for a
+ * rota que as pôs em curso.
  *
  * O lote tem trace próprio, fechado **aqui** com `success()`: o trabalho do lote
  * é decidir e enfileirar, e acaba quando o último job entra na fila. Um trace
@@ -316,15 +329,15 @@ export async function enqueueIvaFetch(
  * algo que ele arruma como feito.
  */
 export async function enqueueIvaFetchAll(
-  requestedTeamId = "",
-  opts: { onlyMissing: boolean } = { onlyMissing: true },
+  requestedTeamId: string,
+  opts: { access: AtAccessMode; onlyMissing: boolean },
 ): Promise<IvaBatchResult | { ok: false; status: number; error: string }> {
   const auth = await requireWriterOn(requestedTeamId);
   if (!auth.ok) return auth;
   const { actor, teamId } = auth;
 
   const admin = getSupabaseAdminClient();
-  const access = getAtAccessMode();
+  const access = opts.access;
   const provider = providerForAccess(access);
 
   const batchId = crypto.randomUUID();
@@ -334,7 +347,7 @@ export async function enqueueIvaFetchAll(
     type: "job.batch_enqueued",
     createdBy: actor.id,
     correlationKey: `team:${teamId}:iva`,
-    payload: { teamId, batchId, provider, ...payload },
+    payload: { teamId, batchId, access, provider, ...payload },
   });
 
   let batch: Awaited<ReturnType<typeof startAction>> | undefined;
@@ -399,7 +412,7 @@ export async function enqueueIvaFetchAll(
     for (let i = 0; i < plan.toEnqueue.length; i += BATCH_CONCURRENCY) {
       const chunk = plan.toEnqueue.slice(i, i + BATCH_CONCURRENCY);
       const results = await Promise.all(
-        chunk.map((id) => enqueueIvaFetch(id, teamId, { batchId })),
+        chunk.map((id) => enqueueIvaFetch(id, teamId, { access, batchId })),
       );
       for (const result of results) {
         if (!result.ok) outcomes.push("failed");
@@ -415,4 +428,71 @@ export async function enqueueIvaFetchAll(
     await batch?.failure(message);
     return { ok: false, status: 500, error: "Erro interno." };
   }
+}
+
+/** Um id de documento malformado é 404, não 500 (o cast para uuid rebentaria). */
+const DOCUMENT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export type SendResult = { ok: true } | { ok: false; status: number; error: string };
+
+/**
+ * «Enviar ao cliente» — por agora um **mock**: marca a guia como enviada
+ * (`documents.status = 'sent'`, `sent_at`) e regista a intenção, sem mandar
+ * email nenhum. O envio real (anexar o PDF e disparar o email) é o passo
+ * seguinte; esta função existe para o fluxo ficar completo de ponta a ponta na
+ * interface.
+ *
+ * Autorização como na rota de download: lê-se a linha com o cliente **RLS** (a
+ * visibilidade É a autorização — guia de outra equipa é 404), só depois se
+ * escreve com a service role. Idempotente: reenviar não volta a marcar nem
+ * falha.
+ */
+export async function sendIvaDocument(
+  documentId: string,
+  requestedTeamId: string,
+): Promise<SendResult> {
+  const auth = await requireWriterOn(requestedTeamId);
+  if (!auth.ok) return { ok: false, status: enqueueStatus(auth.status), error: auth.error };
+  if (!DOCUMENT_ID.test(documentId)) {
+    return { ok: false, status: 404, error: "Guia não encontrada." };
+  }
+
+  // Cliente RLS: guia de outra equipa simplesmente não existe para este utilizador.
+  const supabase = await getSupabaseServerClient();
+  const { data: doc, error } = await supabase
+    .from("documents")
+    .select("id, storage_path, status")
+    .eq("id", documentId)
+    .maybeSingle();
+  if (error) {
+    console.error("[documents] falha ao ler a guia para enviar", {
+      documentId,
+      code: (error as { code?: string }).code,
+    });
+    return { ok: false, status: 500, error: "Erro interno." };
+  }
+  // Sem ficheiro no Storage não há guia para enviar — mesma resposta que invisível.
+  if (!doc || (doc as { storage_path: string | null }).storage_path === null) {
+    return { ok: false, status: 404, error: "Guia não encontrada." };
+  }
+
+  if ((doc as { status: string }).status !== "sent") {
+    const admin = getSupabaseAdminClient();
+    const { error: erroEscrita } = await admin
+      .from("documents")
+      .update({ status: "sent", sent_at: new Date().toISOString() })
+      .eq("id", documentId);
+    if (erroEscrita) {
+      console.error("[documents] falha ao marcar a guia como enviada", {
+        documentId,
+        code: (erroEscrita as { code?: string }).code,
+      });
+      return { ok: false, status: 500, error: "Erro interno." };
+    }
+  }
+
+  // Fail-open (como o resto da observabilidade do web): o registo do evento não
+  // pode derrubar a ação. Nunca leva PII — só o id da guia.
+  await logUserEvent({ action: "document_email_simulated", userId: auth.actor.id, data: { documentId } });
+  return { ok: true };
 }

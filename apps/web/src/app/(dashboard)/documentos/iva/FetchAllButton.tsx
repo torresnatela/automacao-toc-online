@@ -2,9 +2,10 @@
 
 import { useActionState, useId, useState } from "react";
 import { DownloadCloud } from "lucide-react";
+import type { AtAccessMode } from "@toc/core/domain";
 import { fetchAllIvaDocumentsAction, type FetchAllState } from "./actions";
 import type { BulkPlanSummary } from "@/lib/documents/bulk";
-import { formatNotReadyReasons } from "@/lib/documents/present";
+import { BULK_COPY, formatNotReadyReasons } from "@/lib/documents/present";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -20,6 +21,8 @@ import {
 
 export interface FetchAllButtonProps {
   teamId: string;
+  /** A rota deste lote: há um «buscar todas» por rota, cada um com o seu plano. */
+  access: AtAccessMode;
   /**
    * O plano tal como o servidor o calculou, com a MESMA `planBulkFetch` que a
    * ação vai correr. É o que permite anunciar quantas empresas serão
@@ -44,7 +47,10 @@ export interface FetchAllButtonProps {
  * diálogo é uma intenção e o `role="status"` do fim é o que realmente
  * aconteceu — os dois podem legitimamente não coincidir.
  */
-export function FetchAllButton({ teamId, plan, peak }: FetchAllButtonProps) {
+export function FetchAllButton({ teamId, access, plan, peak }: FetchAllButtonProps) {
+  const copy = BULK_COPY[access];
+  // A rota B é o botão de sempre e fica com o destaque; a A anuncia-se ao lado.
+  const variant = access === "at_direct_login" ? "accent" : "outline";
   const [state, formAction, pending] = useActionState<FetchAllState, FormData>(
     fetchAllIvaDocumentsAction,
     {},
@@ -89,12 +95,12 @@ export function FetchAllButton({ teamId, plan, peak }: FetchAllButtonProps) {
       >
         <DialogTrigger asChild>
           <Button
-            variant="accent"
+            variant={variant}
             disabled={nothingReady}
             title={nothingReady ? "Nenhuma empresa pronta para buscar." : undefined}
             aria-describedby={nothingReady ? motivoId : undefined}
           >
-            <DownloadCloud aria-hidden /> Buscar todas
+            <DownloadCloud aria-hidden /> {copy.button}
           </Button>
         </DialogTrigger>
 
@@ -110,7 +116,7 @@ export function FetchAllButton({ teamId, plan, peak }: FetchAllButtonProps) {
 
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Buscar guias de IVA de todas as empresas?</DialogTitle>
+            <DialogTitle>{copy.title}</DialogTitle>
             <DialogDescription>
               Vai enfileirar <strong>{plan.ready}</strong> empresas. {plan.inFlight} já estão em
               curso e {plan.notReady} não estão prontas
@@ -120,6 +126,7 @@ export function FetchAllButton({ teamId, plan, peak }: FetchAllButtonProps) {
 
           <form action={formAction} className="grid gap-4">
             <input type="hidden" name="teamId" value={teamId} />
+            <input type="hidden" name="access" value={access} />
 
             <label className="flex items-start gap-2 text-sm">
               <input
@@ -147,7 +154,7 @@ export function FetchAllButton({ teamId, plan, peak }: FetchAllButtonProps) {
                   Cancelar
                 </Button>
               </DialogClose>
-              <Button type="submit" variant="accent" disabled={pending}>
+              <Button type="submit" variant={variant} disabled={pending}>
                 {pending ? "A enfileirar…" : `Enfileirar ${total}`}
               </Button>
             </DialogFooter>

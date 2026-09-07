@@ -140,7 +140,11 @@ Uma linha por empresa (left joins com laterais para "o período mais recente" e 
 com `security_invoker = true` — ao contrário de `integration_credentials_safe`, esta view
 **não** faz bypass de RLS: quem lê fica sujeito às policies de `companies`/`obligations`/
 `obligation_periods`/`documents`/`jobs`, o mesmo escopo por equipe já escrito nelas. Expõe
-`has_file` (`storage_path is not null`) e nunca o `storage_path`.
+`has_file` (`storage_path is not null`) e nunca o `storage_path`. Expõe também `job_access`
+(`jobs.payload->>'access'`, migration `20260906120000_iva_view_job_access_rls.sql`): por que
+rota correu o último job — é o que a listagem mostra ao lado do estado para comparar «login
+direto na AT» e «via TOConline», e o que decide para que ecrã manda o link da credencial.
+`null` nos jobs anteriores à coluna.
 
 Os literais `'iva'`, `'iva_payment'` e `'rpa.fetch_iva_document'` na definição da view espelham
 `IVA_OBLIGATION_KIND`/`IVA_DOCUMENT_TYPE`/`IVA_DOCUMENT_JOB_TYPE` de `@toc/core/domain` — mudá-

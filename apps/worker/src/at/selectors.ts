@@ -50,6 +50,12 @@ export const AT = {
   loginHostPattern: /^www\.acesso\.gov\.pt$/,
   /** Hosts aceites depois de autenticar. O `$` é o que trava `…gov.pt.evil.com`. */
   portalHostPattern: /^(iva|www|sitfiscal)\.portaldasfinancas\.gov\.pt$/,
+  /**
+   * Domínios de cookie da AT — o que a rota A limpa entre empresas no perfil
+   * persistente. Login e portal, porque a sessão do `acesso.gov.pt` também é
+   * do contribuinte e sobreviveria à limpeza do portal sozinho.
+   */
+  cookieDomainPattern: /(^|\.)(portaldasfinancas\.gov\.pt|acesso\.gov\.pt)$/,
 
   // TODO(recon): tudo daqui para baixo é palpite até à Fase 0.
   login: {
@@ -90,16 +96,50 @@ export const AT = {
 } as const;
 
 /**
- * Rota A — chegar à AT por dentro do TOConline (Acesso Direto), sem gastar
- * credenciais da AT. Só entra em jogo se a Fase 0 mostrar que funciona.
+ * Rota A — chegar à AT por dentro do TOConline (Acesso Direto).
+ *
+ * Observado no reconhecimento de 2026-09-06 em `app13.toconline.pt`:
+ * - a aplicação é uma SPA Polymer (`<toc-app>`) em Shadow DOM; a sessão está
+ *   em `toc-app.session_data` (`session_loaded`, `entity_id`), e a troca de
+ *   empresa ativa é o **método** `toc-app.switchToEntityAndNotifyPages(id, url)`
+ *   (não um global), que faz uma navegação completa para `url` já dentro da
+ *   empresa;
+ * - navegações completas (`page.goto`) feitas por nós depois do login
+ *   **derrubam a sessão** (a validação devolve ao `/login`); dentro da app
+ *   navega-se por `toc-app.changeRoute(url)`;
+ * - o Acesso Direto é a página `/vault-actions` (menu Empresa → Acesso Direto):
+ *   uma grelha com a entidade «Portal das Finanças - Autoridade Tributária e
+ *   Aduaneira» e as suas ações (DPIVA, Mod. 22, …); a classe `valid` marca uma
+ *   senha gravada e validada, e o cofre (`window.vault`, um `<toc-vault>`)
+ *   expõe `accesses.company.AT`.
+ * - **clica-se na ENTIDADE, não numa ação.** Observado ao vivo em 2026-09-07:
+ *   o atalho «DPIVA - Obter documento de pagamento» do TOConline é intermitente
+ *   («O acesso está indisponível») e aterra numa página fora do fluxo. Clicar na
+ *   entidade «Portal das Finanças» abre a AT autenticada na sua página inicial,
+ *   e daí navega-se para a declaração/documento com os nossos próprios `urls`.
  */
 export const TOC_DIRECT_ACCESS = {
-  summaryPath: "/summary",
-  directAccessMenu: 'text="Acesso Direto"',
-  portalFinancasItem: 'text="Portal das Finanças"',
-  /** Função global do TOConline que troca a empresa ativa da sessão. */
+  /** Elemento raiz da aplicação; é nele que vivem a sessão e a troca de empresa. */
+  appElement: "toc-app",
+  /** Método da `toc-app` que veste a empresa e navega para `url`. */
   switchEntityFn: "switchToEntityAndNotifyPages",
-} as const; // TODO(recon)
+  /** Método da `toc-app` que navega dentro da SPA sem derrubar a sessão. */
+  changeRouteFn: "changeRoute",
+  /** Página do Acesso Direto da empresa ativa. */
+  vaultActionsPath: "/vault-actions",
+  /** Campo do formulário de login — presente só quando a app nos devolveu ao login. */
+  loginField: 'input[type="email"]',
+  /**
+   * A entidade da AT no cofre — **o que se clica** para abrir a AT autenticada
+   * na sua página inicial (não uma ação: o atalho de ação do TOConline é
+   * intermitente). A partir daqui o fluxo navega com os nossos `urls`.
+   */
+  portalEntity: 'span.entity_title:has-text("Portal das Finanças")',
+  /** A mesma entidade já validada pelo cofre (senha gravada e aceite): só esta se clica. */
+  portalEntityValid: 'span.entity_title.valid:has-text("Portal das Finanças")',
+  /** Quanto se espera pela app ficar pronta (`session_loaded`) ou devolver o login. */
+  appReadyTimeoutMs: 40_000,
+} as const;
 
 /**
  * O que um adaptador da AT aceita ver substituído. Existe para os testes

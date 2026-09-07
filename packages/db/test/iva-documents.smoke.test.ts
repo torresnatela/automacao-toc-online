@@ -17,6 +17,7 @@ import {
 // a migration mudar, os testes 4/5 caem. Caminho relativo ao source do @toc/core
 // porque @toc/db não pode depender de @toc/core (@toc/core já depende de @toc/db).
 import {
+  AT_ACCESS_MODES,
   IVA_DOCUMENT_JOB_TYPE,
   IVA_DOCUMENT_TYPE,
   IVA_OBLIGATION_KIND,
@@ -291,6 +292,7 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("view iva_documents_overview"
     const names = cols.rows.map((r) => r.column_name);
     expect(names).not.toContain("storage_path");
     expect(names).toContain("has_file");
+    expect(names).toContain("job_access");
   });
 
   it("devolve o desfecho do job mais recente (result.reason, last_error.outcome)", async () => {
@@ -381,6 +383,49 @@ describe.skipIf(process.env.SKIP_DB_TESTS === "1")("view iva_documents_overview"
       job_status: "pending",
       job_deferred: true,
     });
+  });
+
+  it("expõe a rota da última tentativa (job_access) lida do payload", async () => {
+    const a = await makeTeamWithUser("operator");
+    const viaToconline = await makeCompany(a.teamId, "Via TOConline");
+    const semRota = await makeCompany(a.teamId, "Sem rota no payload");
+
+    // O literal pinado ao domínio (`satisfies`): se a rota mudar de nome lá, este
+    // ficheiro deixa de compilar em vez de a view passar a devolver um texto que
+    // a web já não reconhece.
+    const ROTA_A = "toconline_direct_access" satisfies (typeof AT_ACCESS_MODES)[number];
+
+    // O que o dashboard escreve em `jobs.payload.access` (`IvaDocumentJobPayload`).
+    await db.insert(jobs).values({
+      teamId: a.teamId,
+      companyId: viaToconline.id,
+      type: IVA_DOCUMENT_JOB_TYPE,
+      status: "succeeded",
+      payload: { access: ROTA_A },
+    });
+    // Um job anterior a esta coluna não tem a chave: a view diz `null` e a web
+    // não inventa rota nenhuma.
+    await db.insert(jobs).values({
+      teamId: a.teamId,
+      companyId: semRota.id,
+      type: IVA_DOCUMENT_JOB_TYPE,
+      status: "succeeded",
+      payload: {},
+    });
+
+    const rows = await asUser(
+      a.userId,
+      async (c) =>
+        (
+          await c.query(
+            "select company_id, job_access from public.iva_documents_overview where company_id = any($1::uuid[])",
+            [[viaToconline.id, semRota.id]],
+          )
+        ).rows as { company_id: string; job_access: string | null }[],
+    );
+
+    expect(rows.find((r) => r.company_id === viaToconline.id)?.job_access).toBe(ROTA_A);
+    expect(rows.find((r) => r.company_id === semRota.id)?.job_access).toBeNull();
   });
 });
 

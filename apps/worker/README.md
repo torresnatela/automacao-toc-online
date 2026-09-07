@@ -28,13 +28,12 @@ causa de configuração deste módulo. Ver `.env.example` na raiz.
 
 | Variável                              | Omissão           | Para que serve                                                                                                                                                                                                                                                                   |
 | ------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AT_ACCESS_MODE`                      | `at_direct_login` | Rota de acesso à AT. `at_direct_login` (login do gabinete no `acesso.gov.pt`) ou `toconline_direct_access` (Acesso Direto do TOConline — **ainda não implementado**: o worker falha no arranque). Decidido na Fase 0. Um valor desconhecido **lança** em vez de cair no default. |
 | `DOCUMENTS_BUCKET`                    | `documents`       | Bucket do Supabase Storage onde ficam os PDFs.                                                                                                                                                                                                                                   |
 | `AT_PACING_MS`                        | `5000`            | Ritmo mínimo entre jobs de IVA (182 empresas ≈ 30 min, de propósito).                                                                                                                                                                                                            |
 | `AT_DAILY_ATTEMPT_CAP`                | `5`               | Tentativas por empresa por dia. Três recusas de senha trancam a conta da AT.                                                                                                                                                                                                     |
 | `AT_PORTAL_PAUSE_MS`                  | `900000`          | Pausa geral do acesso à AT depois de uma indisponibilidade.                                                                                                                                                                                                                      |
-| `RPA_CHROME_USER_DATA_DIR`            | —                 | Só rota A: perfil de um Chrome real.                                                                                                                                                                                                                                             |
-| `RPA_CHROME_EXTENSION_DIR`            | —                 | Só rota A: extensão do TOConline a carregar nesse Chrome.                                                                                                                                                                                                                        |
+| `RPA_CHROME_USER_DATA_DIR` | `.rpa/chromium-profile` | Rota A (Acesso Direto do TOConline): perfil persistente do Chromium do Playwright. Guarda cookies do TOConline — é credencial, git-ignored. |
+| `RPA_CHROME_EXTENSION_DIR` | `.rpa/extensions/toconline-connect` | Rota A: extensão TOConline Connect **descompactada** (`pnpm --filter @toc/worker exec tsx scripts/install-toconline-connect.ts`). Sem ela a rota A termina em `direct_access_extension_missing`; o worker arranca na mesma. |
 | `AT_RECON_USER` / `AT_RECON_PASSWORD` | —                 | Só para os scripts abaixo (headed, com uma pessoa ao lado). Nunca lidas pelo worker.                                                                                                                                                                                             |
 
 ### Correr o worker
@@ -44,7 +43,7 @@ set -a && . ./.env && set +a          # a partir da raiz do repo
 pnpm --filter @toc/worker dev         # tsx watch
 ```
 
-O arranque loga uma linha JSON com `handles` (os dois tipos) e `atAccessMode`. `Ctrl+C`
+O arranque loga uma linha JSON com `handles` (os dois tipos). `Ctrl+C`
 encerra limpo (fecha o Chromium).
 
 ### Scripts manuais (Fase 0)

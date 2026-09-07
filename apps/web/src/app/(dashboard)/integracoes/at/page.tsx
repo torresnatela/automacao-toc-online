@@ -2,9 +2,7 @@ import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { listTeams } from "@/lib/teams/service";
 import { getTeamCredential } from "@/lib/integrations/service";
-import { getAtAccessMode } from "@/lib/documents/access";
 import { PageHeader } from "@/components/patterns/page-header";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CredentialForm } from "@/components/integrations/credential-form";
 import { saveAtCredentialAction, deleteAtCredentialAction } from "./actions";
 
@@ -36,11 +34,6 @@ export default async function AtPage({ searchParams }: PageProps) {
 
   const credential = await getTeamCredential("at", teamId);
 
-  // Na rota A quem entra na AT é o TOConline, com a senha que o gabinete lá
-  // registou — esta credencial fica guardada mas nunca é usada. Dizê-lo aqui
-  // evita a conclusão errada de que a busca falha por causa dela.
-  const unused = getAtAccessMode() === "toconline_direct_access";
-
   return (
     <div>
       <PageHeader
@@ -49,15 +42,6 @@ export default async function AtPage({ searchParams }: PageProps) {
       />
 
       <div className="grid gap-8">
-        {unused && (
-          <Alert className="max-w-xl">
-            <AlertDescription>
-              O worker está configurado para usar o Acesso Direto do TOConline; esta credencial não
-              é usada nesse modo.
-            </AlertDescription>
-          </Alert>
-        )}
-
         <CredentialForm
           provider="at"
           credential={credential}
@@ -70,7 +54,7 @@ export default async function AtPage({ searchParams }: PageProps) {
           copy={{
             title: "Acesso à Autoridade Tributária",
             description:
-              "Credencial do Contabilista Certificado do gabinete no Portal das Finanças. Guardada cifrada; a palavra-passe nunca é mostrada de volta. Só é usada quando a busca de guias entra diretamente na AT.",
+              "Credencial do Contabilista Certificado do gabinete no Portal das Finanças. Guardada cifrada; a palavra-passe nunca é mostrada de volta. É a que o «Buscar» usa (login direto na AT); o «Buscar via TOConline» entra com a ligação ao TOConline.",
             usernameLabel: "NIF do Contabilista Certificado",
             usernameType: "text",
             usernameInputMode: "numeric",

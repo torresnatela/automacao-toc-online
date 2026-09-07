@@ -1,13 +1,19 @@
-import { describe, it, expect } from "vitest";
-import { IVA_OUTCOME_CODES } from "@toc/core/domain";
+import { describe, it, expect, vi } from "vitest";
+import { AT_ACCESS_MODES, IVA_OUTCOME_CODES, type AtAccessMode } from "@toc/core/domain";
 import {
+  ACCESS_LABEL,
+  BULK_COPY,
   CREDENTIAL_OUTCOME_TARGET,
   NOT_READY_BULK_COPY,
   NOT_READY_COPY,
+  accessHint,
   batchProgress,
   credentialBanner,
   credentialLinkFor,
   deriveState,
+  fetchAffordance,
+  fetchAffordances,
+  fetchButtonLabel,
   formatDatePt,
   formatEur,
   formatNotReadyReasons,
@@ -51,6 +57,7 @@ function row(over: Partial<IvaDocumentRow> = {}): IvaDocumentRow {
     job_created_at: null,
     job_finished_at: null,
     job_deferred: false,
+    job_access: null,
     ...over,
   };
 }
@@ -61,7 +68,10 @@ function withJob(over: Partial<IvaDocumentRow>): IvaDocumentRow {
 }
 
 const activeCredential = { hasSecret: true, status: "active" };
-const NOW = new Date("2026-09-10T10:00:00Z");
+const ROTA_A: AtAccessMode = "toconline_direct_access";
+const ROTA_B: AtAccessMode = "at_direct_login";
+/** As duas rotas com a credencial que cada uma quer, já resolvida e ativa. */
+const prontaEm = (access: AtAccessMode) => ({ access, credential: activeCredential });
 
 describe("deriveState", () => {
   it("lê `pending` como fila e `running` como execução", () => {
@@ -141,20 +151,19 @@ describe("deriveState × adiamento", () => {
     expect(derived.outcome).toBeNull();
   });
 
-  it("um job adiado continua em curso — o botão não convida a um segundo pedido", () => {
-    const view = presentIvaRow(withJob({ job_status: "pending", job_deferred: true }), {
-      access: "at_direct_login",
-      credential: activeCredential,
-      now: NOW,
-    });
+  it("um job adiado continua em curso — nenhum botão convida a um segundo pedido", () => {
+    const adiada = withJob({ job_status: "pending", job_deferred: true });
+    const view = presentIvaRow(adiada);
 
     expect(view.inFlight).toBe(true);
-    expect(view.canFetch).toBe(false);
     expect(view.label).toBe("Portal em pausa");
     // A orientação vem do domínio, não de um texto inventado aqui.
     expect(view.guidance).toBe(
       "O sistema pausou o acesso à AT por indisponibilidade; retoma sozinho.",
     );
+    for (const access of AT_ACCESS_MODES) {
+      expect(fetchAffordance(adiada, prontaEm(access)).canFetch, access).toBe(false);
+    }
   });
 });
 
@@ -187,64 +196,24 @@ describe("jobErrorFor", () => {
   });
 });
 
+// A linha do ecrã que NÃO depende da rota: estado, crachá, orientação, em curso.
 describe("presentIvaRow", () => {
-  const ctxB = { access: "at_direct_login" as const, credential: activeCredential, now: NOW };
-
-  it("uma empresa pronta pode buscar", () => {
-    const view = presentIvaRow(row(), ctxB);
+  it("uma empresa por buscar", () => {
+    const view = presentIvaRow(row());
     expect(view.state).toBe("never");
-    expect(view.canFetch).toBe(true);
-    expect(view.disabledReason).toBeUndefined();
-    expect(view.fetchLabel).toBe("Buscar");
     expect(view.inFlight).toBe(false);
+    expect(view.outcome).toBeNull();
+    expect(view.lastAccess).toBeNull();
   });
 
-  it("não deixa buscar com uma busca em curso", () => {
-    const view = presentIvaRow(withJob({ job_status: "running" }), ctxB);
-    expect(view.inFlight).toBe(true);
-    expect(view.canFetch).toBe(false);
-    expect(view.disabledReason).toBe("Busca já em curso.");
-  });
-
-  it("não deixa buscar sem credencial da AT (rota B)", () => {
-    const view = presentIvaRow(row(), { ...ctxB, credential: null });
-    expect(view.canFetch).toBe(false);
-    expect(view.readiness).toEqual({ ready: false, reason: "credential_missing" });
-    expect(view.disabledReason).toBe("Configure o acesso à AT.");
-  });
-
-  it("não deixa buscar sem NIF na rota B", () => {
-    const view = presentIvaRow(row({ nif: null }), ctxB);
-    expect(view.canFetch).toBe(false);
-    expect(view.readiness).toEqual({ ready: false, reason: "nif_missing" });
-    expect(view.disabledReason).toBe("Empresa sem NIF.");
-  });
-
-  it("na rota A a cópia da credencial fala do TOConline", () => {
-    const ctxA = { access: "toconline_direct_access" as const, credential: null, now: NOW };
-    expect(presentIvaRow(row(), ctxA).disabledReason).toBe("Configure a ligação ao TOConline.");
-    expect(
-      presentIvaRow(row(), { ...ctxA, credential: { hasSecret: true, status: "invalid" } })
-        .disabledReason,
-    ).toBe("Ligação ao TOConline inválida — atualize a palavra-passe.");
-  });
-
-  it("«Buscar novamente» só depois de um job terminal", () => {
-    expect(presentIvaRow(row(), ctxB).fetchLabel).toBe("Buscar");
-    expect(presentIvaRow(withJob({ job_status: "pending" }), ctxB).fetchLabel).toBe("Buscar");
-    expect(presentIvaRow(withJob({ job_status: "running" }), ctxB).fetchLabel).toBe("Buscar");
-    expect(
-      presentIvaRow(withJob({ job_status: "succeeded", job_outcome: "fetched" }), ctxB).fetchLabel,
-    ).toBe("Buscar novamente");
-    expect(
-      presentIvaRow(withJob({ job_status: "failed", job_outcome: null }), ctxB).fetchLabel,
-    ).toBe("Buscar novamente");
+  it("uma busca a correr está em curso", () => {
+    expect(presentIvaRow(withJob({ job_status: "running" })).inFlight).toBe(true);
+    expect(presentIvaRow(withJob({ job_status: "pending" })).inFlight).toBe(true);
   });
 
   it("a orientação vem do domínio, com o período e o prazo por extenso", () => {
     const view = presentIvaRow(
       withJob({ job_status: "succeeded", job_outcome: "fetched", job_period: "2026-07" }),
-      ctxB,
     );
     expect(view.label).toBe("Guia obtida");
     expect(view.tone).toBe("success");
@@ -257,26 +226,215 @@ describe("presentIvaRow", () => {
   });
 
   it("os estados de UI usam a linha curta como orientação", () => {
-    expect(presentIvaRow(row(), ctxB).guidance).toBe("Clique em Buscar");
-    expect(presentIvaRow(withJob({ job_status: "pending" }), ctxB).guidance).toBe(
-      "Aguarda o worker",
+    expect(presentIvaRow(row()).guidance).toBe("Clique em Buscar");
+    expect(presentIvaRow(withJob({ job_status: "pending" })).guidance).toBe("Aguarda o worker");
+  });
+});
+
+describe("presentIvaRow × envio ao cliente (mock)", () => {
+  const guiaObtida = (over: Partial<IvaDocumentRow> = {}) =>
+    withJob({
+      job_status: "succeeded",
+      job_outcome: "fetched",
+      job_period: "2026-07",
+      document_id: "44444444-4444-4444-4444-444444444444",
+      document_status: "extracted",
+      has_file: true,
+      ...over,
+    });
+
+  it("uma guia capturada e com ficheiro pode ser enviada ao cliente", () => {
+    const view = presentIvaRow(guiaObtida());
+    expect(view.canSend).toBe(true);
+    expect(view.sent).toBe(false);
+  });
+
+  it("uma guia já enviada não se envia outra vez e mostra-se como enviada", () => {
+    const view = presentIvaRow(guiaObtida({ document_status: "sent" }));
+    expect(view.sent).toBe(true);
+    expect(view.canSend).toBe(false);
+  });
+
+  it("sem ficheiro (ou sem documento) não há nada a enviar", () => {
+    expect(presentIvaRow(guiaObtida({ has_file: false })).canSend).toBe(false);
+    expect(presentIvaRow(row()).canSend).toBe(false);
+    expect(presentIvaRow(row()).sent).toBe(false);
+  });
+});
+
+describe("presentIvaRow × rota da última tentativa", () => {
+  it("lê de `job_access` por que rota correu o último job", () => {
+    const view = presentIvaRow(
+      withJob({ job_status: "succeeded", job_outcome: "fetched", job_access: ROTA_A }),
     );
+    expect(view.lastAccess).toBe(ROTA_A);
+    expect(view.details.access).toBe(ROTA_A);
+  });
+
+  it("sem rota gravada (job anterior à coluna) não inventa nenhuma", () => {
+    const view = presentIvaRow(withJob({ job_status: "succeeded", job_outcome: "fetched" }));
+    expect(view.lastAccess).toBeNull();
+    expect(view.details).not.toHaveProperty("access");
+  });
+
+  it("uma rota que este build não conhece é o mesmo que nenhuma", () => {
+    const view = presentIvaRow(
+      withJob({ job_status: "succeeded", job_outcome: "fetched", job_access: "rota_do_futuro" }),
+    );
+    expect(view.lastAccess).toBeNull();
+  });
+});
+
+// A decisão que DEPENDE da rota: cada botão sabe se pode buscar e porquê.
+describe("fetchAffordance", () => {
+  it("uma empresa pronta pode buscar pelas duas rotas", () => {
+    for (const access of AT_ACCESS_MODES) {
+      const a = fetchAffordance(row(), prontaEm(access));
+      expect(a.access).toBe(access);
+      expect(a.readiness).toEqual({ ready: true });
+      expect(a.canFetch).toBe(true);
+      expect(a.disabledReason).toBeUndefined();
+      expect(a.refetch).toBe(false);
+    }
+  });
+
+  it("uma busca em curso desliga as duas rotas", () => {
+    const aCorrer = withJob({ job_status: "running" });
+    for (const access of AT_ACCESS_MODES) {
+      const a = fetchAffordance(aCorrer, prontaEm(access));
+      expect(a.canFetch, access).toBe(false);
+      expect(a.disabledReason, access).toBe("Busca já em curso.");
+    }
+  });
+
+  it("sem credencial da AT só a rota B se desliga", () => {
+    // A credencial entra já resolvida POR rota: a da AT em falta não diz nada
+    // sobre a ligação ao TOConline, que pode estar perfeitamente configurada.
+    const b = fetchAffordance(row(), { access: ROTA_B, credential: null });
+    expect(b.canFetch).toBe(false);
+    expect(b.readiness).toEqual({ ready: false, reason: "credential_missing" });
+    expect(b.disabledReason).toBe("Configure o acesso à AT.");
+
+    expect(fetchAffordance(row(), prontaEm(ROTA_A)).canFetch).toBe(true);
+  });
+
+  it("sem ligação ao TOConline só a rota A se desliga", () => {
+    const semLigacao = row({ toconline_company_id: null });
+    const a = fetchAffordance(semLigacao, prontaEm(ROTA_A));
+    expect(a.canFetch).toBe(false);
+    expect(a.readiness).toEqual({ ready: false, reason: "company_not_linked" });
+    expect(a.disabledReason).toBe("Sem ligação ao TOConline — corra a varredura.");
+
+    // Na rota B a empresa sem ligação busca-se na mesma, pelo NIF.
+    expect(fetchAffordance(semLigacao, prontaEm(ROTA_B)).canFetch).toBe(true);
+  });
+
+  it("sem NIF só a rota B se desliga", () => {
+    const semNif = row({ nif: null });
+    const b = fetchAffordance(semNif, prontaEm(ROTA_B));
+    expect(b.canFetch).toBe(false);
+    expect(b.readiness).toEqual({ ready: false, reason: "nif_missing" });
+    expect(b.disabledReason).toBe("Empresa sem NIF.");
+
+    // Na rota A quem identifica a empresa no portal é o TOConline.
+    expect(fetchAffordance(semNif, prontaEm(ROTA_A)).canFetch).toBe(true);
+  });
+
+  it("na rota A a cópia da credencial fala do TOConline", () => {
+    expect(fetchAffordance(row(), { access: ROTA_A, credential: null }).disabledReason).toBe(
+      "Configure a ligação ao TOConline.",
+    );
+    expect(
+      fetchAffordance(row(), { access: ROTA_A, credential: { hasSecret: true, status: "invalid" } })
+        .disabledReason,
+    ).toBe("Ligação ao TOConline inválida — atualize a palavra-passe.");
   });
 
   it("uma empresa inativa não se busca, seja qual for a rota", () => {
-    const view = presentIvaRow(row({ company_status: "inactive" }), ctxB);
-    expect(view.canFetch).toBe(false);
-    expect(view.disabledReason).toBe("Empresa inativa.");
+    const inativa = row({ company_status: "inactive" });
+    for (const access of AT_ACCESS_MODES) {
+      const a = fetchAffordance(inativa, prontaEm(access));
+      expect(a.canFetch, access).toBe(false);
+      expect(a.disabledReason, access).toBe("Empresa inativa.");
+    }
   });
 
-  it("na rota A a empresa sem ligação ao TOConline não se busca", () => {
-    const view = presentIvaRow(row({ toconline_company_id: null }), {
-      access: "toconline_direct_access",
-      credential: activeCredential,
-      now: NOW,
+  it("o nome do botão diz o verbo e a rota", () => {
+    expect(fetchButtonLabel(ROTA_B, false)).toBe("Buscar");
+    expect(fetchButtonLabel(ROTA_B, true)).toBe("Buscar novamente");
+    expect(fetchButtonLabel(ROTA_A, false)).toBe("Buscar via TOConline");
+    expect(fetchButtonLabel(ROTA_A, true)).toBe("Buscar novamente via TOConline");
+  });
+
+  it("«novamente» (e a re-busca forçada) só depois de um job terminal", () => {
+    // `refetch` é explícito, e não deduzido do rótulo: é ele que decide se o
+    // formulário força a re-busca, e um rótulo novo não o pode desligar em
+    // silêncio.
+    const nunca = fetchAffordance(row(), prontaEm(ROTA_B));
+    expect(nunca.refetch).toBe(false);
+    expect(nunca.label).toBe("Buscar");
+
+    for (const status of ["pending", "running"]) {
+      const emCurso = fetchAffordance(withJob({ job_status: status }), prontaEm(ROTA_B));
+      expect(emCurso.refetch, status).toBe(false);
+      expect(emCurso.label, status).toBe("Buscar");
+    }
+
+    const obtida = withJob({ job_status: "succeeded", job_outcome: "fetched" });
+    expect(fetchAffordance(obtida, prontaEm(ROTA_B))).toMatchObject({
+      refetch: true,
+      label: "Buscar novamente",
     });
-    expect(view.canFetch).toBe(false);
-    expect(view.disabledReason).toBe("Sem ligação ao TOConline — corra a varredura.");
+    expect(fetchAffordance(obtida, prontaEm(ROTA_A))).toMatchObject({
+      refetch: true,
+      label: "Buscar novamente via TOConline",
+    });
+    expect(
+      fetchAffordance(withJob({ job_status: "failed", job_outcome: null }), prontaEm(ROTA_B))
+        .refetch,
+    ).toBe(true);
+  });
+});
+
+describe("fetchAffordances", () => {
+  it("dá uma decisão por rota — as duas, sempre, cada uma com a sua credencial", () => {
+    const credentialFor = vi.fn((access: AtAccessMode) =>
+      access === ROTA_B ? null : activeCredential,
+    );
+    const all = fetchAffordances(row(), credentialFor);
+
+    expect(Object.keys(all).sort()).toEqual([...AT_ACCESS_MODES].sort());
+    expect(credentialFor).toHaveBeenCalledTimes(AT_ACCESS_MODES.length);
+    for (const access of AT_ACCESS_MODES) expect(credentialFor).toHaveBeenCalledWith(access);
+
+    // A credencial da AT em falta desliga o «Buscar» e deixa o «Buscar via
+    // TOConline» ligado — cada botão responde pela sua rota.
+    expect(all.at_direct_login.canFetch).toBe(false);
+    expect(all.at_direct_login.disabledReason).toBe("Configure o acesso à AT.");
+    expect(all.toconline_direct_access.canFetch).toBe(true);
+  });
+});
+
+describe("accessHint", () => {
+  it("diz por que rota correu a última tentativa, em PT-PT", () => {
+    expect(accessHint(ROTA_A)).toBe("via TOConline");
+    expect(accessHint(ROTA_B)).toBe("login direto na AT");
+    expect(accessHint(null)).toBeNull();
+  });
+
+  it("tem um rótulo para cada rota do domínio", () => {
+    expect(Object.keys(ACCESS_LABEL).sort()).toEqual([...AT_ACCESS_MODES].sort());
+    for (const access of AT_ACCESS_MODES) expect(accessHint(access)).toBe(ACCESS_LABEL[access]);
+  });
+});
+
+describe("BULK_COPY", () => {
+  it("o lote de cada rota tem um botão com nome próprio — e a rota B mantém o dela", () => {
+    expect(Object.keys(BULK_COPY).sort()).toEqual([...AT_ACCESS_MODES].sort());
+    expect(BULK_COPY.at_direct_login.button).toBe("Buscar todas");
+    expect(BULK_COPY.toconline_direct_access.button).toBe("Buscar todas via TOConline");
+    expect(BULK_COPY.toconline_direct_access.title).not.toBe(BULK_COPY.at_direct_login.title);
+    expect(BULK_COPY.toconline_direct_access.title).toContain("via TOConline");
   });
 });
 
@@ -310,9 +468,10 @@ describe("isPeakDay", () => {
 });
 
 describe("formatEur", () => {
-  // O Intl usa espaço não separável antes do símbolo; normalizamos para
-  // comparar sem depender do byte exato.
-  const plain = (value: string) => value.replace(/[  ]/g, " ");
+  // O Intl usa espaço não separável (U+00A0 ou U+202F, consoante o ICU) antes
+  // do símbolo; `\s` apanha os dois, e normalizamos para comparar sem depender
+  // do byte exato.
+  const plain = (value: string) => value.replace(/\s/g, " ");
 
   it("formata em euros à portuguesa", () => {
     expect(plain(formatEur("1234.56"))).toBe("1234,56 €");
@@ -467,7 +626,7 @@ describe("credentialBanner", () => {
 });
 
 describe("credentialLinkFor", () => {
-  it("os desfechos da senha da AT levam ao ecrã da rota", () => {
+  it("os desfechos da senha da AT levam ao ecrã da rota que correu", () => {
     expect(credentialLinkFor("at_login_rejected", "at_direct_login")).toEqual({
       href: "/integracoes/at",
       label: "Configurar acesso à AT",
@@ -479,11 +638,20 @@ describe("credentialLinkFor", () => {
     );
   });
 
+  it("sem rota conhecida os desfechos da senha da AT levam ao ecrã da AT", () => {
+    // Jobs anteriores à coluna `job_access`: a rota B era a única que corria.
+    expect(credentialLinkFor("at_login_rejected", null)?.href).toBe("/integracoes/at");
+    expect(credentialLinkFor("at_credential_missing", null)?.href).toBe("/integracoes/at");
+  });
+
   it("os desfechos do TOConline levam sempre ao TOConline", () => {
     expect(credentialLinkFor("toconline_login_rejected", "at_direct_login")?.href).toBe(
       "/integracoes/toconline",
     );
     expect(credentialLinkFor("direct_access_not_configured", "at_direct_login")?.href).toBe(
+      "/integracoes/toconline",
+    );
+    expect(credentialLinkFor("toconline_credential_missing", null)?.href).toBe(
       "/integracoes/toconline",
     );
   });
@@ -498,5 +666,6 @@ describe("credentialLinkFor", () => {
   it("um desfecho que não é de credencial não sugere ecrã nenhum", () => {
     expect(credentialLinkFor("document_not_ready", "at_direct_login")).toBeNull();
     expect(credentialLinkFor(null, "at_direct_login")).toBeNull();
+    expect(credentialLinkFor(null, null)).toBeNull();
   });
 });
