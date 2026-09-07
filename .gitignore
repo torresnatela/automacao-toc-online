@@ -20,3 +20,6 @@ test-results/
 # Artefactos do reconhecimento da AT (screenshots do portal com dados reais de
 # clientes, redes, formulários). Partilha só pelo canal seguro do gabinete.
 apps/worker/recon/
+
+# Rascunho do Playwright MCP: snapshots de páginas com dados reais de clientes. Nunca versionar.
+.playwright-mcp/

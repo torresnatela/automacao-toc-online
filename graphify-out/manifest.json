@@ -180,9 +180,9 @@
     "semantic_hash": "7bd52faac48aa7eb117b9f419ed94519"
   },
   "packages/db/src/client.ts": {
-    "mtime": 1783478245.2874074,
-    "ast_hash": "ec0286ded28a9f0a01bfffc5eb32c8d1",
-    "semantic_hash": "ec0286ded28a9f0a01bfffc5eb32c8d1"
+    "mtime": 1788738848.5159023,
+    "ast_hash": "2abbf8d815d4decd9c7b003179a9bd7a",
+    "semantic_hash": ""
   },
   "packages/db/src/index.ts": {
     "mtime": 1783478245.2874854,
@@ -1290,8 +1290,8 @@
     "semantic_hash": ""
   },
   "apps/worker/src/at/selectors.ts": {
-    "mtime": 1788735649.1117964,
-    "ast_hash": "33ad23c70b05659cfaaa95f2025238df",
+    "mtime": 1788741299.247521,
+    "ast_hash": "3e92f2a22384dadfce61479c9e774aab",
     "semantic_hash": ""
   },
   "apps/worker/src/at/wording.ts": {
@@ -1405,8 +1405,8 @@
     "semantic_hash": ""
   },
   "apps/worker/scripts/recon-at.ts": {
-    "mtime": 1788737207.9232988,
-    "ast_hash": "3f62d404b9b3d93162876b0e6993298c",
+    "mtime": 1788740451.9553735,
+    "ast_hash": "aed02fed5862620d9936a0b2a4017e2f",
     "semantic_hash": ""
   },
   "apps/worker/scripts/seed-at-session.ts": {
@@ -1620,8 +1620,8 @@
     "semantic_hash": ""
   },
   "apps/worker/src/at/direct-access-wording.ts": {
-    "mtime": 1788733297.2630565,
-    "ast_hash": "237c20cffdcae5d72e0b58565a6b43ab",
+    "mtime": 1788740355.7504725,
+    "ast_hash": "5406dbcc258f4e1e4ef8f8f551bb1e7e",
     "semantic_hash": ""
   },
   "apps/worker/src/at/login-errors.ts": {
@@ -1650,18 +1650,68 @@
     "semantic_hash": ""
   },
   "apps/worker/src/at/session-toc-direct-access.ts": {
-    "mtime": 1788736091.6538465,
-    "ast_hash": "b930bf51d9e4923292c291f72e027eff",
+    "mtime": 1788741299.2482588,
+    "ast_hash": "8dc4d23ccfa9ce2dc95f91e8c17d3303",
     "semantic_hash": ""
   },
   "apps/worker/test/at/session-toc-direct-access.browser.test.ts": {
-    "mtime": 1788736156.6898296,
-    "ast_hash": "9142e5c69fea99021c026ba75ccc8b15",
+    "mtime": 1788740355.7915902,
+    "ast_hash": "7377921ed04fe3b0bd156efb2dce09cf",
     "semantic_hash": ""
   },
   "apps/worker/test/at/toc-fixture-server.ts": {
-    "mtime": 1788736156.6889813,
-    "ast_hash": "68179197b566112f48fe2f6b980dd49a",
+    "mtime": 1788740206.4750395,
+    "ast_hash": "11d80ab81ec1de2f64e2d4a75228a9b2",
+    "semantic_hash": ""
+  },
+  "packages/db/test/client.test.ts": {
+    "mtime": 1788738818.477856,
+    "ast_hash": "c4f66b1264db6ff6021f7ba866e4cba5",
+    "semantic_hash": ""
+  },
+  ".playwright-mcp/page-2026-09-06T23-45-26-192Z.yml": {
+    "mtime": 1788738326.1932254,
+    "ast_hash": "8713749e76eb81eac617c0853f70c6a0",
+    "semantic_hash": ""
+  },
+  ".playwright-mcp/page-2026-09-06T23-45-50-932Z.yml": {
+    "mtime": 1788738350.9349585,
+    "ast_hash": "e558d96b3b9cf936bbcfd5d1de28cee0",
+    "semantic_hash": ""
+  },
+  ".playwright-mcp/page-2026-09-06T23-46-02-605Z.yml": {
+    "mtime": 1788738362.607182,
+    "ast_hash": "a1144487c6966420a1c1d28a87cba3f5",
+    "semantic_hash": ""
+  },
+  ".playwright-mcp/page-2026-09-06T23-46-39-046Z.yml": {
+    "mtime": 1788738399.0484428,
+    "ast_hash": "56567c18129ab5a9f09593f3a98c7c9f",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-09-06-at-recon.md": {
+    "mtime": 1788743429.7286866,
+    "ast_hash": "776f3ef09b2e167d532ffaf0980215db",
+    "semantic_hash": ""
+  },
+  ".playwright-mcp/page-2026-09-07T00-24-17-412Z.yml": {
+    "mtime": 1788740657.413698,
+    "ast_hash": "1f9ef0cf6d1bcb4fffc0315a079cb601",
+    "semantic_hash": ""
+  },
+  ".playwright-mcp/page-2026-09-07T00-24-46-638Z.yml": {
+    "mtime": 1788740686.6396506,
+    "ast_hash": "0b5cec51975d7401ed336cadd1b47174",
+    "semantic_hash": ""
+  },
+  ".playwright-mcp/page-2026-09-07T00-36-23-555Z.yml": {
+    "mtime": 1788741383.5565567,
+    "ast_hash": "7f992064b8846302b9e7d0cafc69f6c5",
+    "semantic_hash": ""
+  },
+  ".playwright-mcp/page-2026-09-07T00-36-58-655Z.yml": {
+    "mtime": 1788741418.6561012,
+    "ast_hash": "69896612b25276e29c0313dea493fad4",
     "semantic_hash": ""
   }
 }
