@@ -33,6 +33,9 @@ export const SS_PORTAL: DirectAccessPortal = {
   cookieDomainPattern: SS.cookieDomainPattern,
   loginError: (snapshot) => ssLoginErrorFrom(snapshot),
   assertBelongs: (pageText, company) => assertSsSessionBelongsTo(pageText, company),
+  // Login e portal no mesmo host: só se aterrou quando o caminho já não é o do
+  // login (`/sso/…`). TODO(recon): confirmar os caminhos reais da SSD.
+  landed: (url) => !SS.loginPathPattern.test(url.pathname),
   // A SSD navega-se por menus, não por URL: o fetcher não usa estes caminhos.
   // Ficam na origem para a sessão cumprir o contrato sem inventar rotas.
   urls: (portalOrigin) => ({

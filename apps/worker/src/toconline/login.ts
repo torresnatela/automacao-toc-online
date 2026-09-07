@@ -21,6 +21,8 @@ export interface TocLoginOptions {
   /** Injetável para o teste apontar a um servidor local. */
   hostPattern?: RegExp;
   timeoutMs?: number;
+  /** Domínio das cookies do TOConline, para a rota A as limpar quando a sessão prende. */
+  cookieDomainPattern?: RegExp;
 }
 
 /** Valida e devolve o host efetivo. Lança se o redirect levou a sítio inesperado. */

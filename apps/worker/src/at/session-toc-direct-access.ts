@@ -24,6 +24,9 @@ import { assertSessionBelongsTo } from "./guards";
 import { loginErrorFrom } from "./login-errors";
 import { AT, TOC_DIRECT_ACCESS, assertAtHost, type AtOptions } from "./selectors";
 
+/** Domínio das cookies do TOConline (login e shards `appN`). */
+const TOC_COOKIE_DOMAIN = /toconline\.pt$/;
+
 /**
  * O portal que o Acesso Direto abre — a entidade no cofre do TOConline e a
  * forma de reconhecer a aterragem. A AT é a omissão; outro portal do cofre
@@ -51,6 +54,13 @@ export interface DirectAccessPortal {
   ): Error;
   /** A guarda de que a sessão aberta é da empresa certa. Lança se não for. */
   assertBelongs(pageText: string, company: AtCompanyHandle): void;
+  /**
+   * Quando é que o separador **aterrou** no portal, para lá de o host bater
+   * certo. Na AT o host chega: o login vive noutro (`acesso.gov.pt`). Na SSD
+   * o login e o portal partilham o host, e é o caminho que diz se a extensão
+   * já acabou. Omissão: só o host.
+   */
+  landed?(url: URL): boolean;
   /** Os URLs já resolvidos para a sessão (o runner não os constrói). */
   urls(portalOrigin: string): AtSessionUrls;
 }
@@ -331,6 +341,23 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
         estado = await this.aguardarApp(page, () => true, this.appReadyTimeout);
       }
     }
+    // Escalada: uma sessão TOConline **velha** no perfil persistente pode
+    // prender a validação mesmo depois do reload — o `/login` redireciona de
+    // volta para a app presa. Apagar as cookies do TOConline força o formulário
+    // de login verdadeiro. Feito uma vez, e só depois de o reload simples ter
+    // falhado, para o caminho normal (e o teste que o cobre) não mudar.
+    if (estado === "timeout") {
+      await context
+        .clearCookies({ domain: this.options.toconline?.cookieDomainPattern ?? TOC_COOKIE_DOMAIN })
+        .catch(() => undefined);
+      await page.goto(loginUrl, { waitUntil: "domcontentloaded", timeout: this.tocTimeout });
+      estado = await this.aguardarApp(page, () => true, this.appReadyTimeout);
+      if (estado === "login") {
+        await submitLogin(page, credentials, this.options.toconline ?? {});
+        reused = false;
+        estado = await this.aguardarApp(page, () => true, this.appReadyTimeout);
+      }
+    }
     if (estado !== "pronta") {
       throw new Error("O TOConline não ficou pronto dentro do tempo previsto.");
     }
@@ -569,9 +596,10 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
 
     try {
       await Promise.race([
-        atPage.waitForURL((url) => this.padroes.portalHostPattern.test(url.host), {
-          timeout: this.atTimeout,
-        }),
+        atPage.waitForURL(
+          (url) => this.padroes.portalHostPattern.test(url.host) && (this.portal.landed?.(url) ?? true),
+          { timeout: this.atTimeout },
+        ),
         fechada,
       ]);
     } catch (err) {
@@ -594,8 +622,30 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
 
     // A guarda corre sempre: um guião que entrasse com a senha de outra
     // empresa daria uma sessão perfeitamente válida — do contribuinte errado.
-    const snapshot = await snapshotPage(atPage);
+    const snapshot = await this.fotografarAssente(atPage);
     this.portal.assertBelongs(snapshot.text, company);
+  }
+
+  /**
+   * Fotografa a página depois de ela **assentar**. O guião da extensão ainda
+   * pode estar a navegar quando o URL já bate certo (submit do login, `follow`
+   * com `expectURL`), e um `evaluate` apanhado a meio morre com «Execution
+   * context was destroyed». Isso não é a página errada: é cedo. Repete-se
+   * algumas vezes, à espera do `load` entre cada uma.
+   */
+  private async fotografarAssente(page: Page): Promise<AtPageSnapshot> {
+    let ultimo: unknown = null;
+    for (let tentativa = 0; tentativa < 6; tentativa += 1) {
+      await page.waitForLoadState("load", { timeout: this.atTimeout }).catch(() => undefined);
+      try {
+        return await snapshotPage(page);
+      } catch (err) {
+        ultimo = err;
+        if (!/Execution context was destroyed|navigation/i.test(String(err))) throw err;
+        await page.waitForTimeout(500).catch(() => undefined);
+      }
+    }
+    throw ultimo instanceof Error ? ultimo : new Error(String(ultimo));
   }
 
   private wrap(

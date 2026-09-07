@@ -30,3 +30,28 @@ operador presente). Tudo em `apps/worker/src/ss/selectors.ts` é `TODO(recon)`.
 - Tipo de job próprio, ledger/período e Storage (`documents.kind = "ss"`), runner e botão no dashboard.
 - Guarda de pertença por NISS (a SSD identifica o titular pelo NISS, que não está na BD).
 - Corrigir `selectors.ts`/`wording` com o que a Fase 0 mostrar e registar aqui a tabela observada.
+
+## Fase 0 — observado na SSD real (2026-09-07)
+
+Corrido pela demo/recon com o operador, empresa de teste «FRIENDLY CLICONTA» (tocCompanyId 72075).
+
+- **Aterragem:** o Acesso Direto abre a SSD em `www.seg-social.pt` (não `app.`), portal
+  **PrimeFaces/JSF** server-rendered (`/ptss/pssd/...`). Login e portal partilham o host, por isso
+  `landed()` espera o caminho deixar de ser o de login (`loginPathPattern`).
+- **Percurso confirmado:**
+  `/ptss/pssd/menu/pagamentos-dividas` → cartão «Valores a pagar à Segurança Social»
+  (`/…/valores-a-pagar`) → cartão «Pagamentos» (`/…/valores-a-pagar/pagamentos`) →
+  «Fazer pagamentos» → wizard `/ptss/ci/canais-pagamento/seleciona-pacote`.
+  As redações dos menus e o «Não existem valores a pagar neste momento» batem certo com `selectors.ts`.
+- **Sem valor a pagar hoje:** a empresa de teste não tinha nada a pagar, por isso o wizard mostrou
+  «Não existem valores a pagar» e o fluxo devolveu `nothing_to_pay` — corretamente. **Não foi possível
+  observar** a página com valor: a opção «atuar em nome próprio», o montante, o Multibanco e o botão do
+  documento continuam `TODO(recon)`, à espera de uma empresa com imposto em aberto (ou do próximo ciclo).
+- **JSF com estado:** o wizard `/ci/…` só se alcança por **cliques** a partir do menu; um `goto` direto
+  cai num modal «Prolongar sessão». O fetcher já navega por cliques.
+- **Robustez do TOConline:** uma sessão TOConline **velha** no perfil persistente prende a «Validação
+  de sessão em curso»; um só reload não a solta. A sessão passou a **escalar**: se o reload falhar,
+  limpa as cookies do TOConline e volta a entrar (a causa dos «TOConline não ficou pronto» na demo).
+- **1.º clique na entidade falha, 2.º resulta:** confirmado ao vivo (como na AT). O retry de duas
+  tentativas do Acesso Direto cobre-o. Também se corrigiu um «Execution context was destroyed» ao
+  fotografar a página a meio da navegação do login da extensão (`fotografarAssente`).

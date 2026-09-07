@@ -79,7 +79,13 @@ async function main(): Promise<void> {
     info: async (m, d) => console.log(`[ss-demo] ${m} ${JSON.stringify(d ?? {})}`),
     warn: async (m, d) => console.warn(`[ss-demo] AVISO ${m} ${JSON.stringify(d ?? {})}`),
   };
-  const sessions = new TocDirectAccessSsSessions({ persistent });
+  // Demo headed de uma empresa: entra-se sempre com a sessão do TOConline
+  // limpa. Uma sessão gravada no perfil persistente pode prender a «Validação
+  // de sessão em curso»; começar do zero é fiável e não custa nada aqui.
+  await (await persistent.context()).clearCookies().catch(() => undefined);
+  // O 1.º clique no Acesso Direto falha com frequência e o adaptador repete;
+  // 15 s chegam para a extensão abrir o separador e poupam a espera inútil.
+  const sessions = new TocDirectAccessSsSessions({ persistent }, { directAccessTimeoutMs: 15_000 });
   const fetcher = new SsPaymentDocumentFetcher();
 
   const inicio = Date.now();

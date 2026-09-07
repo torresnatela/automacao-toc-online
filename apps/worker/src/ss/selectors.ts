@@ -14,22 +14,32 @@
  *   Multibanco → PDF com a referência.
  */
 export const SS = {
-  /** Origem da SSD depois de autenticado. */
-  portalOrigin: "https://app.seg-social.pt",
+  /** Origem da SSD. Observado: o Acesso Direto aterra em `www.seg-social.pt`. */
+  portalOrigin: "https://www.seg-social.pt",
   /** Hosts aceites depois de autenticar. O `$` trava `…seg-social.pt.evil.com`. */
   portalHostPattern: /^(app|www)\.seg-social\.pt$/,
   /** Domínios de cookie da SS — o que a rota A limpa entre empresas. */
   cookieDomainPattern: /(^|\.)seg-social\.pt$/,
+  /** Caminhos do login (SSO) no mesmo host do portal: enquanto lá estiver, não aterrou. */
+  loginPathPattern: /\/sso\/|login|autentica/i,
 
-  // TODO(recon): tudo daqui para baixo é palpite até à Fase 0 na SSD real.
+  // Confirmado na SSD real em 2026-09-07 (www.seg-social.pt, PrimeFaces/JSF):
+  //   /ptss/pssd/menu/pagamentos-dividas
+  //   → cartão «Valores a pagar à Segurança Social» (/…/valores-a-pagar)
+  //   → cartão «Pagamentos» (/…/valores-a-pagar/pagamentos)
+  //   → «Fazer pagamentos» (/ptss/ci/canais-pagamento/seleciona-pacote, wizard JSF)
+  // As redações dos menus, o host e o «não existem valores a pagar» batem certo.
+  // O que fica TODO(recon): a página COM valor a pagar (a empresa de teste não
+  // tinha nada a pagar em 2026-09-07), logo a opção «atuar em nome próprio», o
+  // valor, o Multibanco e o botão do documento continuam por observar.
   menu: {
     /** Menu de topo/lateral da SSD. */
     pagamentosEDividas: /pagamentos\s+e\s+d[ií]vidas/i,
     /** Submenu / cartão dentro de «Pagamentos e Dívidas». */
     valoresAPagar: /valores\s+a\s+pagar\s+[àa]\s+seguran[çc]a\s+social/i,
-    /** Separador «Pagamentos» dentro de «Valores a pagar». */
+    /** Cartão «Pagamentos» dentro de «Valores a pagar» (/…/valores-a-pagar/pagamentos). */
     pagamentos: /^\s*pagamentos\s*$/i,
-    /** Botão/ligação «Fazer pagamento». */
+    /** Ação «Fazer pagamentos» → wizard /ptss/ci/canais-pagamento/seleciona-pacote. */
     fazerPagamento: /fazer\s+pagamento/i,
   },
   pagamento: {
@@ -46,9 +56,12 @@ export const SS = {
     fieldsContainer: "main, #content, body",
   },
   wording: {
-    /** Não há nada a pagar: estado normal do mês, não uma falha. */
+    /**
+     * Não há nada a pagar: estado normal do mês, não uma falha. A frase real
+     * observada em 2026-09-07 foi «Não existem valores a pagar neste momento».
+     */
     nothingToPay:
-      /n[ãa]o\s+(?:existem|h[áa]|tem)\s+(?:valores|montantes|d[ií]vidas|contribui[çc][õo]es)[^.]{0,40}(?:a\s+pagar|em\s+d[ií]vida|pendentes)|sem\s+valores\s+a\s+pagar|nada\s+a\s+pagar/i,
+      /n[ãa]o\s+existem\s+valores\s+a\s+pagar|n[ãa]o\s+(?:existem|h[áa]|tem)\s+(?:valores|montantes|d[ií]vidas|contribui[çc][õo]es)[^.]{0,40}(?:a\s+pagar|em\s+d[ií]vida|pendentes)|sem\s+valores\s+a\s+pagar|nada\s+a\s+pagar/i,
     /** Valor a pagar (EUR) tal como a SSD o mostra. */
     amount: /(?:valor|montante|total)[^\d€]{0,40}(\d{1,3}(?:[.\s]\d{3})*(?:,\d{2})?)\s*€?/i,
     /** Entidade e referência Multibanco, na redação habitual dos avisos. */
