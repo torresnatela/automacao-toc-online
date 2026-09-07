@@ -261,6 +261,20 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
       reused = false;
       estado = await this.aguardarApp(page, () => true, this.appReadyTimeout);
     }
+    // A «Validação de sessão em curso» do TOConline às vezes fica presa num
+    // vaivém (401 → / → /login) que não é nem app pronta nem formulário. Um
+    // `goto` ao login corta o vaivém e deixa a app recomeçar limpa — melhor do
+    // que desistir e queimar uma tentativa + a trava do portal por uma
+    // lentidão passageira. Faz-se UMA vez.
+    if (estado === "timeout") {
+      await page.goto(loginUrl, { waitUntil: "domcontentloaded", timeout: this.tocTimeout });
+      estado = await this.aguardarApp(page, () => true, this.appReadyTimeout);
+      if (estado === "login") {
+        await submitLogin(page, credentials, this.options.toconline ?? {});
+        reused = false;
+        estado = await this.aguardarApp(page, () => true, this.appReadyTimeout);
+      }
+    }
     if (estado !== "pronta") {
       throw new Error("O TOConline não ficou pronto dentro do tempo previsto.");
     }

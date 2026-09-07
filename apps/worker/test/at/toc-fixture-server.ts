@@ -47,6 +47,10 @@ export interface TocFixtureState {
   noTab: boolean;
   /** Quanto a app demora a dar `session_loaded` (ms). */
   sessionDelayMs: number;
+  /** Nº de carregamentos que ficam presos na «Validação de sessão» (o reload liberta). */
+  staysValidatingFor: number;
+  /** Interno: este carregamento em concreto fica preso? (o servidor calcula-o). */
+  stuckThisLoad: boolean;
   visitas: { login: number; vaultActions: number };
 }
 
@@ -109,6 +113,9 @@ function shell(state: TocFixtureState, at: AtFixtureServer): string {
     const SENHA_GRAVADA = ${state.passwordConfigured ? "true" : "false"};
     const EMPRESA = ${JSON.stringify(state.activeCompany)};
     const ATRASO_SESSAO = ${state.sessionDelayMs};
+    // Quando presa, a app fica em «Validação de sessão em curso» e nunca marca
+    // session_loaded — modela o vaivém 401 que o adaptador corta com um reload.
+    const PRESA = ${state.stuckThisLoad ? "true" : "false"};
 
     // O cofre, como na app real: um objeto global com os acessos da empresa.
     window.vault = {
@@ -124,6 +131,7 @@ function shell(state: TocFixtureState, at: AtFixtureServer): string {
       connectedCallback() {
         this.raiz = this.attachShadow({ mode: "open" });
         this.raiz.innerHTML = "<div id='overlay'>Validação de sessão em curso</div>";
+        if (PRESA) return; // fica presa na validação: só um reload a liberta
         setTimeout(() => {
           this.session_data = { session_loaded: true, entity_id: EMPRESA ? EMPRESA.id : null };
           this.render();
@@ -239,6 +247,8 @@ export async function startTocFixtureServer(at: AtFixtureServer): Promise<TocFix
     closeTabAfterLogin: false,
     noTab: false,
     sessionDelayMs: 300,
+    staysValidatingFor: 0,
+    stuckThisLoad: false,
     visitas: { login: 0, vaultActions: 0 },
   };
 
@@ -294,6 +304,10 @@ export async function startTocFixtureServer(at: AtFixtureServer): Promise<TocFix
     }
 
     if (url.pathname === "/vault-actions") state.visitas.vaultActions += 1;
+    // Este carregamento fica preso na validação? Consome um do contador — o
+    // reload do adaptador serve a shell de novo, já sem estar presa.
+    state.stuckThisLoad = state.staysValidatingFor > 0;
+    if (state.stuckThisLoad) state.staysValidatingFor -= 1;
     return html(res, shell(state, at));
   };
 

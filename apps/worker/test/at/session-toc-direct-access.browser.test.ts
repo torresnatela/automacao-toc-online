@@ -116,6 +116,8 @@ beforeEach(async () => {
     toc.state.closeTabAfterLogin = false;
     toc.state.noTab = false;
     toc.state.sessionDelayMs = 300;
+    toc.state.staysValidatingFor = 0;
+    toc.state.stuckThisLoad = false;
     toc.state.visitas = { login: 0, vaultActions: 0 };
   }
   if (at) {
@@ -188,6 +190,20 @@ describe.skipIf(skip)("TocDirectAccessAtSessions (browser + TOConline e AT locai
     ]);
     expect(at.state.visitas.consultarDeclaracao).toBe(2);
   }, 90_000);
+
+  it("uma validação de sessão presa é cortada por um reload, sem queimar a tentativa", async () => {
+    // O primeiro carregamento fica preso na «Validação de sessão em curso»; o
+    // adaptador, em vez de desistir (e disparar toconline_unavailable + a trava
+    // do portal), recarrega uma vez e a app recomeça limpa.
+    toc.state.staysValidatingFor = 1;
+    const factory = sessions(novoBrowser(), 6_000);
+
+    const opened = await abrir(factory);
+
+    expect(opened.session.access).toBe("toconline_direct_access");
+    expect(opened.session.host).toBe(new URL(at.baseUrl).host);
+    await opened.session.close();
+  }, 60_000);
 
   it("sem tocCompanyId a pré-condição é company_not_linked, sem abrir browser", () => {
     const factory = sessions(novoBrowser());
