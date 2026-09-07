@@ -130,6 +130,8 @@ export const TOC_DIRECT_ACCESS = {
    * do IVA (`iva.portaldasfinancas.gov.pt`), onde o resto do fluxo navega.
    */
   paymentDocumentAction: 'a.action_title:has-text("DPIVA - Obter documento de pagamento")',
+  /** A mesma ação já validada pelo cofre (senha gravada e aceite): só esta se clica. */
+  paymentDocumentActionValid: 'a.action_title.valid:has-text("DPIVA - Obter documento de pagamento")',
   /** A entidade genérica, para saber que a grelha do cofre está à vista. */
   portalEntity: 'span.entity_title:has-text("Portal das Finanças")',
   /** Quanto se espera pela app ficar pronta (`session_loaded`) ou devolver o login. */

@@ -332,9 +332,16 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
    * ---------------------------------------------------------------------- */
 
   /**
-   * Sonda os sinais do cofre: os padrões de texto atravessam o Shadow DOM pelo
-   * motor do Playwright, e o estado do cofre lê-se da própria app
-   * (`window.vault.accesses.company.AT`) — mais fiável do que qualquer frase.
+   * Sonda os sinais do cofre e só decide quando ele **assentou**.
+   *
+   * Ao aterrar em `/vault-actions` a grelha ainda não existe e
+   * `window.vault.accesses` está vazio; os acessos chegam ~1 s depois e é com
+   * eles que os links ganham a classe `valid`. Decidir antes disso dava
+   * «senha por gravar» a uma empresa com a senha gravada (aconteceu no primeiro
+   * ensaio real). Por isso: enquanto não houver acessos carregados nem links,
+   * é `unknown` e espera-se; com a ação DPIVA `valid` é `ready`; com a ação à
+   * vista mas sem `valid` (ou acessos carregados sem AT válido) é senha por
+   * gravar; o convite a instalar a extensão ganha a tudo.
    */
   private async sondar(page: Page): Promise<DirectAccessPageKind> {
     const ha = async (seletorOuPadrao: string | RegExp): Promise<boolean> => {
@@ -349,31 +356,37 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
     const cofre = await page
       .evaluate(() => {
         const vault = (globalThis as unknown as {
-          vault?: { accesses?: Record<string, Record<string, { valid?: boolean }>> };
+          vault?: { accesses?: Record<string, Record<string, { valid?: boolean }> | undefined> };
         }).vault;
-        if (!vault) return { conhecido: false, atValido: false };
-        const at = vault.accesses?.["company"]?.["AT"];
-        return { conhecido: true, atValido: at?.valid === true };
+        const company = vault?.accesses?.["company"];
+        const carregado = company !== undefined && company !== null && Object.keys(company).length > 0;
+        return { carregado, atValido: carregado && company?.["AT"]?.valid === true };
       })
-      .catch(() => ({ conhecido: false, atValido: false }));
+      .catch(() => ({ carregado: false, atValido: false }));
 
-    const acao = await ha(TOC_DIRECT_ACCESS.paymentDocumentAction);
+    const instalar = await ha(DIRECT_ACCESS_WORDING.extensionMissing);
+    const acaoValida = await ha(TOC_DIRECT_ACCESS.paymentDocumentActionValid);
+    const acaoPresente = acaoValida || (await ha(TOC_DIRECT_ACCESS.paymentDocumentAction));
     const entidade = await ha(TOC_DIRECT_ACCESS.portalEntity);
-    const semSenhaNoCofre = cofre.conhecido && (acao || entidade) && !cofre.atValido;
-    const acaoInvalida = await ha(`${TOC_DIRECT_ACCESS.paymentDocumentAction}.invalid`);
+    const assentou = cofre.carregado || acaoPresente || entidade;
+    const semSenha =
+      assentou &&
+      !acaoValida &&
+      ((acaoPresente && !cofre.atValido) ||
+        (cofre.carregado && !cofre.atValido) ||
+        (await ha(DIRECT_ACCESS_WORDING.passwordNotConfigured)));
 
     return classifyDirectAccessSignals({
-      extensionMissing: await ha(DIRECT_ACCESS_WORDING.extensionMissing),
-      passwordNotConfigured:
-        semSenhaNoCofre || acaoInvalida || (await ha(DIRECT_ACCESS_WORDING.passwordNotConfigured)),
-      menuVisible: acao || entidade,
+      extensionMissing: instalar,
+      passwordNotConfigured: semSenha,
+      menuVisible: acaoValida,
     });
   }
 
   /**
-   * O cofre só se decide depois de a app ter falado com a extensão (o
-   * handshake é assíncrono): espera-se até haver um veredicto ou acabar a
-   * paciência — e aí `unknown` é o que fica.
+   * O cofre só se decide depois de a app ter falado com a extensão e carregado
+   * os acessos: espera-se até haver um veredicto ou acabar a paciência — e aí
+   * `unknown` é o que fica.
    */
   private async classificarCofre(page: Page): Promise<DirectAccessPageKind> {
     const fim = Date.now() + this.directAccessTimeout;
@@ -417,7 +430,7 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
 
     try {
       await tocPage
-        .locator(TOC_DIRECT_ACCESS.paymentDocumentAction)
+        .locator(TOC_DIRECT_ACCESS.paymentDocumentActionValid)
         .first()
         .click({ timeout: this.tocTimeout });
     } catch {
