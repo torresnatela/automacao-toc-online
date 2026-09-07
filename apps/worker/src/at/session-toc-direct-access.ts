@@ -25,6 +25,54 @@ import { loginErrorFrom } from "./login-errors";
 import { AT, TOC_DIRECT_ACCESS, assertAtHost, type AtOptions } from "./selectors";
 
 /**
+ * O portal que o Acesso Direto abre — a entidade no cofre do TOConline e a
+ * forma de reconhecer a aterragem. A AT é a omissão; outro portal do cofre
+ * (ex.: Segurança Social) seria o mesmo percurso com outra entidade, outro
+ * host e outra guarda. Tudo o resto — sessão do TOConline, troca de empresa,
+ * cofre, separador da extensão, limpeza — é partilhado, e é por isso que vive
+ * neste `DirectAccessPortal` e não espalhado pela classe.
+ */
+export interface DirectAccessPortal {
+  /** Nome para mensagens e logs («Portal das Finanças», «Segurança Social»). */
+  label: string;
+  /** A entidade na grelha do cofre, e a mesma já validada (senha gravada e aceite). */
+  entity: string;
+  entityValid: string;
+  /** Chave em `window.vault.accesses.company` (`AT`, `SS`). */
+  vaultKey: string;
+  portalOrigin: string;
+  portalHostPattern: RegExp;
+  /** Cookies deste portal — o que se limpa entre empresas no perfil persistente. */
+  cookieDomainPattern: RegExp;
+  /** Lê o que ficou pelo caminho quando o separador não aterra no portal. */
+  loginError(
+    snapshot: AtPageSnapshot,
+    padroes: { loginHostPattern: RegExp; portalHostPattern: RegExp },
+  ): Error;
+  /** A guarda de que a sessão aberta é da empresa certa. Lança se não for. */
+  assertBelongs(pageText: string, company: AtCompanyHandle): void;
+  /** Os URLs já resolvidos para a sessão (o runner não os constrói). */
+  urls(portalOrigin: string): AtSessionUrls;
+}
+
+/** O Portal das Finanças: entrou-se como o próprio contribuinte, caminhos diretos. */
+export const AT_PORTAL: DirectAccessPortal = {
+  label: "Portal das Finanças",
+  entity: TOC_DIRECT_ACCESS.portalEntity,
+  entityValid: TOC_DIRECT_ACCESS.portalEntityValid,
+  vaultKey: "AT",
+  portalOrigin: AT.portalOrigin,
+  portalHostPattern: AT.portalHostPattern,
+  cookieDomainPattern: AT.cookieDomainPattern,
+  loginError: (snapshot, padroes) => loginErrorFrom(snapshot, padroes),
+  assertBelongs: (pageText, company) => assertSessionBelongsTo(pageText, company.nif),
+  urls: (portalOrigin) => ({
+    consultarDeclaracao: `${portalOrigin}${AT.paths.direct.consultarDeclaracao}`,
+    obterDocumentoPagamento: `${portalOrigin}${AT.paths.direct.obterDocumentoPagamento}`,
+  }),
+};
+
+/**
  * Rota A: sessão no Portal das Finanças aberta pelo **Acesso Direto do
  * TOConline**, com a extensão TOConline Connect a fazer o login por nós.
  *
@@ -63,6 +111,8 @@ export interface TocDirectAccessOptions {
   directAccessTimeoutMs?: number;
   /** Quanto se espera pela app ficar pronta ou devolver o login. */
   appReadyTimeoutMs?: number;
+  /** Espera entre a 1.ª e a 2.ª tentativa de abrir o Acesso Direto. */
+  retryDelayMs?: number;
   /** Cookies a limpar entre empresas. Injetável porque nos testes tudo é `127.0.0.1`. */
   atCookieDomainPattern?: RegExp;
 }
@@ -93,6 +143,8 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
   constructor(
     private readonly deps: { persistent: PersistentContextProvider },
     private readonly options: TocDirectAccessOptions = {},
+    /** Que portal se abre a partir do cofre. A AT por omissão. */
+    protected readonly portal: DirectAccessPortal = AT_PORTAL,
   ) {}
 
   private get tocTimeout(): number {
@@ -111,10 +163,14 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
     return this.options.appReadyTimeoutMs ?? TOC_DIRECT_ACCESS.appReadyTimeoutMs;
   }
 
+  private get retryDelayMs(): number {
+    return this.options.retryDelayMs ?? 1_000;
+  }
+
   private get padroes(): { loginHostPattern: RegExp; portalHostPattern: RegExp } {
     return {
       loginHostPattern: this.options.at?.loginHostPattern ?? AT.loginHostPattern,
-      portalHostPattern: this.options.at?.portalHostPattern ?? AT.portalHostPattern,
+      portalHostPattern: this.options.at?.portalHostPattern ?? this.portal.portalHostPattern,
     };
   }
 
@@ -369,19 +425,19 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
       }
     };
     const cofre = await page
-      .evaluate(() => {
+      .evaluate((vaultKey) => {
         const vault = (globalThis as unknown as {
           vault?: { accesses?: Record<string, Record<string, { valid?: boolean }> | undefined> };
         }).vault;
         const company = vault?.accesses?.["company"];
         const carregado = company !== undefined && company !== null && Object.keys(company).length > 0;
-        return { carregado, atValido: carregado && company?.["AT"]?.valid === true };
-      })
+        return { carregado, atValido: carregado && company?.[vaultKey]?.valid === true };
+      }, this.portal.vaultKey)
       .catch(() => ({ carregado: false, atValido: false }));
 
     const instalar = await ha(DIRECT_ACCESS_WORDING.extensionMissing);
-    const entidadeValida = await ha(TOC_DIRECT_ACCESS.portalEntityValid);
-    const entidade = entidadeValida || (await ha(TOC_DIRECT_ACCESS.portalEntity));
+    const entidadeValida = await ha(this.portal.entityValid);
+    const entidade = entidadeValida || (await ha(this.portal.entity));
     const assentou = cofre.carregado || entidade;
     const semSenha =
       assentou &&
@@ -423,11 +479,11 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
       case "password_not_configured":
         throw new AtIntegrityError(
           "direct_access_not_configured",
-          "O TOConline não tem a senha da AT desta empresa gravada.",
+          `O TOConline não tem a senha de «${this.portal.label}» desta empresa gravada.`,
         );
       case "unknown":
         throw new StructuralError(
-          "A página do Acesso Direto do TOConline não mostra o Portal das Finanças. O fluxo mudou.",
+          `A página do Acesso Direto do TOConline não mostra «${this.portal.label}». O fluxo mudou.`,
         );
     }
   }
@@ -436,34 +492,51 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
    * Clica na **entidade** «Portal das Finanças» e espera pelo separador que a
    * extensão abre — a AT autenticada na sua página inicial, de onde o fluxo
    * navega para a declaração/documento. Clica-se aqui, e não numa ação DPIVA:
-   * o atalho de ação do TOConline é intermitente e aterra fora do fluxo. Se
-   * nenhum separador abrir, é a página do TOConline que diz porquê.
+   * o atalho de ação do TOConline é intermitente e aterra fora do fluxo.
+   *
+   * O primeiro clique falha com frequência («O acesso está indisponível»),
+   * sem abrir separador nenhum, e um segundo clique costuma resolver
+   * (observado ao vivo). Por isso tenta-se **duas vezes**, com uma pausa de
+   * `retryDelayMs` (1 s por omissão) entre elas; só depois de as duas falharem
+   * é que o desfecho é `direct_access_failed`. Se, entretanto, a página disser
+   * que a extensão ou a senha faltam, isso ganha à retentativa.
    */
   private async abrirPortal(context: BrowserContext, tocPage: Page): Promise<Page> {
-    const separador = context
-      .waitForEvent("page", { timeout: this.directAccessTimeout })
-      .catch(() => null);
+    const tentativas = 2;
+    for (let tentativa = 1; tentativa <= tentativas; tentativa += 1) {
+      const separador = context
+        .waitForEvent("page", { timeout: this.directAccessTimeout })
+        .catch(() => null);
 
-    try {
-      await tocPage
-        .locator(TOC_DIRECT_ACCESS.portalEntityValid)
-        .first()
-        .click({ timeout: this.tocTimeout });
-    } catch {
-      throw new StructuralError(
-        "A entidade «Portal das Finanças» não está no Acesso Direto do TOConline. O fluxo mudou.",
-      );
+      try {
+        await tocPage
+          .locator(this.portal.entityValid)
+          .first()
+          .click({ timeout: this.tocTimeout });
+      } catch {
+        throw new StructuralError(
+          `A entidade «${this.portal.label}» não está no Acesso Direto do TOConline. O fluxo mudou.`,
+        );
+      }
+
+      const atPage = await separador;
+      if (atPage !== null) return atPage;
+
+      // Nada abriu. Um problema de configuração (extensão/senha) não se resolve
+      // com um segundo clique — sai já; uma indisponibilidade transitória, sim.
+      const kind = await this.sondar(tocPage);
+      if (kind === "password_not_configured" || kind === "extension_missing") this.exigirPronto(kind);
+
+      if (tentativa < tentativas) {
+        // Fecha o diálogo de erro do TOConline (tem um «OK») antes de repetir.
+        await tocPage.keyboard.press("Escape").catch(() => undefined);
+        await tocPage.waitForTimeout(this.retryDelayMs);
+        continue;
+      }
     }
-
-    const atPage = await separador;
-    if (atPage !== null) return atPage;
-
-    // Nada abriu. A página do TOConline pode entretanto ter dito porquê.
-    const kind = await this.sondar(tocPage);
-    if (kind === "password_not_configured" || kind === "extension_missing") this.exigirPronto(kind);
     throw new AtTransientError(
       "direct_access_failed",
-      "O Acesso Direto não abriu o Portal das Finanças dentro do tempo previsto.",
+      `O Acesso Direto não abriu «${this.portal.label}», mesmo após uma segunda tentativa.`,
     );
   }
 
@@ -484,7 +557,7 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
         reject(
           new AtTransientError(
             "direct_access_failed",
-            "A extensão fechou o separador do Portal das Finanças antes de a sessão abrir.",
+            `A extensão fechou o separador de «${this.portal.label}» antes de a sessão abrir.`,
           ),
         );
       atPage.once("close", aoFechar);
@@ -506,14 +579,14 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
       if (atPage.isClosed()) {
         throw new AtTransientError(
           "direct_access_failed",
-          "A extensão fechou o separador do Portal das Finanças antes de a sessão abrir.",
+          `A extensão fechou o separador de «${this.portal.label}» antes de a sessão abrir.`,
         );
       }
       const snapshot: AtPageSnapshot = {
         ...(await snapshotPage(atPage)),
         ...(documento.ultima === null ? {} : { status: documento.ultima.status() }),
       };
-      throw loginErrorFrom(snapshot, this.padroes);
+      throw this.portal.loginError(snapshot, this.padroes);
     } finally {
       documento.parar();
       (fechou as (() => void) | null)?.();
@@ -522,7 +595,7 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
     // A guarda corre sempre: um guião que entrasse com a senha de outra
     // empresa daria uma sessão perfeitamente válida — do contribuinte errado.
     const snapshot = await snapshotPage(atPage);
-    assertSessionBelongsTo(snapshot.text, company.nif);
+    this.portal.assertBelongs(snapshot.text, company);
   }
 
   private wrap(
@@ -532,13 +605,10 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
     abertas: Page[],
     pararRegisto: () => void,
   ): AuthenticatedAtSession {
-    const portalOrigin = this.options.at?.portalOrigin ?? AT.portalOrigin;
+    const portalOrigin = this.options.at?.portalOrigin ?? this.portal.portalOrigin;
     // Entrou-se como o próprio contribuinte: são os caminhos diretos, não os
     // do contabilista certificado.
-    const urls: AtSessionUrls = {
-      consultarDeclaracao: `${portalOrigin}${AT.paths.direct.consultarDeclaracao}`,
-      obterDocumentoPagamento: `${portalOrigin}${AT.paths.direct.obterDocumentoPagamento}`,
-    };
+    const urls: AtSessionUrls = this.portal.urls(portalOrigin);
     return {
       page,
       access: this.access,
@@ -560,7 +630,7 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
       if (!page.isClosed()) await page.close().catch(() => undefined);
     }
     await context
-      .clearCookies({ domain: this.options.atCookieDomainPattern ?? AT.cookieDomainPattern })
+      .clearCookies({ domain: this.options.atCookieDomainPattern ?? this.portal.cookieDomainPattern })
       .catch(() => undefined);
   }
 }

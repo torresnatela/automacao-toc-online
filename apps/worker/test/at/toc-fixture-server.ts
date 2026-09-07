@@ -45,6 +45,8 @@ export interface TocFixtureState {
   closeTabAfterLogin: boolean;
   /** A página fala com a extensão mas sem `login`: nenhum separador abre. */
   noTab: boolean;
+  /** O primeiro clique no Acesso Direto falha («indisponível»); o segundo resulta. */
+  failDirectAccessOnce: boolean;
   /** Quanto a app demora a dar `session_loaded` (ms). */
   sessionDelayMs: number;
   /** Nº de carregamentos que ficam presos na «Validação de sessão» (o reload liberta). */
@@ -116,6 +118,7 @@ function shell(state: TocFixtureState, at: AtFixtureServer): string {
     // Quando presa, a app fica em «Validação de sessão em curso» e nunca marca
     // session_loaded — modela o vaivém 401 que o adaptador corta com um reload.
     const PRESA = ${state.stuckThisLoad ? "true" : "false"};
+    window.__falhaAcessoUmaVez = ${state.failDirectAccessOnce ? "true" : "false"};
 
     // O cofre, como na app real: um objeto global com os acessos da empresa.
     window.vault = {
@@ -206,6 +209,13 @@ function shell(state: TocFixtureState, at: AtFixtureServer): string {
           estado.textContent = "Não existe informação de acesso para esta entidade. Defina as senhas da empresa.";
           return;
         }
+        // Falha transitória à primeira, como na AT real: mostra o erro e não
+        // abre separador; o segundo clique (o retry do adaptador) já resulta.
+        if (window.__falhaAcessoUmaVez) {
+          window.__falhaAcessoUmaVez = false;
+          estado.textContent = "Não foi possível estabelecer uma ligação no tempo esperado. O acesso está indisponivel. Por favor tente mais tarde.";
+          return;
+        }
         const hash = "acesso-" + Math.random();
         const ouvinte = (e) => {
           if (e.source === window && e.data && e.data.type === RESPOSTA && e.data.promise === hash) {
@@ -248,6 +258,7 @@ export async function startTocFixtureServer(at: AtFixtureServer): Promise<TocFix
     noTab: false,
     sessionDelayMs: 300,
     staysValidatingFor: 0,
+    failDirectAccessOnce: false,
     stuckThisLoad: false,
     visitas: { login: 0, vaultActions: 0 },
   };

@@ -75,6 +75,8 @@ function sessions(persistent: PersistentChromiumBrowser, timeoutMs = 8_000) {
       at: { portalOrigin: at.baseUrl, ...padroesDeHost(at), timeoutMs },
       directAccessTimeoutMs: 4_000,
       appReadyTimeoutMs: 10_000,
+      // Retry rápido: os testes não devem esperar o 1 s de produção.
+      retryDelayMs: 200,
       atCookieDomainPattern: /^127\.0\.0\.1$/,
     },
   );
@@ -118,6 +120,7 @@ beforeEach(async () => {
     toc.state.sessionDelayMs = 300;
     toc.state.staysValidatingFor = 0;
     toc.state.stuckThisLoad = false;
+    toc.state.failDirectAccessOnce = false;
     toc.state.visitas = { login: 0, vaultActions: 0 };
   }
   if (at) {
@@ -272,6 +275,17 @@ describe.skipIf(skip)("TocDirectAccessAtSessions (browser + TOConline e AT locai
 
     expect(erro).toBeInstanceOf(AtAuthError);
     expect((erro as AtAuthError).reason).toBe("two_factor");
+  }, 60_000);
+
+  it("um primeiro Acesso Direto que falha («indisponível») resulta ao segundo clique", async () => {
+    toc.state.failDirectAccessOnce = true;
+    const factory = sessions(novoBrowser());
+
+    const opened = await abrir(factory);
+
+    expect(opened.session.access).toBe("toconline_direct_access");
+    expect(opened.session.host).toBe(new URL(at.baseUrl).host);
+    await opened.session.close();
   }, 60_000);
 
   it("a extensão fecha o separador antes de aterrar → direct_access_failed (retentável)", async () => {
