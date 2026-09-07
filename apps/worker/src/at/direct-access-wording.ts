@@ -26,7 +26,7 @@ export const DIRECT_ACCESS_WORDING = {
    * // observado em: TODO(recon)
    */
   passwordNotConfigured:
-    /senha\w*[^.]{0,40}(?:n[aã]o (?:est[aá]|se encontra|foi)[^.]{0,20}(?:configurad|gravad|registad|definid)|por (?:configurar|gravar|registar))|n[aã]o (?:existe|h[aá]) senha/i,
+    /senha\w*[^.]{0,40}(?:n[aã]o (?:est[aá]|se encontra|foi)[^.]{0,20}(?:configurad|gravad|registad|definid)|por (?:configurar|gravar|registar))|n[aã]o (?:existe|h[aá]) (?:senha|informa[çc][aã]o de acesso)/i,
   /** O menu do Acesso Direto, com ou sem a grafia antiga. */
   directAccessMenu: /acesso dire[ct]?to/i,
 } as const;

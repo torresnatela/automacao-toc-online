@@ -510,9 +510,15 @@ async function rotaA(context: BrowserContext, registo: Registo, args: Argumentos
       // A troca de empresa ativa é uma função global da aplicação. Se ela mudou
       // de nome (ou deixou de existir), é exatamente isso que se veio descobrir
       // — daí o erro ser registado em vez de matar a sessão.
-      const chamada = `${TOC_DIRECT_ACCESS.switchEntityFn}(${args.tocCompanyId}, ${args.tocCluster})`;
+      const chamada = `${TOC_DIRECT_ACCESS.appElement}.${TOC_DIRECT_ACCESS.switchEntityFn}(${args.tocCompanyId}, "${TOC_DIRECT_ACCESS.vaultActionsPath}")`;
       try {
-        await page.evaluate(chamada);
+        await page
+          .evaluate(
+            ([appElement, fn, id, url]) =>
+              ((globalThis as unknown as { document: { querySelector: (s: string) => unknown } }).document.querySelector(appElement) as Record<string, (i: number, u: string) => unknown>)[fn]!(id, url),
+            [TOC_DIRECT_ACCESS.appElement, TOC_DIRECT_ACCESS.switchEntityFn, args.tocCompanyId ?? 0, TOC_DIRECT_ACCESS.vaultActionsPath] as const,
+          )
+          .catch(() => undefined);
         console.log(`[recon] switch de empresa executado: ${chamada}`);
       } catch (err) {
         console.error(`[recon] switch de empresa FALHOU (${chamada}): ${mensagemDe(err)}`);
@@ -526,7 +532,14 @@ async function rotaA(context: BrowserContext, registo: Registo, args: Argumentos
     },
   );
 
-  await irPara(page, new URL(TOC_DIRECT_ACCESS.summaryPath, page.url()).toString());
+  // Navegação pela própria app: um `goto` depois do login derruba a sessão.
+  await page
+    .evaluate(
+      ([appElement, changeRoute, url]) =>
+        ((globalThis as unknown as { document: { querySelector: (s: string) => unknown } }).document.querySelector(appElement) as Record<string, (u: string) => void>)[changeRoute]!(url),
+      [TOC_DIRECT_ACCESS.appElement, TOC_DIRECT_ACCESS.changeRouteFn, TOC_DIRECT_ACCESS.vaultActionsPath] as const,
+    )
+    .catch((err) => console.error(`[recon] changeRoute falhou: ${mensagemDe(err)}`));
   await etapa(
     registo,
     page,

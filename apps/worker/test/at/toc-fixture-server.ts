@@ -3,22 +3,22 @@ import type { AtFixtureServer } from "./fixture-server";
 
 /**
  * O TOConline em miniatura para a rota A, servido em `127.0.0.1` — zero rede
- * externa. Modela só o que o Acesso Direto precisa: login do gabinete, a troca
- * de empresa ativa (`switchToEntityAndNotifyPages`) e a página do Sumário com o
- * menu «Acesso Direto», que fala com a extensão pelo **mesmo protocolo** da
- * TOConline Connect (`postMessage` com `type: btoa("platform")`).
+ * externa. Modela o que se observou na aplicação real em 2026-09-06 e de que o
+ * adaptador depende:
  *
- * TODOS OS DADOS SÃO SINTÉTICOS. As credenciais do gabinete e as empresas são
- * inventadas para os testes.
+ * - login do gabinete (`/login` → `/companies`);
+ * - uma SPA `<toc-app>` em Shadow DOM com `session_data` (`session_loaded`,
+ *   `entity_id`), o método `switchToEntityAndNotifyPages(id, url)` (troca a
+ *   empresa ativa e faz uma navegação COMPLETA para `url`) e `changeRoute(url)`;
+ * - a página `/vault-actions` (Acesso Direto): entidade «Portal das Finanças -
+ *   Autoridade Tributária e Aduaneira» e a ação «DPIVA - Obter documento de
+ *   pagamento», com a classe `valid` quando a senha está gravada, e o cofre em
+ *   `window.vault.accesses.company.AT`;
+ * - o handshake com a extensão pelo **mesmo protocolo** da TOConline Connect
+ *   (`postMessage` com `type: btoa("platform")`), e sem resposta a página pede
+ *   para instalar a extensão.
  *
- * Fiel ao portal real no que importa ao adaptador:
- * - a aplicação vive em Shadow DOM (`<toc-app>`): o texto do menu e dos avisos
- *   NÃO aparece em `innerText`, só ao motor de texto do Playwright;
- * - a página só mostra o menu depois de a extensão responder ao handshake; sem
- *   resposta mostra «Instalar Extensão Chrome» — é a própria página que diz que
- *   a extensão não está lá;
- * - o guião entregue à extensão é o da AT de mentira (`fixture-server.ts`):
- *   URL de login, XPath dos campos e a senha que o teste escolheu.
+ * TODOS OS DADOS SÃO SINTÉTICOS.
  */
 
 export const TOC_FIXTURE = {
@@ -31,12 +31,12 @@ export const TOC_FIXTURE = {
 export interface TocFixtureState {
   cookieValido: string;
   /** A empresa ativa depois do último `switchToEntityAndNotifyPages`. */
-  activeCompany: { id: number; cluster: number } | null;
+  activeCompany: { id: number; url: string } | null;
   /** Todas as trocas de empresa pedidas à página, por ordem. */
-  switches: { id: number; cluster: number }[];
+  switches: { id: number; url: string }[];
   /** Mostra «Instalar Extensão Chrome» mesmo que a extensão responda. */
   extensionMissing: boolean;
-  /** A senha da AT da empresa está gravada no TOConline? */
+  /** A senha da AT da empresa está gravada no cofre? */
   passwordConfigured: boolean;
   /** O que a extensão vai escrever no formulário da AT. */
   atUsername: string;
@@ -45,7 +45,9 @@ export interface TocFixtureState {
   closeTabAfterLogin: boolean;
   /** A página fala com a extensão mas sem `login`: nenhum separador abre. */
   noTab: boolean;
-  visitas: { login: number; summary: number };
+  /** Quanto a app demora a dar `session_loaded` (ms). */
+  sessionDelayMs: number;
+  visitas: { login: number; vaultActions: number };
 }
 
 export interface TocFixtureServer {
@@ -74,36 +76,12 @@ const PAGINA_LOGIN = (erro = false): string =>
   );
 
 /**
- * A função global que troca a empresa ativa — numa SPA existe em qualquer
- * página autenticada, e é assim que o adaptador a chama (logo a seguir ao
- * login, antes de ir ao Sumário). Regista a troca no servidor para o teste a
- * poder ver.
+ * A shell da SPA, igual em todas as rotas autenticadas: quem decide o que se
+ * vê é o `pathname`, como na aplicação real (`iron-pages`). O guião da
+ * extensão vai embutido como JSON porque é a página do TOConline que o
+ * constrói (com a senha decifrada do seu lado) — o adaptador nunca o vê.
  */
-const SCRIPT_SWITCH_ENTITY = `
-    window.switchToEntityAndNotifyPages = function (id, cluster) {
-      return fetch("/switch-entity", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id, cluster }),
-      });
-    };`;
-
-const PAGINA_EMPRESAS = pagina(
-  "Empresas",
-  `<toc-app></toc-app>
-  <script>${SCRIPT_SWITCH_ENTITY}
-    class TocApp extends HTMLElement { connectedCallback(){ this.attachShadow({mode:"open"}).innerHTML = "<h1>Empresas</h1><vaadin-grid></vaadin-grid>"; } }
-    customElements.define("toc-app", TocApp);
-  </script>`,
-);
-
-/**
- * O Sumário. O guião vai embutido como JSON porque é a página do TOConline que
- * o constrói (com a senha decifrada do seu lado) e o entrega à extensão — o
- * adaptador nunca o vê nem o constrói.
- */
-function paginaSumario(state: TocFixtureState, at: AtFixtureServer): string {
-  const empresa = state.activeCompany;
+function shell(state: TocFixtureState, at: AtFixtureServer): string {
   const guiao = state.noTab
     ? { action: "login-fetch-logout", logout: { url: `${at.baseUrl}/logout`, timeout: 500 } }
     : {
@@ -113,12 +91,7 @@ function paginaSumario(state: TocFixtureState, at: AtFixtureServer): string {
           url: `${at.loginBaseUrl}/loginForm`,
           actions: [
             { type: "input-value", element: "//input[@name='username']", value: state.atUsername },
-            {
-              type: "input-value",
-              element: "//input[@name='password']",
-              value: state.atPassword,
-              hidePassword: true,
-            },
+            { type: "input-value", element: "//input[@name='password']", value: state.atPassword, hidePassword: true },
             { type: "element-click", element: "//button[@type='submit']" },
           ],
         },
@@ -126,7 +99,7 @@ function paginaSumario(state: TocFixtureState, at: AtFixtureServer): string {
         comeBack: true,
       };
   return pagina(
-    "Sumário",
+    "TOConline",
     `<toc-app></toc-app>
   <script>
     const PEDIDO = btoa("platform");
@@ -134,15 +107,54 @@ function paginaSumario(state: TocFixtureState, at: AtFixtureServer): string {
     const GUIAO = ${JSON.stringify(guiao)};
     const FORCAR_SEM_EXTENSAO = ${state.extensionMissing ? "true" : "false"};
     const SENHA_GRAVADA = ${state.passwordConfigured ? "true" : "false"};
-    const EMPRESA = ${JSON.stringify(empresa)};
+    const EMPRESA = ${JSON.stringify(state.activeCompany)};
+    const ATRASO_SESSAO = ${state.sessionDelayMs};
 
-    ${SCRIPT_SWITCH_ENTITY}
+    // O cofre, como na app real: um objeto global com os acessos da empresa.
+    window.vault = {
+      type: EMPRESA ? "company" : null,
+      accesses: EMPRESA && SENHA_GRAVADA ? { company: { AT: { username: "5#######", valid: true } } } : {},
+    };
 
     class TocApp extends HTMLElement {
+      constructor() {
+        super();
+        this.session_data = { session_loaded: false, entity_id: null };
+      }
       connectedCallback() {
         this.raiz = this.attachShadow({ mode: "open" });
-        this.raiz.innerHTML = "<h1>Sumário</h1><p id='a-carregar'>A carregar…</p>";
-        this.handshake();
+        this.raiz.innerHTML = "<div id='overlay'>Validação de sessão em curso</div>";
+        setTimeout(() => {
+          this.session_data = { session_loaded: true, entity_id: EMPRESA ? EMPRESA.id : null };
+          this.render();
+        }, ATRASO_SESSAO);
+      }
+      // A troca de empresa: regista no servidor e faz uma navegação COMPLETA.
+      async switchToEntityAndNotifyPages(id, url) {
+        await fetch("/switch-entity", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ id: Number(id), url }),
+        });
+        window.location.assign(url);
+      }
+      changeRoute(url) {
+        history.pushState({}, "", url);
+        this.render();
+      }
+      render() {
+        const path = window.location.pathname;
+        const cabecalho = "<nav><span>Área de contabilista</span> <span>Empresa</span></nav>";
+        if (path === "/vault-actions" && EMPRESA) {
+          this.raiz.innerHTML = cabecalho + "<h1>Acesso Direto</h1><p id='estado'></p><div id='cofre'>A carregar…</div>";
+          this.handshake();
+          return;
+        }
+        if (path === "/my_company/summary" && EMPRESA) {
+          this.raiz.innerHTML = cabecalho + "<h1>Sumário</h1><p>Empresa " + EMPRESA.id + "</p>";
+          return;
+        }
+        this.raiz.innerHTML = cabecalho + "<h1>Empresas</h1><vaadin-grid></vaadin-grid>";
       }
       handshake() {
         const hash = "handshake-" + Math.random();
@@ -155,38 +167,40 @@ function paginaSumario(state: TocFixtureState, at: AtFixtureServer): string {
         const tenta = () => {
           if (respondeu || tentativas >= 15) {
             window.removeEventListener("message", ouvinte);
-            this.render(respondeu && !FORCAR_SEM_EXTENSAO);
+            this.renderCofre(respondeu && !FORCAR_SEM_EXTENSAO);
             return;
           }
           tentativas += 1;
-          window.postMessage({ type: PEDIDO, hash, hasExtension: false }, "*");
+          window.postMessage({ type: PEDIDO, hash, hasExtension: null }, "*");
           setTimeout(tenta, 100);
         };
         tenta();
       }
-      render(comExtensao) {
-        const empresa = EMPRESA ? "Empresa " + EMPRESA.id + " (cluster " + EMPRESA.cluster + ")" : "Sem empresa ativa";
+      renderCofre(comExtensao) {
+        const cofre = this.raiz.getElementById("cofre");
         if (!comExtensao) {
-          this.raiz.innerHTML = "<h1>Sumário</h1><p>" + empresa + "</p><section><h2>Acesso Direto</h2><p>Para utilizar esta funcionalidade, instale a extensão.</p><button type='button'>Instalar Extensão Chrome</button></section>";
+          cofre.innerHTML = "<p>Para utilizar esta funcionalidade, instale a extensão.</p><button type='button'>Instalar Extensão Chrome</button>";
           return;
         }
-        this.raiz.innerHTML = "<h1>Sumário</h1><p>" + empresa + "</p><nav><span class='menu'>Acesso Direto</span><ul><li><a href='#' id='pf'>Portal das Finanças</a></li><li><a href='#'>Segurança Social</a></li><li><a href='#'>Senhas da empresa</a></li></ul></nav><p id='estado'></p>";
-        this.raiz.getElementById("pf").addEventListener("click", (ev) => {
-          ev.preventDefault();
-          this.acessoDireto();
-        });
+        const classe = SENHA_GRAVADA ? "valid" : "invalid";
+        cofre.innerHTML =
+          "<div><a href='/vault-company'>Definir senhas da Empresa</a></div>" +
+          "<vaadin-grid><vaadin-grid-cell-content><a href='#'><span class='entity_title " + classe + "'>Portal das Finanças - Autoridade Tributária e Aduaneira</span></a></vaadin-grid-cell-content>" +
+          "<vaadin-grid-cell-content><div><a href='#' class='action_title " + classe + "' id='dpiva-proof'>DPIVA - Obter comprovativo</a></div>" +
+          "<div><a href='#' class='action_title " + classe + "' id='dpiva-doc'>DPIVA - Obter documento de pagamento</a></div></vaadin-grid-cell-content></vaadin-grid>";
+        this.raiz.getElementById("dpiva-doc").addEventListener("click", (ev) => { ev.preventDefault(); this.invocar(); });
       }
-      acessoDireto() {
+      invocar() {
         const estado = this.raiz.getElementById("estado");
         if (!SENHA_GRAVADA) {
-          estado.textContent = "A senha da empresa não está configurada. Registe-a em Dados da empresa.";
+          estado.textContent = "Não existe informação de acesso para esta entidade. Defina as senhas da empresa.";
           return;
         }
         const hash = "acesso-" + Math.random();
         const ouvinte = (e) => {
           if (e.source === window && e.data && e.data.type === RESPOSTA && e.data.promise === hash) {
             window.removeEventListener("message", ouvinte);
-            estado.textContent = "Acesso Direto iniciado: " + JSON.stringify(e.data.response);
+            estado.textContent = "Acesso Direto iniciado";
           }
         };
         window.addEventListener("message", ouvinte);
@@ -222,7 +236,8 @@ export async function startTocFixtureServer(at: AtFixtureServer): Promise<TocFix
     atPassword: "boa",
     closeTabAfterLogin: false,
     noTab: false,
-    visitas: { login: 0, summary: 0 },
+    sessionDelayMs: 300,
+    visitas: { login: 0, vaultActions: 0 },
   };
 
   const trata = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
@@ -255,30 +270,29 @@ export async function startTocFixtureServer(at: AtFixtureServer): Promise<TocFix
       return html(res, PAGINA_LOGIN());
     }
 
+    if (url.pathname === "/favicon.ico") {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+
     if (!autenticado) {
       res.writeHead(302, { location: "/login" });
       res.end();
       return;
     }
 
-    if (url.pathname === "/companies") return html(res, PAGINA_EMPRESAS);
-
     if (url.pathname === "/switch-entity" && req.method === "POST") {
-      const { id, cluster } = JSON.parse(await lerCorpo(req)) as { id: number; cluster: number };
-      state.activeCompany = { id, cluster };
-      state.switches.push({ id, cluster });
+      const { id, url: destino } = JSON.parse(await lerCorpo(req)) as { id: number; url: string };
+      state.activeCompany = { id, url: destino };
+      state.switches.push({ id, url: destino });
       res.writeHead(204);
       res.end();
       return;
     }
 
-    if (url.pathname === "/summary") {
-      state.visitas.summary += 1;
-      return html(res, paginaSumario(state, at));
-    }
-
-    res.writeHead(404, { "content-type": "text/html; charset=utf-8" });
-    res.end(pagina("Não encontrado", "<h1>404</h1>"));
+    if (url.pathname === "/vault-actions") state.visitas.vaultActions += 1;
+    return html(res, shell(state, at));
   };
 
   const server: Server = createServer((req, res) => {

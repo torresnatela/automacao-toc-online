@@ -74,6 +74,7 @@ function sessions(persistent: PersistentChromiumBrowser, timeoutMs = 8_000) {
       },
       at: { portalOrigin: at.baseUrl, ...padroesDeHost(at), timeoutMs },
       directAccessTimeoutMs: 4_000,
+      appReadyTimeoutMs: 10_000,
       atCookieDomainPattern: /^127\.0\.0\.1$/,
     },
   );
@@ -114,7 +115,8 @@ beforeEach(async () => {
     toc.state.atPassword = SENHAS.boa;
     toc.state.closeTabAfterLogin = false;
     toc.state.noTab = false;
-    toc.state.visitas = { login: 0, summary: 0 };
+    toc.state.sessionDelayMs = 300;
+    toc.state.visitas = { login: 0, vaultActions: 0 };
   }
   if (at) {
     at.state.serverError = false;
@@ -146,7 +148,8 @@ describe.skipIf(skip)("TocDirectAccessAtSessions (browser + TOConline e AT locai
     });
     // A página devolvida é a da AT (aberta pela extensão), não a do TOConline.
     expect(new URL(opened.session.page.url()).host).toBe(new URL(at.baseUrl).host);
-    expect(toc.state.switches).toEqual([{ id: 4321, cluster: 5 }]);
+    // Vestiu a empresa pela app e aterrou logo no Acesso Direto.
+    expect(toc.state.switches).toEqual([{ id: 4321, url: "/vault-actions" }]);
     // A extensão entrou e aterrou no portal exatamente uma vez.
     expect(at.state.visitas.consultarDeclaracao).toBe(1);
 
@@ -180,22 +183,20 @@ describe.skipIf(skip)("TocDirectAccessAtSessions (browser + TOConline e AT locai
     expect(segunda.reused).toBe(true);
     expect(toc.state.visitas.login).toBe(1);
     expect(toc.state.switches).toEqual([
-      { id: 4321, cluster: 5 },
-      { id: 9999, cluster: 7 },
+      { id: 4321, url: "/vault-actions" },
+      { id: 9999, url: "/vault-actions" },
     ]);
     expect(at.state.visitas.consultarDeclaracao).toBe(2);
   }, 90_000);
 
-  it("sem tocCompanyId/cluster a pré-condição é company_not_linked, sem abrir browser", () => {
+  it("sem tocCompanyId a pré-condição é company_not_linked, sem abrir browser", () => {
     const factory = sessions(novoBrowser());
     expect(factory.precondition(empresa({ tocCompanyId: null }))).toEqual({
       ok: false,
       outcome: "company_not_linked",
     });
-    expect(factory.precondition(empresa({ tocCluster: null }))).toEqual({
-      ok: false,
-      outcome: "company_not_linked",
-    });
+    // O cluster é um detalhe da varredura: a troca de empresa na app só precisa do id.
+    expect(factory.precondition(empresa({ tocCluster: null }))).toEqual({ ok: true });
     expect(factory.precondition(empresa())).toEqual({ ok: true });
     expect(factory.access).toBe("toconline_direct_access");
     expect(factory.credentialProvider).toBe("toconline");

@@ -28,33 +28,41 @@ import { AT, TOC_DIRECT_ACCESS, assertAtHost, type AtOptions } from "./selectors
  * Rota A: sessão no Portal das Finanças aberta pelo **Acesso Direto do
  * TOConline**, com a extensão TOConline Connect a fazer o login por nós.
  *
- * Três coisas moldam este ficheiro.
+ * Quatro coisas moldam este ficheiro (reconhecimento de 2026-09-06).
  *
  * A primeira é que **a senha da AT nunca passa por aqui**. O TOConline
- * guarda-a, constrói o guião de login e entrega-o à extensão; a extensão abre
- * um separador novo e preenche o formulário. O que nós vemos é o separador —
- * um `page` novo no mesmo contexto — e o sítio onde ele aterra. Este código
- * não escuta, não regista e não serializa as mensagens entre a página e a
- * extensão.
+ * guarda-a no cofre, constrói o guião de login e entrega-o à extensão; a
+ * extensão abre um separador novo e preenche o formulário. O que nós vemos é o
+ * separador — um `page` novo no mesmo contexto — e o sítio onde ele aterra.
+ * Este código não escuta, não regista e não serializa as mensagens entre a
+ * página e a extensão.
  *
- * A segunda é que o browser é **um perfil persistente**, não um contexto por
+ * A segunda é que o TOConline é uma SPA que **derruba a sessão a cada
+ * navegação completa nossa** (`page.goto` depois do login devolve ao `/login`).
+ * Por isso só se faz `goto` para o login; tudo o resto é feito pela própria
+ * aplicação: `toc-app.switchToEntityAndNotifyPages(id, "/vault-actions")`
+ * veste a empresa e aterra no Acesso Direto, e `toc-app.changeRoute` navega
+ * dentro dela. Entre empresas o separador do TOConline fica aberto — é um
+ * login por lote.
+ *
+ * A terceira é que o browser é **um perfil persistente**, não um contexto por
  * empresa como na rota B: a extensão só vive num perfil, e um perfil tem um
  * contexto só. O isolamento entre empresas faz-se por logout (que a extensão
- * já faz antes de cada login) e pela limpeza das cookies da AT no `close()`;
- * a sessão do TOConline, essa, fica — é um login por lote, não por empresa.
+ * já faz antes de cada login) e pela limpeza das cookies da AT no `close()`.
  *
- * A terceira é que **a página do TOConline é Shadow DOM**: `innerText` não a
- * atravessa, e por isso os avisos («Instalar Extensão Chrome», «senha não
- * configurada») sondam-se com o motor de texto do Playwright, padrão a padrão.
+ * A quarta é que **a página do TOConline é Shadow DOM**: `innerText` não a
+ * atravessa, e por isso os sinais do cofre sondam-se com o motor de seletores
+ * do Playwright e com o estado que a própria app expõe (`toc-app.session_data`,
+ * `window.vault.accesses`).
  */
 
 export interface TocDirectAccessOptions {
   toconline?: TocLoginOptions;
-  /** Caminho do Sumário da empresa, onde vive o menu do Acesso Direto. */
-  summaryPath?: string;
   at?: AtOptions;
-  /** Quanto se espera pelo separador que a extensão abre e pelo Sumário renderizar. */
+  /** Quanto se espera pelo separador que a extensão abre e pelo cofre renderizar. */
   directAccessTimeoutMs?: number;
+  /** Quanto se espera pela app ficar pronta ou devolver o login. */
+  appReadyTimeoutMs?: number;
   /** Cookies a limpar entre empresas. Injetável porque nos testes tudo é `127.0.0.1`. */
   atCookieDomainPattern?: RegExp;
 }
@@ -65,6 +73,15 @@ interface SessaoToc {
   origin: string;
   host: string;
   reused: boolean;
+}
+
+/** O que a app diz de si própria num instante. `null` = a página estava a navegar. */
+interface EstadoDaApp {
+  pronta: boolean;
+  loaded: boolean;
+  entityId: number | null;
+  path: string;
+  loginForm: boolean;
 }
 
 export class TocDirectAccessAtSessions implements AtSessionFactory {
@@ -90,6 +107,10 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
     return this.options.directAccessTimeoutMs ?? this.atTimeout;
   }
 
+  private get appReadyTimeout(): number {
+    return this.options.appReadyTimeoutMs ?? TOC_DIRECT_ACCESS.appReadyTimeoutMs;
+  }
+
   private get padroes(): { loginHostPattern: RegExp; portalHostPattern: RegExp } {
     return {
       loginHostPattern: this.options.at?.loginHostPattern ?? AT.loginHostPattern,
@@ -98,13 +119,12 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
   }
 
   /**
-   * Sem a ligação ao TOConline não há empresa para vestir — e descobri-lo com
-   * o browser já aberto gastaria um login do gabinete para nada.
+   * Sem o id da empresa no TOConline não há empresa para vestir — e
+   * descobri-lo com o browser já aberto gastaria um login do gabinete para nada.
+   * O cluster é um detalhe da varredura: a troca na app só precisa do id.
    */
   precondition(company: AtCompanyHandle): AtPrecondition {
-    return company.tocCompanyId !== null && company.tocCluster !== null
-      ? { ok: true }
-      : { ok: false, outcome: "company_not_linked" };
+    return company.tocCompanyId !== null ? { ok: true } : { ok: false, outcome: "company_not_linked" };
   }
 
   async open(input: {
@@ -125,12 +145,9 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
     const toc = await this.sessaoToconline(context, input.credentials);
     await input.log?.info("sessão TOConline", { host: toc.host, reused: toc.reused });
 
-    await this.vestirEmpresa(toc.page, input.company);
-    await toc.page.goto(`${toc.origin}${this.options.summaryPath ?? TOC_DIRECT_ACCESS.summaryPath}`, {
-      waitUntil: "domcontentloaded",
-      timeout: this.tocTimeout,
-    });
-    this.exigirPronto(await this.classificarSumario(toc.page));
+    await this.vestirEmpresa(toc.page, input.company, input.credentials);
+    await input.log?.info("empresa vestida", { path: TOC_DIRECT_ACCESS.vaultActionsPath });
+    this.exigirPronto(await this.classificarCofre(toc.page));
 
     // Tudo o que abrir a partir daqui é da AT e fecha com a sessão — inclusive
     // os popups que a captura do PDF vier a abrir mais à frente.
@@ -161,83 +178,204 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
     }
   }
 
+  /* ---------------------------------------------------------------------- *
+   * TOConline
+   * ---------------------------------------------------------------------- */
+
+  /** O que `toc-app` diz de si própria; `null` enquanto a página navega. */
+  private async lerApp(page: Page): Promise<EstadoDaApp | null> {
+    try {
+      return await page.evaluate(
+        ([appElement, switchFn, loginField]) => {
+          // Sem a lib DOM no worker: o browser entra pelo `globalThis`, como em
+          // `classify-page.ts`.
+          const janela = globalThis as unknown as {
+            document: { querySelector: (s: string) => unknown };
+            location: { pathname: string };
+          };
+          const app = janela.document.querySelector(appElement) as {
+            session_data?: { session_loaded?: boolean; entity_id?: number | null };
+            [k: string]: unknown;
+          } | null;
+          return {
+            pronta: typeof app?.[switchFn] === "function",
+            loaded: app?.session_data?.session_loaded === true,
+            entityId: app?.session_data?.entity_id ?? null,
+            path: janela.location.pathname,
+            loginForm: janela.document.querySelector(loginField) !== null,
+          };
+        },
+        [TOC_DIRECT_ACCESS.appElement, TOC_DIRECT_ACCESS.switchEntityFn, TOC_DIRECT_ACCESS.loginField] as const,
+      );
+    } catch {
+      return null;
+    }
+  }
+
   /**
-   * A sessão do TOConline no perfil persistente: o perfil **é** o
-   * `storageState`. Se o portal já nos conhece, `/login` devolve-nos à
-   * aplicação e não há login a fazer; se ficamos no formulário, entra-se.
+   * Espera até a app dizer que está pronta (`session_loaded`) ou até nos ter
+   * devolvido ao formulário de login — a app aterra primeiro na shell e só
+   * depois da «validação de sessão» decide, portanto olhar cedo demais para o
+   * URL diz sempre «autenticado».
+   */
+  private async aguardarApp(
+    page: Page,
+    pronta: (estado: EstadoDaApp) => boolean,
+    timeoutMs: number,
+  ): Promise<"pronta" | "login" | "timeout"> {
+    const fim = Date.now() + timeoutMs;
+    for (;;) {
+      const estado = await this.lerApp(page);
+      if (estado !== null) {
+        if (estado.loginForm && estado.path.includes("/login")) return "login";
+        if (estado.pronta && estado.loaded && pronta(estado)) return "pronta";
+      }
+      if (Date.now() >= fim) return "timeout";
+      await page.waitForTimeout(250).catch(() => undefined);
+    }
+  }
+
+  /**
+   * A sessão do TOConline no perfil persistente. Um separador só, reutilizado
+   * entre empresas: enquanto a app disser que está pronta não há `goto`
+   * nenhum — seria ele a derrubar a sessão. Só um separador novo (ou uma
+   * sessão que a app entretanto deu por morta) passa pelo login.
    */
   private async sessaoToconline(
     context: BrowserContext,
     credentials: PortalCredentials,
   ): Promise<SessaoToc> {
-    const page = this.tocPage !== null && !this.tocPage.isClosed() ? this.tocPage : await context.newPage();
+    const nova = this.tocPage === null || this.tocPage.isClosed();
+    const page = nova ? await context.newPage() : this.tocPage!;
     this.tocPage = page;
 
     const loginUrl = this.options.toconline?.loginUrl ?? TOCONLINE.loginUrl;
-    await page.goto(loginUrl, { waitUntil: "domcontentloaded", timeout: this.tocTimeout });
+    if (nova) {
+      await page.goto(loginUrl, { waitUntil: "domcontentloaded", timeout: this.tocTimeout });
+    }
 
-    if (new URL(page.url()).pathname.includes("/login")) {
-      const entrada = await submitLogin(page, credentials, this.options.toconline ?? {});
-      return { page, origin: entrada.origin, host: entrada.host, reused: false };
+    let reused = true;
+    let estado = await this.aguardarApp(page, () => true, this.appReadyTimeout);
+    if (estado === "login") {
+      await submitLogin(page, credentials, this.options.toconline ?? {});
+      reused = false;
+      estado = await this.aguardarApp(page, () => true, this.appReadyTimeout);
+    }
+    if (estado !== "pronta") {
+      throw new Error("O TOConline não ficou pronto dentro do tempo previsto.");
     }
 
     const host = assertTocHost(page.url(), this.options.toconline?.hostPattern);
-    return { page, origin: new URL(page.url()).origin, host, reused: true };
+    return { page, origin: new URL(page.url()).origin, host, reused };
   }
 
   /**
-   * Troca a empresa ativa pela função global da aplicação. Os argumentos vão
-   * como valores, nunca interpolados numa string de código — e a função em
-   * falta é o fluxo a ter mudado, não um azar da rede.
+   * Veste a empresa pelo método da própria app, que navega já para o Acesso
+   * Direto. Se a app nos devolver ao login pelo caminho (sessão que morreu no
+   * servidor), entra-se de novo e repete-se **uma** vez.
    */
-  private async vestirEmpresa(page: Page, company: AtCompanyHandle): Promise<void> {
-    const fn = TOC_DIRECT_ACCESS.switchEntityFn;
-    let resultado: "ok" | "missing";
-    try {
-      resultado = await page.evaluate(
-        async ([nome, id, cluster]) => {
-          const janela = globalThis as unknown as Record<string, unknown>;
-          const trocar = janela[nome];
-          if (typeof trocar !== "function") return "missing" as const;
-          await (trocar as (id: number | null, cluster: number | null) => unknown)(id, cluster);
-          return "ok" as const;
-        },
-        [fn, company.tocCompanyId, company.tocCluster] as const,
+  private async vestirEmpresa(
+    page: Page,
+    company: AtCompanyHandle,
+    credentials: PortalCredentials,
+  ): Promise<void> {
+    const id = company.tocCompanyId!;
+    const destino = TOC_DIRECT_ACCESS.vaultActionsPath;
+
+    for (let tentativa = 0; tentativa < 2; tentativa += 1) {
+      const antes = await this.lerApp(page);
+      if (antes === null || !antes.pronta) {
+        throw new StructuralError(
+          `A aplicação do TOConline não expõe ${TOC_DIRECT_ACCESS.switchEntityFn}. O fluxo do Acesso Direto mudou.`,
+        );
+      }
+      // A promessa pode nunca resolver: o método navega a página inteira e o
+      // contexto de avaliação morre com ela. É a chegada que se espera, não o
+      // retorno.
+      void page
+        .evaluate(
+          ([appElement, switchFn, entityId, url]) => {
+            const janela = globalThis as unknown as {
+              document: { querySelector: (s: string) => unknown };
+            };
+            const app = janela.document.querySelector(appElement) as Record<
+              string,
+              (id: number, url: string) => unknown
+            >;
+            return app[switchFn]!(entityId, url);
+          },
+          [TOC_DIRECT_ACCESS.appElement, TOC_DIRECT_ACCESS.switchEntityFn, id, destino] as const,
+        )
+        .catch(() => undefined);
+
+      const estado = await this.aguardarApp(
+        page,
+        (s) => s.entityId === id && s.path === destino,
+        this.appReadyTimeout,
       );
-    } catch (err) {
-      throw new StructuralError(
-        `A troca de empresa no TOConline falhou (${err instanceof Error ? err.name : "erro"}). O fluxo mudou.`,
-      );
+      if (estado === "pronta") return;
+      if (estado === "login" && tentativa === 0) {
+        await submitLogin(page, credentials, this.options.toconline ?? {});
+        const depois = await this.aguardarApp(page, () => true, this.appReadyTimeout);
+        if (depois !== "pronta") break;
+        continue;
+      }
+      break;
     }
-    if (resultado === "missing") {
-      throw new StructuralError(
-        `A função ${fn} não existe na aplicação do TOConline. O fluxo do Acesso Direto mudou.`,
-      );
-    }
+    throw new StructuralError(
+      "A troca de empresa no TOConline não aterrou no Acesso Direto. O fluxo mudou.",
+    );
   }
 
-  /** Sonda os padrões um a um; `getByText` atravessa o Shadow DOM, `innerText` não. */
+  /* ---------------------------------------------------------------------- *
+   * Cofre (Acesso Direto)
+   * ---------------------------------------------------------------------- */
+
+  /**
+   * Sonda os sinais do cofre: os padrões de texto atravessam o Shadow DOM pelo
+   * motor do Playwright, e o estado do cofre lê-se da própria app
+   * (`window.vault.accesses.company.AT`) — mais fiável do que qualquer frase.
+   */
   private async sondar(page: Page): Promise<DirectAccessPageKind> {
-    const ha = async (padrao: RegExp): Promise<boolean> => {
+    const ha = async (seletorOuPadrao: string | RegExp): Promise<boolean> => {
       try {
-        return (await page.getByText(padrao).count()) > 0;
+        const locator =
+          typeof seletorOuPadrao === "string" ? page.locator(seletorOuPadrao) : page.getByText(seletorOuPadrao);
+        return (await locator.count()) > 0;
       } catch {
         return false;
       }
     };
+    const cofre = await page
+      .evaluate(() => {
+        const vault = (globalThis as unknown as {
+          vault?: { accesses?: Record<string, Record<string, { valid?: boolean }>> };
+        }).vault;
+        if (!vault) return { conhecido: false, atValido: false };
+        const at = vault.accesses?.["company"]?.["AT"];
+        return { conhecido: true, atValido: at?.valid === true };
+      })
+      .catch(() => ({ conhecido: false, atValido: false }));
+
+    const acao = await ha(TOC_DIRECT_ACCESS.paymentDocumentAction);
+    const entidade = await ha(TOC_DIRECT_ACCESS.portalEntity);
+    const semSenhaNoCofre = cofre.conhecido && (acao || entidade) && !cofre.atValido;
+    const acaoInvalida = await ha(`${TOC_DIRECT_ACCESS.paymentDocumentAction}.invalid`);
+
     return classifyDirectAccessSignals({
       extensionMissing: await ha(DIRECT_ACCESS_WORDING.extensionMissing),
-      passwordNotConfigured: await ha(DIRECT_ACCESS_WORDING.passwordNotConfigured),
-      menuVisible: await ha(DIRECT_ACCESS_WORDING.directAccessMenu),
+      passwordNotConfigured:
+        semSenhaNoCofre || acaoInvalida || (await ha(DIRECT_ACCESS_WORDING.passwordNotConfigured)),
+      menuVisible: acao || entidade,
     });
   }
 
   /**
-   * O Sumário só se decide depois de a aplicação ter falado com a extensão
-   * (o handshake é assíncrono): espera-se até haver um veredicto ou acabar a
+   * O cofre só se decide depois de a app ter falado com a extensão (o
+   * handshake é assíncrono): espera-se até haver um veredicto ou acabar a
    * paciência — e aí `unknown` é o que fica.
    */
-  private async classificarSumario(page: Page): Promise<DirectAccessPageKind> {
+  private async classificarCofre(page: Page): Promise<DirectAccessPageKind> {
     const fim = Date.now() + this.directAccessTimeout;
     for (;;) {
       const kind = await this.sondar(page);
@@ -262,35 +400,29 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
         );
       case "unknown":
         throw new StructuralError(
-          "O Sumário do TOConline não mostra o menu Acesso Direto. O fluxo mudou.",
+          "A página do Acesso Direto do TOConline não mostra o Portal das Finanças. O fluxo mudou.",
         );
     }
   }
 
   /**
-   * Clica no Acesso Direto → Portal das Finanças e espera pelo separador que a
-   * extensão abre. Se nenhum abrir, é a página do TOConline que diz porquê.
+   * Clica na ação «DPIVA - Obter documento de pagamento» e espera pelo
+   * separador que a extensão abre. Se nenhum abrir, é a página do TOConline
+   * que diz porquê.
    */
   private async abrirPortal(context: BrowserContext, tocPage: Page): Promise<Page> {
     const separador = context
       .waitForEvent("page", { timeout: this.directAccessTimeout })
       .catch(() => null);
 
-    // O menu pode precisar de um clique para abrir; se não precisar, o clique
-    // não faz mal. O item, esse, tem de estar lá.
-    await tocPage
-      .locator(TOC_DIRECT_ACCESS.directAccessMenu)
-      .first()
-      .click({ timeout: this.tocTimeout })
-      .catch(() => undefined);
     try {
       await tocPage
-        .locator(TOC_DIRECT_ACCESS.portalFinancasItem)
+        .locator(TOC_DIRECT_ACCESS.paymentDocumentAction)
         .first()
         .click({ timeout: this.tocTimeout });
     } catch {
       throw new StructuralError(
-        "O item «Portal das Finanças» do Acesso Direto não está no Sumário do TOConline. O fluxo mudou.",
+        "A ação «DPIVA - Obter documento de pagamento» não está no Acesso Direto do TOConline. O fluxo mudou.",
       );
     }
 
@@ -305,6 +437,10 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
       "O Acesso Direto não abriu o Portal das Finanças dentro do tempo previsto.",
     );
   }
+
+  /* ---------------------------------------------------------------------- *
+   * AT
+   * ---------------------------------------------------------------------- */
 
   /**
    * Espera que a extensão termine o login e o separador aterre no portal. O

@@ -96,16 +96,45 @@ export const AT = {
 } as const;
 
 /**
- * Rota A — chegar à AT por dentro do TOConline (Acesso Direto), sem gastar
- * credenciais da AT. Só entra em jogo se a Fase 0 mostrar que funciona.
+ * Rota A — chegar à AT por dentro do TOConline (Acesso Direto).
+ *
+ * Observado no reconhecimento de 2026-09-06 em `app13.toconline.pt`:
+ * - a aplicação é uma SPA Polymer (`<toc-app>`) em Shadow DOM; a sessão está
+ *   em `toc-app.session_data` (`session_loaded`, `entity_id`), e a troca de
+ *   empresa ativa é o **método** `toc-app.switchToEntityAndNotifyPages(id, url)`
+ *   (não um global), que faz uma navegação completa para `url` já dentro da
+ *   empresa;
+ * - navegações completas (`page.goto`) feitas por nós depois do login
+ *   **derrubam a sessão** (a validação devolve ao `/login`); dentro da app
+ *   navega-se por `toc-app.changeRoute(url)`;
+ * - o Acesso Direto é a página `/vault-actions` (menu Empresa → Acesso Direto):
+ *   uma grelha com a entidade «Portal das Finanças - Autoridade Tributária e
+ *   Aduaneira» e as suas ações, entre elas «DPIVA - Obter documento de
+ *   pagamento»; a classe `valid` marca uma senha gravada e validada, e o cofre
+ *   (`window.vault`, um `<toc-vault>`) expõe `accesses.company.AT`.
  */
 export const TOC_DIRECT_ACCESS = {
-  summaryPath: "/summary",
-  directAccessMenu: 'text="Acesso Direto"',
-  portalFinancasItem: 'text="Portal das Finanças"',
-  /** Função global do TOConline que troca a empresa ativa da sessão. */
+  /** Elemento raiz da aplicação; é nele que vivem a sessão e a troca de empresa. */
+  appElement: "toc-app",
+  /** Método da `toc-app` que veste a empresa e navega para `url`. */
   switchEntityFn: "switchToEntityAndNotifyPages",
-} as const; // TODO(recon)
+  /** Método da `toc-app` que navega dentro da SPA sem derrubar a sessão. */
+  changeRouteFn: "changeRoute",
+  /** Página do Acesso Direto da empresa ativa. */
+  vaultActionsPath: "/vault-actions",
+  /** Campo do formulário de login — presente só quando a app nos devolveu ao login. */
+  loginField: 'input[type="email"]',
+  /**
+   * A ação que abre a AT já no documento de pagamento do IVA. Preferida à
+   * entidade genérica porque a extensão trata do salto de SSO para a aplicação
+   * do IVA (`iva.portaldasfinancas.gov.pt`), onde o resto do fluxo navega.
+   */
+  paymentDocumentAction: 'a.action_title:has-text("DPIVA - Obter documento de pagamento")',
+  /** A entidade genérica, para saber que a grelha do cofre está à vista. */
+  portalEntity: 'span.entity_title:has-text("Portal das Finanças")',
+  /** Quanto se espera pela app ficar pronta (`session_loaded`) ou devolver o login. */
+  appReadyTimeoutMs: 40_000,
+} as const;
 
 /**
  * O que um adaptador da AT aceita ver substituído. Existe para os testes
