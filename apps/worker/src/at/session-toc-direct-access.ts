@@ -336,12 +336,13 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
    *
    * Ao aterrar em `/vault-actions` a grelha ainda não existe e
    * `window.vault.accesses` está vazio; os acessos chegam ~1 s depois e é com
-   * eles que os links ganham a classe `valid`. Decidir antes disso dava
-   * «senha por gravar» a uma empresa com a senha gravada (aconteceu no primeiro
-   * ensaio real). Por isso: enquanto não houver acessos carregados nem links,
-   * é `unknown` e espera-se; com a ação DPIVA `valid` é `ready`; com a ação à
-   * vista mas sem `valid` (ou acessos carregados sem AT válido) é senha por
-   * gravar; o convite a instalar a extensão ganha a tudo.
+   * eles que a entidade ganha a classe `valid`. Decidir antes disso dava «senha
+   * por gravar» a uma empresa com a senha gravada (aconteceu no primeiro ensaio
+   * real). Por isso: enquanto não houver acessos carregados nem a entidade à
+   * vista, é `unknown` e espera-se; com a entidade «Portal das Finanças»
+   * `valid` é `ready`; com a entidade à vista mas sem `valid` (ou acessos
+   * carregados sem AT válido) é senha por gravar; o convite a instalar a
+   * extensão ganha a tudo.
    */
   private async sondar(page: Page): Promise<DirectAccessPageKind> {
     const ha = async (seletorOuPadrao: string | RegExp): Promise<boolean> => {
@@ -365,21 +366,20 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
       .catch(() => ({ carregado: false, atValido: false }));
 
     const instalar = await ha(DIRECT_ACCESS_WORDING.extensionMissing);
-    const acaoValida = await ha(TOC_DIRECT_ACCESS.paymentDocumentActionValid);
-    const acaoPresente = acaoValida || (await ha(TOC_DIRECT_ACCESS.paymentDocumentAction));
-    const entidade = await ha(TOC_DIRECT_ACCESS.portalEntity);
-    const assentou = cofre.carregado || acaoPresente || entidade;
+    const entidadeValida = await ha(TOC_DIRECT_ACCESS.portalEntityValid);
+    const entidade = entidadeValida || (await ha(TOC_DIRECT_ACCESS.portalEntity));
+    const assentou = cofre.carregado || entidade;
     const semSenha =
       assentou &&
-      !acaoValida &&
-      ((acaoPresente && !cofre.atValido) ||
+      !entidadeValida &&
+      ((entidade && !cofre.atValido) ||
         (cofre.carregado && !cofre.atValido) ||
         (await ha(DIRECT_ACCESS_WORDING.passwordNotConfigured)));
 
     return classifyDirectAccessSignals({
       extensionMissing: instalar,
       passwordNotConfigured: semSenha,
-      menuVisible: acaoValida,
+      menuVisible: entidadeValida,
     });
   }
 
@@ -419,9 +419,11 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
   }
 
   /**
-   * Clica na ação «DPIVA - Obter documento de pagamento» e espera pelo
-   * separador que a extensão abre. Se nenhum abrir, é a página do TOConline
-   * que diz porquê.
+   * Clica na **entidade** «Portal das Finanças» e espera pelo separador que a
+   * extensão abre — a AT autenticada na sua página inicial, de onde o fluxo
+   * navega para a declaração/documento. Clica-se aqui, e não numa ação DPIVA:
+   * o atalho de ação do TOConline é intermitente e aterra fora do fluxo. Se
+   * nenhum separador abrir, é a página do TOConline que diz porquê.
    */
   private async abrirPortal(context: BrowserContext, tocPage: Page): Promise<Page> {
     const separador = context
@@ -430,12 +432,12 @@ export class TocDirectAccessAtSessions implements AtSessionFactory {
 
     try {
       await tocPage
-        .locator(TOC_DIRECT_ACCESS.paymentDocumentActionValid)
+        .locator(TOC_DIRECT_ACCESS.portalEntityValid)
         .first()
         .click({ timeout: this.tocTimeout });
     } catch {
       throw new StructuralError(
-        "A ação «DPIVA - Obter documento de pagamento» não está no Acesso Direto do TOConline. O fluxo mudou.",
+        "A entidade «Portal das Finanças» não está no Acesso Direto do TOConline. O fluxo mudou.",
       );
     }
 

@@ -109,9 +109,14 @@ export const AT = {
  *   navega-se por `toc-app.changeRoute(url)`;
  * - o Acesso Direto é a página `/vault-actions` (menu Empresa → Acesso Direto):
  *   uma grelha com a entidade «Portal das Finanças - Autoridade Tributária e
- *   Aduaneira» e as suas ações, entre elas «DPIVA - Obter documento de
- *   pagamento»; a classe `valid` marca uma senha gravada e validada, e o cofre
- *   (`window.vault`, um `<toc-vault>`) expõe `accesses.company.AT`.
+ *   Aduaneira» e as suas ações (DPIVA, Mod. 22, …); a classe `valid` marca uma
+ *   senha gravada e validada, e o cofre (`window.vault`, um `<toc-vault>`)
+ *   expõe `accesses.company.AT`.
+ * - **clica-se na ENTIDADE, não numa ação.** Observado ao vivo em 2026-09-07:
+ *   o atalho «DPIVA - Obter documento de pagamento» do TOConline é intermitente
+ *   («O acesso está indisponível») e aterra numa página fora do fluxo. Clicar na
+ *   entidade «Portal das Finanças» abre a AT autenticada na sua página inicial,
+ *   e daí navega-se para a declaração/documento com os nossos próprios `urls`.
  */
 export const TOC_DIRECT_ACCESS = {
   /** Elemento raiz da aplicação; é nele que vivem a sessão e a troca de empresa. */
@@ -125,15 +130,13 @@ export const TOC_DIRECT_ACCESS = {
   /** Campo do formulário de login — presente só quando a app nos devolveu ao login. */
   loginField: 'input[type="email"]',
   /**
-   * A ação que abre a AT já no documento de pagamento do IVA. Preferida à
-   * entidade genérica porque a extensão trata do salto de SSO para a aplicação
-   * do IVA (`iva.portaldasfinancas.gov.pt`), onde o resto do fluxo navega.
+   * A entidade da AT no cofre — **o que se clica** para abrir a AT autenticada
+   * na sua página inicial (não uma ação: o atalho de ação do TOConline é
+   * intermitente). A partir daqui o fluxo navega com os nossos `urls`.
    */
-  paymentDocumentAction: 'a.action_title:has-text("DPIVA - Obter documento de pagamento")',
-  /** A mesma ação já validada pelo cofre (senha gravada e aceite): só esta se clica. */
-  paymentDocumentActionValid: 'a.action_title.valid:has-text("DPIVA - Obter documento de pagamento")',
-  /** A entidade genérica, para saber que a grelha do cofre está à vista. */
   portalEntity: 'span.entity_title:has-text("Portal das Finanças")',
+  /** A mesma entidade já validada pelo cofre (senha gravada e aceite): só esta se clica. */
+  portalEntityValid: 'span.entity_title.valid:has-text("Portal das Finanças")',
   /** Quanto se espera pela app ficar pronta (`session_loaded`) ou devolver o login. */
   appReadyTimeoutMs: 40_000,
 } as const;

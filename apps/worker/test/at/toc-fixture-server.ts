@@ -185,10 +185,12 @@ function shell(state: TocFixtureState, at: AtFixtureServer): string {
         const classe = SENHA_GRAVADA ? "valid" : "invalid";
         cofre.innerHTML =
           "<div><a href='/vault-company'>Definir senhas da Empresa</a></div>" +
-          "<vaadin-grid><vaadin-grid-cell-content><a href='#'><span class='entity_title " + classe + "'>Portal das Finanças - Autoridade Tributária e Aduaneira</span></a></vaadin-grid-cell-content>" +
+          "<vaadin-grid><vaadin-grid-cell-content><a href='#' id='entidade-at'><span class='entity_title " + classe + "'>Portal das Finanças - Autoridade Tributária e Aduaneira</span></a></vaadin-grid-cell-content>" +
           "<vaadin-grid-cell-content><div><a href='#' class='action_title " + classe + "' id='dpiva-proof'>DPIVA - Obter comprovativo</a></div>" +
           "<div><a href='#' class='action_title " + classe + "' id='dpiva-doc'>DPIVA - Obter documento de pagamento</a></div></vaadin-grid-cell-content></vaadin-grid>";
-        this.raiz.getElementById("dpiva-doc").addEventListener("click", (ev) => { ev.preventDefault(); this.invocar(); });
+        // O clique real é na ENTIDADE (abre a AT); a ação DPIVA fica na grelha
+        // mas não é o que o adaptador usa.
+        this.raiz.getElementById("entidade-at").addEventListener("click", (ev) => { ev.preventDefault(); this.invocar(); });
       }
       invocar() {
         const estado = this.raiz.getElementById("estado");
