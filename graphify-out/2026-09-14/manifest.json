@@ -1290,8 +1290,8 @@
     "semantic_hash": ""
   },
   "apps/worker/src/at/selectors.ts": {
-    "mtime": 1788788088.466622,
-    "ast_hash": "37f6f2828eab84592d7f20875734c5bf",
+    "mtime": 1788783733.2396123,
+    "ast_hash": "68e5c0b4aabc4054df973099822e8af5",
     "semantic_hash": ""
   },
   "apps/worker/src/at/wording.ts": {
@@ -1315,8 +1315,8 @@
     "semantic_hash": ""
   },
   "apps/worker/src/at/parse-declarations.ts": {
-    "mtime": 1788788027.9770284,
-    "ast_hash": "bbb69b0c634cba26e40a0656b1091618",
+    "mtime": 1788726869.6132836,
+    "ast_hash": "a5a6ed9eb98bcb03ec1886f02b85d8a8",
     "semantic_hash": ""
   },
   "apps/worker/src/at/parse-fields.ts": {
@@ -1330,8 +1330,8 @@
     "semantic_hash": ""
   },
   "apps/worker/test/at/parse-declarations.test.ts": {
-    "mtime": 1788788006.6125634,
-    "ast_hash": "6013c5a978947a206c6b6427c316b233",
+    "mtime": 1788726869.6196709,
+    "ast_hash": "65b15136a581813e8f3790c5c93a0b72",
     "semantic_hash": ""
   },
   "apps/worker/test/at/parse-fields.test.ts": {
@@ -1365,8 +1365,8 @@
     "semantic_hash": ""
   },
   "apps/worker/src/at/payment-document.ts": {
-    "mtime": 1789402817.9811273,
-    "ast_hash": "35ab19e9589a130ddee8ac2c8439f189",
+    "mtime": 1788726869.61363,
+    "ast_hash": "6bf88197ba0ddf77775ab4aaf3a180ab",
     "semantic_hash": ""
   },
   "apps/worker/src/at/pdf-capture.ts": {
@@ -1380,8 +1380,8 @@
     "semantic_hash": ""
   },
   "apps/worker/test/at/fixture-server.ts": {
-    "mtime": 1789402693.7606282,
-    "ast_hash": "b634c14c2c0c4bd521988fa00883d926",
+    "mtime": 1788726869.6191885,
+    "ast_hash": "943a0fc941f8a5fc79aae5f1002b3d91",
     "semantic_hash": ""
   },
   "apps/worker/test/at/iva-declaration.browser.test.ts": {
@@ -1390,8 +1390,8 @@
     "semantic_hash": ""
   },
   "apps/worker/test/at/payment-document.browser.test.ts": {
-    "mtime": 1789402745.0718586,
-    "ast_hash": "4bdb9b3cfcbbb8b0986656661139c403",
+    "mtime": 1788726869.6202617,
+    "ast_hash": "aaa05fc372e66f21d0e3e1e1645f24c3",
     "semantic_hash": ""
   },
   "apps/worker/test/at/pdf-capture.test.ts": {
@@ -1630,8 +1630,8 @@
     "semantic_hash": ""
   },
   "apps/worker/src/toconline/login.ts": {
-    "mtime": 1788789129.626691,
-    "ast_hash": "5f0c05aa68cd5c48d1ca84531e137c6d",
+    "mtime": 1788736091.65308,
+    "ast_hash": "138b4742d43cd4563e2caa43ebeaf7dc",
     "semantic_hash": ""
   },
   "apps/worker/test/at/direct-access-wording.test.ts": {
@@ -1650,8 +1650,8 @@
     "semantic_hash": ""
   },
   "apps/worker/src/at/session-toc-direct-access.ts": {
-    "mtime": 1788789129.626053,
-    "ast_hash": "90b3c6847151cda2d59d3fab844842c6",
+    "mtime": 1788786867.1055236,
+    "ast_hash": "2f6b705bf0d8601781d482d585a46266",
     "semantic_hash": ""
   },
   "apps/worker/test/at/session-toc-direct-access.browser.test.ts": {
@@ -1720,48 +1720,33 @@
     "semantic_hash": ""
   },
   "apps/worker/scripts/ss-demo.ts": {
-    "mtime": 1788789354.4011834,
-    "ast_hash": "1f1de0143207a5fcb997385566029825",
+    "mtime": 1788786892.4291873,
+    "ast_hash": "1eb6b9d181d971ed0101be9b9c710b05",
     "semantic_hash": ""
   },
   "apps/worker/src/ss/payment-document.ts": {
-    "mtime": 1788786998.2151961,
-    "ast_hash": "ba2b9c06e16e9cb32fdcfc872869fc44",
+    "mtime": 1788786807.8554907,
+    "ast_hash": "82029825cc042bac47f65f24c9f2b4ef",
     "semantic_hash": ""
   },
   "apps/worker/src/ss/selectors.ts": {
-    "mtime": 1788789159.0066214,
-    "ast_hash": "c216818e555eb38cb0a05835882bd118",
+    "mtime": 1788786602.967867,
+    "ast_hash": "4aa9883023d6effeeb6b9b28c94b44f2",
     "semantic_hash": ""
   },
   "apps/worker/src/ss/session-toc-direct-access.ts": {
-    "mtime": 1788788469.8490872,
-    "ast_hash": "e9529ddfe3675da9951a8cd9b21b7c01",
+    "mtime": 1788786760.7652328,
+    "ast_hash": "adb86c2e02f02621429331d0229263f5",
     "semantic_hash": ""
   },
   "apps/worker/test/ss/payment-document.browser.test.ts": {
-    "mtime": 1788787044.5944607,
-    "ast_hash": "a4a630e7c7e7d963d782226d6fe34fe2",
+    "mtime": 1788786860.6932743,
+    "ast_hash": "33ea7ad12bcc4c23240610ed79071340",
     "semantic_hash": ""
   },
   "apps/worker/test/ss/ss-fixture-server.ts": {
     "mtime": 1788786839.5126288,
     "ast_hash": "bc9fb7ee385e218497e109f65d571bc2",
-    "semantic_hash": ""
-  },
-  "apps/worker/src/at/parse-payment-list.ts": {
-    "mtime": 1788787960.1174564,
-    "ast_hash": "764f7955af10168e1b069fffa6cd8c73",
-    "semantic_hash": ""
-  },
-  "apps/worker/test/at/parse-payment-list.test.ts": {
-    "mtime": 1788787927.131175,
-    "ast_hash": "06b956fea364baec58ed7c20b18cb032",
-    "semantic_hash": ""
-  },
-  "docs/superpowers/specs/2026-09-07-seguranca-social-rota-a-design.md": {
-    "mtime": 1788789202.625784,
-    "ast_hash": "2cf12c663db2e2e03f9d73a851d483e6",
     "semantic_hash": ""
   }
 }
