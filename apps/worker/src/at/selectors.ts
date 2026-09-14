@@ -78,13 +78,23 @@ export const AT = {
      */
     cells: "td, th",
   },
+  /**
+   * `obter-doc-pagamento` é uma **lista** de declarações, uma por linha
+   * (reconhecimento de 2026-09-07): «Identificação | Período | Data de receção»
+   * e, em cada linha, um «Obter documento de pagamento» que traz o PDF. O ano é
+   * um filtro à parte; o período da linha traz só o trimestre.
+   */
   paymentDocument: {
-    obtainButton:
-      'button:has-text("Obter documento de pagamento"), a:has-text("Obter documento de pagamento")',
-    fieldsContainer: "main",
+    table: "table",
+    rows: "table tbody tr",
+    headerCells: "table thead th",
+    cells: "td, th",
+    /** O gatilho do PDF, procurado DENTRO de uma linha (link ou botão). */
+    obtainInRow:
+      'a:has-text("Obter documento de pagamento"), button:has-text("Obter documento de pagamento")',
+    /** Filtro de ano da lista e o botão de aplicar. */
     yearInput: 'select[name="ano"]',
-    periodInput: 'select[name="periodo"]',
-    submit: 'button[type="submit"]',
+    searchButton: 'button:has-text("Pesquisar")',
   },
 
   /**

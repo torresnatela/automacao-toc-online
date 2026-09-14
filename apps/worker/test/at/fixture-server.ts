@@ -31,7 +31,14 @@ import type { Page } from "playwright";
  * palavra-passe") que NÃO podem classificar nada.
  */
 
-/** O que a rota do documento de pagamento devolve. */
+/**
+ * O que a rota do documento de pagamento devolve.
+ *
+ * `attachment` / `inline` / `popup` são a lista completa, e dizem só COMO o
+ * link da linha entrega o PDF. `none` é a lista com a tabela vazia; `notready`
+ * é a lista sem a linha do período pedido; `paid` é a página SEM tabela, só
+ * com o aviso — o caso em que o adaptador cai na redação.
+ */
 export type AtFixtureMode = "attachment" | "inline" | "popup" | "none" | "paid" | "notready";
 
 /** Senhas com significado. Só `boa` autentica; as outras modelam cada recusa. */
@@ -65,8 +72,8 @@ export interface AtFixtureState {
   mode: AtFixtureMode;
   /** Baralha a ordem das colunas da tabela de declarações. */
   reorderColumns: boolean;
-  /** Faz o `obter-doc-pagamento` exigir ano+período antes de mostrar a guia. */
-  periodForm: boolean;
+  /** O ano com que a lista de `obter-doc-pagamento` abre (o filtro «Ano»). */
+  anoInicial: string;
   /**
    * Faz o portal responder 503 com um corpo NEUTRO — sem uma palavra que
    * `wording.ts` reconheça. Só o código HTTP denuncia a avaria, que é o caso
@@ -75,14 +82,14 @@ export interface AtFixtureState {
   serverError: boolean;
   /** A sessão morre entre a reutilização e a escolha do cliente. */
   sessaoMorreNaSelecao: boolean;
-  /** A guia vem sem o contentor `<main>` dos campos (layout mudado). */
-  semCampos: boolean;
-  /** A guia vem sem o botão de obter documento (seletor partido). */
+  /** As linhas da lista vêm sem o link de obter documento (seletor partido). */
   semBotao: boolean;
   /** O PDF servido em `/doc.pdf`. Gerado no `beforeAll` do teste, nunca no repo. */
   pdf: Buffer;
-  /** O que o último POST do formulário de período trouxe. */
-  ultimoPeriodo: { ano: string | null; periodo: string | null } | null;
+  /** O `ano` da última pesquisa na lista (`null` se o filtro nunca foi aplicado). */
+  ultimoAno: string | null;
+  /** O período da linha cujo PDF foi servido por último (`null` se nenhum). */
+  ultimoDocumento: string | null;
   /** Contadores — provam que a sessão reutilizada NÃO passa pelo login. */
   visitas: {
     login: number;
@@ -221,7 +228,27 @@ const paginaSemDeclaracoes = (nif: string): string =>
   );
 
 /**
- * A guia: campos em linhas separadas, como o portal os imprime.
+ * As declarações que a lista de `obter-doc-pagamento` mostra, por ano do
+ * filtro. Sintéticas: a mistura de meses e trimestre no mesmo ano não existe
+ * numa empresa real e serve só para exercitar os dois regimes no mesmo ecrã.
+ * O período da linha traz SÓ o mês/trimestre — o ano é o do filtro, como no
+ * portal real (reconhecimento de 2026-09-07).
+ */
+const LINHAS_DOCUMENTOS: Readonly<
+  Record<string, readonly { id: string; periodo: string; rececao: string }[]>
+> = {
+  "2025": [{ id: "240011111111", periodo: "12", rececao: "2026-01-10 09:00:00" }],
+  "2026": [
+    { id: "240012345601", periodo: "06", rececao: "2026-07-10 09:00:00" },
+    { id: "240012345602", periodo: "07", rececao: "2026-08-10 10:11:12" },
+    { id: "240012345603", periodo: "3T", rececao: "2026-11-12 08:30:00" },
+  ],
+};
+
+/**
+ * A lista de `obter-doc-pagamento`: filtro de ano + uma declaração por linha,
+ * cada uma com o seu «Obter documento de pagamento». Os campos da guia
+ * (entidade, referência, valor) NÃO estão aqui — vivem dentro do PDF.
  *
  * O `aoClicar` muda com o modo porque o Chromium **sem cabeça não tem visor de
  * PDF**: qualquer navegação para `application/pdf` vira download, e os modos
@@ -231,44 +258,38 @@ const paginaSemDeclaracoes = (nif: string): string =>
  * `window.open` para a janela nova. // TODO(recon): confirmar na Fase 0 qual
  * deles o portal usa de verdade e com que cabeçalhos.
  */
-const paginaDocumento = (
-  aoClicar: string,
-  opcoes: { semCampos?: boolean; semBotao?: boolean } = {},
+const paginaListaDocumentos = (
+  ano: string,
+  linhas: readonly { id: string; periodo: string; rececao: string }[],
+  aoClicar: (url: string) => string,
+  opcoes: { semBotao?: boolean } = {},
 ): string => {
-  const campos = `<p>Entidade: 11111</p>
-      <p>Referência: 123 456 789 012 345</p>
-      <p>Valor: 1.234,56 €</p>
-      <p>NIF: ${NIFS.bom}</p>
-      <p>Período: 2026/07</p>`;
+  const anos = Object.keys(LINHAS_DOCUMENTOS)
+    .map((a) => `<option value="${a}"${a === ano ? " selected" : ""}>${a}</option>`)
+    .join("");
+  const corpo = linhas
+    .map((l) => {
+      const gatilho =
+        opcoes.semBotao === true
+          ? "Documento indisponível"
+          : `<a href="#" onclick="${aoClicar(`/doc.pdf?periodo=${l.periodo}`)}; return false">Obter documento de pagamento</a>`;
+      return `<tr><td>${l.id}</td><td>${l.periodo}</td><td>${l.rececao}</td><td>${gatilho}</td></tr>`;
+    })
+    .join("");
   return pagina(
     "Obter documento de pagamento",
-    `<h1>Documento de pagamento</h1>
-    ${
-      // Sem `<main>` os campos continuam à vista — muda só o contentor, que é
-      // exatamente como um redesenho do portal se apresenta.
-      opcoes.semCampos === true ? `<div>${campos}</div>` : `<main>${campos}</main>`
-    }
-    ${
-      opcoes.semBotao === true
-        ? "<p>Entidade emissora: Autoridade Tributária</p>"
-        : `<button type="button" onclick="${aoClicar}">Obter documento de pagamento</button>`
-    }`,
+    `<h1>Obter documento de pagamento</h1>
+    <form method="GET" action="/dpiva/portal/cc/obter-doc-pagamento">
+      <label for="ano">Ano</label>
+      <select id="ano" name="ano">${anos}</select>
+      <button type="submit">Pesquisar</button>
+    </form>
+    <table>
+      <thead><tr><th>Identificação</th><th>Período</th><th>Data de receção</th><th></th></tr></thead>
+      <tbody>${corpo}</tbody>
+    </table>`,
   );
 };
-
-const PAGINA_FORMULARIO_PERIODO = pagina(
-  "Obter documento de pagamento",
-  `<h1>Obter documento de pagamento</h1>
-  <form method="POST" action="/dpiva/portal/cc/obter-doc-pagamento">
-    <label for="ano">Ano</label>
-    <select id="ano" name="ano"><option value="2025">2025</option><option value="2026">2026</option></select>
-    <label for="periodo">Período</label>
-    <select id="periodo" name="periodo">
-      <option value="06">06</option><option value="07">07</option><option value="3">3.º trimestre</option>
-    </select>
-    <button type="submit">Consultar</button>
-  </form>`,
-);
 
 /**
  * O 503 sem pistas: nem "em manutenção", nem "temporariamente indisponível",
@@ -280,19 +301,10 @@ const PAGINA_503 = pagina(
   `<h1>Serviço indisponível</h1><p>Por favor tente novamente mais tarde.</p>`,
 );
 
-const PAGINA_SEM_DOCUMENTO = pagina(
-  "Obter documento de pagamento",
-  `<h1>Documento de pagamento</h1><p>Não existe documento de pagamento para este período.</p>`,
-);
-
+/** Sem tabela nenhuma: só o aviso. É a redação que o adaptador tem de ler. */
 const PAGINA_JA_PAGO = pagina(
   "Obter documento de pagamento",
   `<h1>Documento de pagamento</h1><p>O IVA deste período já foi pago.</p>`,
-);
-
-const PAGINA_NAO_PRONTO = pagina(
-  "Obter documento de pagamento",
-  `<h1>Documento de pagamento</h1><p>Documento em processamento — ainda não disponível.</p>`,
 );
 
 /* -------------------------------------------------------------------------- */
@@ -348,13 +360,13 @@ export async function startAtFixtureServer(): Promise<AtFixtureServer> {
     cookieValido: "1",
     mode: "attachment",
     reorderColumns: false,
-    periodForm: false,
+    anoInicial: "2026",
     serverError: false,
     sessaoMorreNaSelecao: false,
-    semCampos: false,
     semBotao: false,
     pdf: Buffer.alloc(0),
-    ultimoPeriodo: null,
+    ultimoAno: null,
+    ultimoDocumento: null,
     visitas: { login: 0, listaClientes: 0, consultarDeclaracao: 0, obterDocumento: 0, pdf: 0 },
   };
 
@@ -459,29 +471,24 @@ export async function startAtFixtureServer(): Promise<AtFixtureServer> {
       caminho === "/dpiva/portal/cc/obter-doc-pagamento" ||
       caminho === "/dpiva/portal/obter-doc-pagamento"
     ) {
-      if (req.method === "POST") {
-        const corpo = await lerCorpo(req);
-        state.ultimoPeriodo = { ano: corpo.get("ano"), periodo: corpo.get("periodo") };
-      } else {
-        state.visitas.obterDocumento += 1;
-        if (state.periodForm) return html(res, PAGINA_FORMULARIO_PERIODO);
-      }
+      state.visitas.obterDocumento += 1;
+      // O filtro é um GET: a lista abre no `anoInicial` e «Pesquisar» volta cá
+      // com `?ano=`. Só a pesquisa conta como "o filtro foi aplicado".
+      const anoPedido = url.searchParams.get("ano");
+      if (anoPedido !== null) state.ultimoAno = anoPedido;
+      const ano = anoPedido ?? state.anoInicial;
       const modo = (url.searchParams.get("mode") as AtFixtureMode | null) ?? state.mode;
-      const degradacao = { semCampos: state.semCampos, semBotao: state.semBotao };
-      switch (modo) {
-        case "none":
-          return html(res, PAGINA_SEM_DOCUMENTO);
-        case "paid":
-          return html(res, PAGINA_JA_PAGO);
-        case "notready":
-          return html(res, PAGINA_NAO_PRONTO);
-        case "popup":
-          return html(res, paginaDocumento("window.open('/doc.pdf')", degradacao));
-        case "inline":
-          return html(res, paginaDocumento("fetch('/doc.pdf')", degradacao));
-        default:
-          return html(res, paginaDocumento("location.href='/doc.pdf'", degradacao));
-      }
+      if (modo === "paid") return html(res, PAGINA_JA_PAGO);
+      const todas = LINHAS_DOCUMENTOS[ano] ?? [];
+      const linhas =
+        modo === "none" ? [] : modo === "notready" ? todas.filter((l) => l.periodo !== "07") : todas;
+      const aoClicar =
+        modo === "popup"
+          ? (u: string) => `window.open('${u}')`
+          : modo === "inline"
+            ? (u: string) => `fetch('${u}')`
+            : (u: string) => `location.href='${u}'`;
+      return html(res, paginaListaDocumentos(ano, linhas, aoClicar, { semBotao: state.semBotao }));
     }
 
     if (caminho === "/doc.pdf") {
@@ -495,6 +502,7 @@ export async function startAtFixtureServer(): Promise<AtFixtureServer> {
         return html(res, pagina("Documento", "<h1>Documento de pagamento</h1>"));
       }
       state.visitas.pdf += 1;
+      state.ultimoDocumento = url.searchParams.get("periodo");
       const cabecalhos: Record<string, string> = {
         "content-type": "application/pdf",
         "content-length": String(state.pdf.length),

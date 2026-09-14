@@ -39,10 +39,36 @@ function plain(text: string): string {
  * apanha as duas sem uma lista interminável de variantes.
  */
 const COLUMN_KEYWORDS = {
-  period: ["periodo", "per."],
-  submittedAt: ["data", "entrega", "submiss"],
+  // "declaracao": no portal real (consultar-declaracao) o período vive dentro
+  // da coluna «Declaração» («2026 3T <nº>»), não numa coluna «Período» própria.
+  period: ["periodo", "per.", "declaracao"],
+  submittedAt: ["data", "entrega", "submiss", "rece"],
   state: ["tipo", "estado", "situa"],
 } as const;
+
+/**
+ * O período dentro de uma célula que pode trazer mais texto à volta.
+ *
+ * A coluna «Declaração» do portal real é «2026 3T 240012345678»: o período está
+ * lá, mas colado ao número da declaração. Tenta-se a célula inteira primeiro
+ * (uma coluna «Período» limpa continua a funcionar); se falhar, extrai-se o
+ * troço «ANO nT» (trimestral) ou «ANO/MM»/«ANO MM» (mensal) e canoniza-se esse.
+ */
+function extractPeriod(cell: string): string | null {
+  const inteiro = parsePeriod(cell);
+  if (inteiro.ok) return inteiro.period;
+  const trimestre = /\b(\d{4})\s+(\d{1,2})\s*t\b/i.exec(cell);
+  if (trimestre) {
+    const p = parsePeriod(`${trimestre[1]} ${trimestre[2]}T`);
+    if (p.ok) return p.period;
+  }
+  const mensal = /\b(\d{4})[\s/-](\d{2})\b/.exec(cell);
+  if (mensal) {
+    const p = parsePeriod(`${mensal[1]}-${mensal[2]}`);
+    if (p.ok) return p.period;
+  }
+  return null;
+}
 
 /** Primeira coluna por reclamar cujo texto contenha uma das palavras. */
 function findColumn(
@@ -92,12 +118,13 @@ export function parseDeclarationRows(
     // como todas as outras. Ignorar as que não têm período legível é certo; o
     // total de linhas vistas continua a ser `rows.length`, para quem o quiser
     // registar como `rowsSeen`.
-    const period = parsePeriod(cellAt(row, periodColumn));
-    if (!period.ok) continue;
+    const raw = cellAt(row, periodColumn);
+    const period = raw === null ? null : extractPeriod(raw);
+    if (period === null) continue;
 
     const state = cellAt(row, stateColumn);
     parsed.push({
-      period: period.period,
+      period,
       submittedAt: cellAt(row, dateColumn),
       state,
       replacement: state !== null && plain(state).includes("substitui"),

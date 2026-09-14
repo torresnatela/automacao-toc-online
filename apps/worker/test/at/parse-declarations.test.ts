@@ -24,6 +24,24 @@ describe("parseDeclarationRows", () => {
     ]);
   });
 
+  it("extrai o período da coluna «Declaração» do portal real (ano + trimestre no meio de texto)", () => {
+    // consultar-declaracao real (2026-09-07): «Declaração | Situação | Data de
+    // receção», e o período vive dentro da célula «Declaração» com o número da
+    // declaração colado — «2026 3T 240012345678».
+    const rows = parseDeclarationRows(
+      ["Declaração", "Situação", "Data de receção"],
+      [["2026 3T 240012345678", "Pendente de Liquidação", "2026-09-02 10:11:12"]],
+    );
+    expect(rows).toEqual([
+      {
+        period: "2026-Q3",
+        submittedAt: "2026-09-02 10:11:12",
+        state: "Pendente de Liquidação",
+        replacement: false,
+      },
+    ]);
+  });
+
   it("aceita as abreviaturas e os acentos do cabeçalho real", () => {
     const rows = parseDeclarationRows(
       ["Per.", "Submissão", "Situação"],

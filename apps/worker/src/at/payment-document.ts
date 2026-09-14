@@ -1,4 +1,4 @@
-import type { Page, Response } from "playwright";
+import type { Locator, Page } from "playwright";
 import { AtAuthError, AtIntegrityError } from "../errors";
 import type {
   AtCompanyHandle,
@@ -8,31 +8,39 @@ import type {
 } from "../runner/ports";
 import { classifyAtPage, fingerprint, snapshotPage, type AtPageSnapshot } from "./classify-page";
 import { assertPdfIntegrity } from "./guards";
-import { parseFieldsFromText } from "./parse-fields";
+import { parsePaymentRows, pickMostRecentPayment } from "./parse-payment-list";
 import { capturePdf } from "./pdf-capture";
 import { AT, type AtOptions } from "./selectors";
 
-/** Quanto se espera por uma peça de layout já dada por presente pela classificação. */
-const ESPERA_ESTRUTURAL_MS = 2_000;
-/** O botão vale mais paciência: é ele que traz o documento. */
-const ESPERA_DO_BOTAO_MS = 5_000;
-
 /**
- * A guia de pagamento: a página, os campos e o PDF.
+ * A guia de pagamento a partir da **lista** de `obter-doc-pagamento`.
  *
- * A ordem aqui é a política. **Classificar antes de tudo**, porque metade dos
- * desfechos desta etapa não são falhas — "não há imposto a pagar", "já foi
- * pago", "ainda está em processamento" são estados normais do mês, e tratá-los
- * como erro encheria o dashboard de vermelho por empresas que não têm problema
- * nenhum. Só o que não é nenhum desses e também não é a guia é que lança.
+ * O portal real (reconhecimento de 2026-09-07) não abre um documento único:
+ * lista uma declaração por linha — «Identificação | Período | Data de receção»
+ * — e cada linha tem um «Obter documento de pagamento» que entrega o PDF. O
+ * ano é um filtro; o período da linha traz só o trimestre.
  *
- * **Ler os campos antes de clicar**, porque o clique leva a página embora: no
- * modo inline o próprio separador passa a ser o visor de PDF, e a entidade e a
- * referência que estavam no HTML deixam de existir.
+ * A ordem é a política:
+ * - **Filtrar pelo ano** do período pedido antes de ler a tabela. Se o filtro
+ *   não tem esse ano, as linhas no ecrã são de OUTRO ano — não se leem: lê-las
+ *   com o ano pedido clicava a guia certa do ano errado. Não há guia.
+ * - **Sem tabela, cai-se na redação**: «não existe documento», «já pago»,
+ *   «em processamento» são estados normais do mês. O que não é nenhum deles
+ *   nem é a lista é página que não se conhece, e falha alto com assinatura —
+ *   um portal redesenhado não pode passar por «não há guia» em todas as
+ *   empresas.
+ * - **Encontrar a linha do período** pedido. Tabela vazia → não há guia;
+ *   com linhas mas sem a do período → a declaração existe e o documento ainda
+ *   não foi emitido (`not_ready`).
+ * - **Clicar na linha certa** e correr as três estratégias de captura.
+ * - **Verificar o PDF** antes de o devolver: um download cortado ou uma página
+ *   de erro com `Content-Type: application/pdf` chegariam ao Storage com nome
+ *   de guia.
  *
- * E **verificar o PDF antes de o devolver**: um download cortado ou uma página
- * de erro servida com `Content-Type: application/pdf` chegariam ao Storage do
- * gabinete com nome de guia.
+ * Os campos (entidade/referência/valor) **não vêm no HTML** desta lista — vivem
+ * dentro do PDF. Por isso o desfecho é `fetched_without_fields` (`source:
+ * "none"`): a guia fica guardada e útil, e a leitura dos campos do PDF é uma
+ * melhoria posterior, não um bloqueio.
  */
 export class AtPaymentDocumentFetcher implements PaymentDocumentFetcher {
   constructor(private readonly options: AtOptions = {}) {}
@@ -53,130 +61,142 @@ export class AtPaymentDocumentFetcher implements PaymentDocumentFetcher {
     target: { period: string; company: AtCompanyHandle },
   ): Promise<PaymentDocumentFetch> {
     const page = session.page;
-    let response = await page.goto(session.urls.obterDocumentoPagamento, {
+    const response = await page.goto(session.urls.obterDocumentoPagamento, {
       waitUntil: "domcontentloaded",
       timeout: this.timeout,
     });
+    const year = target.period.slice(0, 4);
+    const anoAtivo = await this.filtrarPorAno(page, year);
 
-    // Há entradas do portal que abrem já na guia e outras que começam por
-    // perguntar o período. A presença do campo é que decide — não uma opção
-    // de configuração que alguém teria de manter a par do portal.
-    if ((await page.locator(AT.paymentDocument.yearInput).count()) > 0) {
-      response = await this.escolherPeriodo(page, target.period);
-    }
-
+    // A sessão pode ter morrido (volta ao login) ou o portal pode estar em
+    // baixo/sem autorização: isso classifica-se e sai já. O resto — a lista —
+    // trata-se lendo a tabela, não por redação.
     const snapshot: AtPageSnapshot = {
       ...(await snapshotPage(page)),
       ...(response === null ? {} : { status: response.status() }),
     };
     const pagina = classifyAtPage(snapshot, this.padroes);
-    switch (pagina.kind) {
-      // Os três desfechos que não são falha: devolvem-se como valor para o
-      // runner os distinguir de "não conseguimos".
-      case "payment_document_none":
-        return { kind: "no_document" };
-      case "already_paid":
-        return { kind: "already_paid" };
-      case "not_ready":
-        return { kind: "not_ready" };
-      case "authorization_missing":
-        throw new AtAuthError("authorization_missing");
-      case "payment_document":
-        break;
-      default:
-        throw new AtIntegrityError(
-          "at_unexpected_page",
-          "O documento de pagamento no Portal das Finanças respondeu com uma página inesperada.",
-          fingerprint(snapshot),
-        );
+    if (pagina.kind === "authorization_missing") throw new AtAuthError("authorization_missing");
+    if (pagina.kind === "maintenance" || pagina.kind === "server_error") {
+      throw new AtIntegrityError(
+        "at_unexpected_page",
+        "O documento de pagamento no Portal das Finanças está indisponível de momento.",
+        fingerprint(snapshot),
+      );
     }
 
-    // Antes do clique: a captura pode levar a página para o visor de PDF.
-    const fields = parseFieldsFromText(await this.textoDosCampos(page));
+    // Sem tabela, só a redação distingue um estado normal de uma página
+    // desconhecida. Os três desfechos que não são falha devolvem-se como
+    // valor; o resto é mudança de contrato e lança com a página assinada.
+    if ((await page.locator(AT.paymentDocument.table).count()) === 0) {
+      if (pagina.kind === "payment_document_none") return { kind: "no_document" };
+      if (pagina.kind === "already_paid") return { kind: "already_paid" };
+      if (pagina.kind === "not_ready") return { kind: "not_ready" };
+      throw new AtIntegrityError(
+        "at_unexpected_page",
+        "O documento de pagamento no Portal das Finanças respondeu com uma página inesperada.",
+        fingerprint(snapshot),
+      );
+    }
 
-    await this.exigirBotao(page, snapshot);
-    const capturado = await capturePdf(
-      page,
-      () => page.click(AT.paymentDocument.obtainButton, { timeout: this.timeout }),
-      { timeoutMs: this.timeout },
-    );
+    // O filtro não tem o ano pedido: a empresa não tem declarações nesse ano, e
+    // as linhas no ecrã pertencem ao ano que ficou selecionado.
+    if (anoAtivo !== null && anoAtivo !== year) return { kind: "no_document" };
+
+    const header = await page.locator(AT.paymentDocument.headerCells).allInnerTexts();
+    const rowsLocator = page.locator(AT.paymentDocument.rows);
+    const total = await rowsLocator.count();
+    // Tabela vazia: não há declaração cujo documento se possa obter.
+    if (total === 0) return { kind: "no_document" };
+
+    const rows: string[][] = [];
+    for (let i = 0; i < total; i += 1) {
+      rows.push(await rowsLocator.nth(i).locator(AT.paymentDocument.cells).allInnerTexts());
+    }
+
+    // Lança `at_unexpected_page` se o cabeçalho não tiver período — adivinhar a
+    // coluna custaria a guia do trimestre errado.
+    const parsed = parsePaymentRows(header, rows, year);
+    if (parsed.length === 0) return { kind: "no_document" };
+
+    // A linha do período pedido (o leitor já escolheu qual). Se a tabela tem
+    // declarações mas não a deste período, o documento ainda não foi emitido.
+    const alvo =
+      parsed.find((r) => r.period === target.period) ?? pickMostRecentPayment(parsed);
+    if (alvo === null || alvo.period !== target.period) return { kind: "not_ready" };
+
+    const linha = rowsLocator.nth(alvo.rowIndex);
+    const gatilho = linha.locator(AT.paymentDocument.obtainInRow).first();
+    await this.exigirGatilho(gatilho, snapshot);
+
+    const capturado = await capturePdf(page, () => gatilho.click({ timeout: this.timeout }), {
+      timeoutMs: this.timeout,
+    });
     assertPdfIntegrity(capturado.pdf);
 
     return {
       kind: "document",
       pdf: capturado.pdf,
-      // O período pedido é a rede de segurança quando o HTML não o traz: sem
-      // ele o ficheiro ia para o Storage sem saber a que mês pertence.
-      fields: { ...fields, period: fields.period ?? target.period },
+      // Os campos vêm no PDF, não nesta lista: `source: "none"` →
+      // `fetched_without_fields`. O período é o pedido.
+      fields: {
+        period: target.period,
+        entity: null,
+        reference: null,
+        amount: null,
+        nif: null,
+        source: "none",
+      },
       via: capturado.via,
     };
   }
 
   /**
-   * O texto de onde saem os campos da guia — ou `""` se o contentor não estiver
-   * lá.
+   * Aplica o filtro de ano, se ele existir e não estiver já no ano pedido, e
+   * devolve o ano que ficou **ativo** — ou `null` se a página não tem filtro.
    *
-   * **Não falha de propósito.** Um `<main>` renomeado é uma mudança de layout,
-   * não um documento errado: a guia continua a ser a certa e continua a poder
-   * ser guardada. O desfecho `fetched_without_fields` (`source: "none"`) diz ao
-   * gabinete que a entidade e a referência têm de ser lidas do PDF à mão —
-   * muito melhor do que recusar uma guia boa e deixar o IVA por pagar.
-   *
-   * A espera é curta: a página já está classificada como a do documento, e se o
-   * contentor não apareceu em dois segundos não vai aparecer.
+   * A lista abre no ano corrente; um período de outro ano precisa de trocar o
+   * filtro e pesquisar. Se o `select` não tiver o ano (empresa sem declarações
+   * nesse ano), fica o que está — e é esse ano que se devolve, para que quem
+   * chama saiba que as linhas no ecrã não são as do período pedido.
    */
-  private async textoDosCampos(page: Page): Promise<string> {
-    const contentor = page.locator(AT.paymentDocument.fieldsContainer).first();
-    await contentor
-      .waitFor({ state: "attached", timeout: ESPERA_ESTRUTURAL_MS })
-      .catch(() => undefined);
-    if ((await contentor.count()) === 0) return "";
-    try {
-      return await contentor.innerText({ timeout: ESPERA_ESTRUTURAL_MS });
-    } catch {
-      return "";
+  private async filtrarPorAno(page: Page, year: string): Promise<string | null> {
+    const select = page.locator(AT.paymentDocument.yearInput).first();
+    if ((await select.count()) === 0) return null;
+    const atual = await select.inputValue().catch(() => "");
+    if (atual === year) return atual;
+    const temAno =
+      (await select.locator(`option[value="${year}"]`).count()) > 0 ||
+      (await select.getByRole("option", { name: year }).count()) > 0;
+    if (!temAno) return atual;
+    await select.selectOption(year, { timeout: this.timeout }).catch(() => undefined);
+    const pesquisar = page.locator(AT.paymentDocument.searchButton).first();
+    if ((await pesquisar.count()) > 0) {
+      await Promise.all([
+        page.waitForLoadState("domcontentloaded", { timeout: this.timeout }).catch(() => undefined),
+        pesquisar.click({ timeout: this.timeout }).catch(() => undefined),
+      ]);
+      await page.waitForTimeout(500);
     }
+    // Depois da pesquisa a página é outra: lê-se o valor que ficou, não o pedido.
+    const depois = page.locator(AT.paymentDocument.yearInput).first();
+    if ((await depois.count()) === 0) return year;
+    return (await depois.inputValue().catch(() => year)) || year;
   }
 
   /**
-   * O botão tem de existir **antes** de a corrida começar.
-   *
-   * Sem esta verificação, um seletor partido chegava lá fora como um
-   * `TimeoutError` cru do Playwright — retentável, sem código de desfecho e sem
-   * assinatura da página. Três retentativas depois, o portal tinha sido
-   * martelado três vezes e ninguém sabia porquê. Um botão que não existe é uma
-   * mudança de contrato: falha alto, uma vez, com a página assinada.
+   * O gatilho da linha tem de existir antes de a corrida de captura começar —
+   * senão um seletor partido chega lá fora como um `TimeoutError` cru,
+   * retentável e sem assinatura. Um gatilho ausente é mudança de contrato:
+   * falha alto, uma vez, com a página assinada.
    */
-  private async exigirBotao(page: Page, snapshot: AtPageSnapshot): Promise<void> {
-    const botao = page.locator(AT.paymentDocument.obtainButton).first();
-    await botao.waitFor({ state: "attached", timeout: ESPERA_DO_BOTAO_MS }).catch(() => undefined);
-    if ((await botao.count()) > 0) return;
+  private async exigirGatilho(gatilho: Locator, snapshot: AtPageSnapshot): Promise<void> {
+    await gatilho.waitFor({ state: "attached", timeout: 5_000 }).catch(() => undefined);
+    if ((await gatilho.count()) > 0) return;
     throw new AtIntegrityError(
       "at_unexpected_page",
-      "O botão de obter documento de pagamento não existe na página do portal.",
+      "A linha do documento de pagamento não tem o botão de obter na página do portal.",
       fingerprint(snapshot),
     );
-  }
-
-  /**
-   * Escolhe ano e período no formulário do portal.
-   *
-   * O trimestre entra como número (`3`), não como o marcador canónico (`Q3`):
-   * a forma canónica é nossa, e o portal numera os trimestres de 1 a 4.
-   */
-  private async escolherPeriodo(page: Page, period: string): Promise<Response | null> {
-    const ano = period.slice(0, 4);
-    const marcador = period.slice(5);
-    const valor = marcador.startsWith("Q") ? marcador.slice(1) : marcador;
-
-    await page.selectOption(AT.paymentDocument.yearInput, ano, { timeout: this.timeout });
-    await page.selectOption(AT.paymentDocument.periodInput, valor, { timeout: this.timeout });
-    // Sem esperar pela navegação, o snapshot a seguir tanto podia fotografar a
-    // página nova como o formulário que acabou de ser submetido.
-    const [navegacao] = await Promise.all([
-      page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: this.timeout }),
-      page.click(AT.paymentDocument.submit, { timeout: this.timeout }),
-    ]);
-    return navegacao;
   }
 }

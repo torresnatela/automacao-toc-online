@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
 import { chromium, type Browser } from "playwright";
 import { AtPaymentDocumentFetcher } from "../../src/at/payment-document";
+import { AT } from "../../src/at/selectors";
 import { AcessoGovAtSessions } from "../../src/at/session-acesso-gov";
 import { PlaywrightBrowser, type BrowserProvider } from "../../src/browser/browser";
 import { capturePdf } from "../../src/at/pdf-capture";
@@ -17,12 +18,17 @@ import {
 } from "./fixture-server";
 
 /**
- * A captura da guia contra um portal que entrega o PDF de três maneiras.
+ * A captura da guia contra a **lista** de `obter-doc-pagamento` de um portal
+ * local (filtro de ano + uma declaração por linha, como no reconhecimento de
+ * 2026-09-07), que entrega o PDF de três maneiras.
  *
- * A asserção que dá sentido ao ficheiro é a dos **mesmos bytes**: `attachment`,
+ * Duas asserções dão sentido ao ficheiro. A dos **mesmos bytes**: `attachment`,
  * `inline` e `popup` são três caminhos técnicos para o mesmo documento, e se
  * algum deles trouxesse um ficheiro diferente (o visor impresso, por exemplo)
- * ninguém daria por isso até um contribuinte tentar pagar com ele.
+ * ninguém daria por isso até um contribuinte tentar pagar com ele. E a da
+ * **linha certa**: o portal só diz o mês/trimestre na linha e o ano no filtro,
+ * portanto clicar a linha errada — ou o ano errado — entrega uma guia válida
+ * do período errado, que é pior do que nenhuma.
  */
 const skip = process.env.SKIP_BROWSER_TESTS === "1";
 
@@ -109,9 +115,9 @@ beforeEach(() => {
   sessoes = [];
   providersReais = [];
   fixture.state.mode = "attachment";
-  fixture.state.periodForm = false;
-  fixture.state.ultimoPeriodo = null;
-  fixture.state.semCampos = false;
+  fixture.state.anoInicial = "2026";
+  fixture.state.ultimoAno = null;
+  fixture.state.ultimoDocumento = null;
   fixture.state.semBotao = false;
 });
 
@@ -121,7 +127,7 @@ afterEach(async () => {
 });
 
 describe.skipIf(skip)("AtPaymentDocumentFetcher (browser + Portal das Finanças local)", () => {
-  it("modo attachment: o download traz a guia, com os campos lidos do HTML", async () => {
+  it("modo attachment: o download traz a guia da linha do período, sem campos do HTML", async () => {
     const session = await abrirSessao();
 
     const obtido = await fetcher().fetch(session, { period: "2026-07", company: empresa() });
@@ -129,14 +135,18 @@ describe.skipIf(skip)("AtPaymentDocumentFetcher (browser + Portal das Finanças 
     if (obtido.kind !== "document") throw new Error(`esperava documento, veio ${obtido.kind}`);
     expect(obtido.via).toBe("download");
     expect(obtido.pdf.equals(fixture.state.pdf)).toBe(true);
+    // A lista não traz entidade/referência/valor — vivem no PDF. O desfecho é
+    // `fetched_without_fields`, e o período é o pedido, para o ficheiro saber
+    // sempre a que mês pertence.
     expect(obtido.fields).toEqual({
-      period: "2026/07",
-      entity: "11111",
-      reference: "123 456 789 012 345",
-      amount: "1.234,56",
-      nif: NIFS.bom,
-      source: "html",
+      period: "2026-07",
+      entity: null,
+      reference: null,
+      amount: null,
+      nif: null,
+      source: "none",
     });
+    expect(fixture.state.ultimoDocumento).toBe("07");
   }, 40_000);
 
   it("modo inline: o PDF vem no corpo da própria resposta", async () => {
@@ -201,7 +211,7 @@ describe.skipIf(skip)("AtPaymentDocumentFetcher (browser + Portal das Finanças 
 
     const erro = await capturePdf(
       pagina,
-      () => pagina.click('button:has-text("Obter documento de pagamento")'),
+      () => pagina.locator(AT.paymentDocument.rows).first().locator(AT.paymentDocument.obtainInRow).click(),
       { timeoutMs: 6_000 },
     )
       .then(() => null)
@@ -212,24 +222,7 @@ describe.skipIf(skip)("AtPaymentDocumentFetcher (browser + Portal das Finanças 
     await contexto.close();
   }, 60_000);
 
-  it("layout sem o contentor dos campos: guia guardada, campos por ler", async () => {
-    fixture.state.semCampos = true;
-    const session = await abrirSessao();
-
-    const obtido = await fetcher().fetch(session, { period: "2026-07", company: empresa() });
-
-    // Recusar uma guia boa por causa de um `<main>` renomeado deixaria o IVA
-    // por pagar. O desfecho é `fetched_without_fields`, não falha.
-    if (obtido.kind !== "document") throw new Error(`esperava documento, veio ${obtido.kind}`);
-    expect(obtido.fields.source).toBe("none");
-    expect(obtido.fields.entity).toBeNull();
-    // O período pedido é a rede de segurança: o ficheiro sabe sempre a que mês
-    // pertence, mesmo quando o portal não o disse.
-    expect(obtido.fields.period).toBe("2026-07");
-    expect(obtido.pdf.equals(fixture.state.pdf)).toBe(true);
-  }, 40_000);
-
-  it("botão de obter documento em falta → AtIntegrityError, não um timeout cru", async () => {
+  it("linha sem o link de obter documento → AtIntegrityError, não um timeout cru", async () => {
     fixture.state.semBotao = true;
     const session = await abrirSessao();
 
@@ -245,44 +238,68 @@ describe.skipIf(skip)("AtPaymentDocumentFetcher (browser + Portal das Finanças 
     expect(erro?.fingerprint).toBeDefined();
   }, 40_000);
 
-  it("preenche ano e período quando o portal os pede antes de mostrar a guia", async () => {
-    fixture.state.periodForm = true;
+  it("muda o filtro de ano quando a lista abre noutro ano", async () => {
+    fixture.state.anoInicial = "2025";
     const session = await abrirSessao();
 
     const obtido = await fetcher().fetch(session, { period: "2026-07", company: empresa() });
 
     expect(obtido.kind).toBe("document");
-    expect(fixture.state.ultimoPeriodo).toEqual({ ano: "2026", periodo: "07" });
+    expect(fixture.state.ultimoAno).toBe("2026");
+    expect(fixture.state.ultimoDocumento).toBe("07");
   }, 40_000);
 
-  it("o trimestre vai como número, não como o marcador canónico", async () => {
-    fixture.state.periodForm = true;
+  it("não volta a pesquisar quando a lista já está no ano pedido", async () => {
+    fixture.state.anoInicial = "2026";
     const session = await abrirSessao();
 
-    await fetcher().fetch(session, { period: "2026-Q3", company: empresa() });
+    const obtido = await fetcher().fetch(session, { period: "2026-07", company: empresa() });
 
-    expect(fixture.state.ultimoPeriodo).toEqual({ ano: "2026", periodo: "3" });
+    expect(obtido.kind).toBe("document");
+    expect(fixture.state.ultimoAno).toBeNull();
   }, 40_000);
 
-  it("sem documento para o período → no_document (não é falha)", async () => {
+  it("o trimestre pedido clica a linha do trimestre, não a de um mês", async () => {
+    const session = await abrirSessao();
+
+    const obtido = await fetcher().fetch(session, { period: "2026-Q3", company: empresa() });
+
+    expect(obtido.kind).toBe("document");
+    expect(fixture.state.ultimoDocumento).toBe("3T");
+  }, 40_000);
+
+  it("ano pedido sem opção no filtro → no_document, sem ler as linhas do outro ano", async () => {
+    // Se o filtro não tem 2024, as linhas no ecrã são de 2026. Ler a linha
+    // «07» como 2024-07 e clicá-la entregava a guia certa do ano errado.
+    fixture.state.anoInicial = "2026";
+    const session = await abrirSessao();
+
+    const obtido = await fetcher().fetch(session, { period: "2024-07", company: empresa() });
+
+    expect(obtido).toEqual({ kind: "no_document" });
+    expect(fixture.state.ultimoDocumento).toBeNull();
+  }, 40_000);
+
+  it("tabela vazia → no_document (não é falha)", async () => {
     fixture.state.mode = "none";
     const session = await abrirSessao();
     const obtido = await fetcher().fetch(session, { period: "2026-07", company: empresa() });
     expect(obtido).toEqual({ kind: "no_document" });
   }, 40_000);
 
-  it("imposto já pago → already_paid", async () => {
-    fixture.state.mode = "paid";
-    const session = await abrirSessao();
-    const obtido = await fetcher().fetch(session, { period: "2026-07", company: empresa() });
-    expect(obtido).toEqual({ kind: "already_paid" });
-  }, 40_000);
-
-  it("guia ainda em processamento → not_ready", async () => {
+  it("lista sem a linha do período pedido → not_ready", async () => {
     fixture.state.mode = "notready";
     const session = await abrirSessao();
     const obtido = await fetcher().fetch(session, { period: "2026-07", company: empresa() });
     expect(obtido).toEqual({ kind: "not_ready" });
+    expect(fixture.state.ultimoDocumento).toBeNull();
+  }, 40_000);
+
+  it("página sem tabela mas com o aviso de já pago → already_paid (pela redação)", async () => {
+    fixture.state.mode = "paid";
+    const session = await abrirSessao();
+    const obtido = await fetcher().fetch(session, { period: "2026-07", company: empresa() });
+    expect(obtido).toEqual({ kind: "already_paid" });
   }, 40_000);
 
   it("sem autorização no portal → AtAuthError(authorization_missing)", async () => {
@@ -298,7 +315,8 @@ describe.skipIf(skip)("AtPaymentDocumentFetcher (browser + Portal das Finanças 
     expect(erro?.reason).toBe("authorization_missing");
   }, 40_000);
 
-  it("página irreconhecível → AtIntegrityError(at_unexpected_page)", async () => {
+  it("página irreconhecível (sem tabela nem aviso) → AtIntegrityError(at_unexpected_page)", async () => {
+    // Um portal redesenhado sem a tabela não pode passar por «não há guia».
     const session = await abrirSessao();
     const alvo = apontada(session, `${fixture.baseUrl}/pagina-que-nao-existe`);
 
